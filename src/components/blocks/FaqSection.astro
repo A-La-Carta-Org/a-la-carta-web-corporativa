@@ -1,0 +1,68 @@
+---
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import FaqList from './FaqList.astro';
+import type { Faq } from '@/data/solutions';
+
+interface Props {
+  items: Faq[];
+  title?: string;
+  text?: string;
+  eyebrow?: string;
+  allLink?: boolean;
+  soft?: boolean;
+}
+const {
+  items,
+  title = 'Preguntas frecuentes',
+  text,
+  eyebrow = 'Dudas habituales',
+  allLink = true,
+  soft = false,
+} = Astro.props;
+---
+
+<section class:list={['section', { 'is-soft': soft }]}>
+  <div class="container faq-section">
+    <div class="faq-section__head">
+      <SectionHeader eyebrow={eyebrow} title={title} text={text} />
+      {allLink && (
+        <a href="/recursos/preguntas-frecuentes" class="link-arrow">
+          Todas las preguntas
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </a>
+      )}
+    </div>
+    <FaqList items={items} />
+  </div>
+</section>
+
+<style>
+  .faq-section {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: var(--space-12);
+    align-items: start;
+  }
+  .faq-section__head {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .faq-section__head :global(.section-header) {
+    margin-bottom: var(--space-2);
+  }
+  @media (max-width: 1024px) {
+    .faq-section {
+      grid-template-columns: 1fr;
+      gap: var(--space-6);
+    }
+  }
+</style>

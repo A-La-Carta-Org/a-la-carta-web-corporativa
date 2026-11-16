@@ -1,0 +1,109 @@
+---
+/** Comandero en móvil: mesa abierta, platos con modificadores y envío a cocina. */
+---
+
+<div class="mk mk-cmd">
+  <div class="mk-cmd__head">
+    <span class="mk-muted">‹ Sala</span>
+    <span class="mk-strong">Mesa 7 · 3 pax</span>
+    <span class="mk-pill">2.º tiempo</span>
+  </div>
+  <div class="mk-cmd__cats">
+    <span class="mk-tab">Entrantes</span>
+    <span class="mk-tab is-on">Principales</span>
+    <span class="mk-tab">Postres</span>
+    <span class="mk-tab">Bebidas</span>
+  </div>
+  <div class="mk-cmd__list">
+    <div class="mk-row">
+      <span class="grow">
+        Lubina a la sal<span class="sub">para 2 · sin guarnición</span>
+      </span>
+      <span class="mk-cmd__qty num">1</span>
+    </div>
+    <div class="mk-row">
+      <span class="grow">
+        Entrecot 300 g<span class="sub">poco hecho</span>
+      </span>
+      <span class="mk-cmd__qty num">1</span>
+    </div>
+    <div class="mk-row">
+      <span class="grow">
+        Risotto de boletus<span class="sub">sin lactosa</span>
+      </span>
+      <span class="mk-cmd__qty num">1</span>
+    </div>
+    <div class="mk-row mk-cmd__off">
+      <span class="grow">Canelones de la abuela</span>
+      <span class="mk-pill is-warn">Agotado</span>
+    </div>
+    <div class="mk-row">
+      <span class="grow">Bacalao al pil-pil</span>
+      <span class="mk-cmd__add">+</span>
+    </div>
+    <div class="mk-row">
+      <span class="grow">Carrillera al vino</span>
+      <span class="mk-cmd__add">+</span>
+    </div>
+  </div>
+  <div class="mk-cmd__foot">
+    <div class="mk-row">
+      <span class="grow mk-muted">3 artículos · 2.º tiempo</span>
+      <span class="num mk-strong">72,50 €</span>
+    </div>
+    <span class="mk-btn is-dark is-block">Enviar a cocina</span>
+  </div>
+</div>
+
+<style>
+  .mk-cmd {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding-top: 34px;
+  }
+  .mk-cmd__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 12px 10px;
+    border-bottom: 1px solid var(--gray-150);
+  }
+  .mk-cmd__cats {
+    display: flex;
+    gap: 2px;
+    padding: 8px 10px;
+    overflow: hidden;
+  }
+  .mk-cmd__list {
+    flex: 1 1 auto;
+    padding: 0 12px;
+  }
+  .mk-cmd__qty {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    background: var(--black);
+    color: var(--white);
+    display: grid;
+    place-items: center;
+    font-size: 10px;
+  }
+  .mk-cmd__add {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 1px solid var(--gray-300);
+    display: grid;
+    place-items: center;
+    color: var(--gray-500);
+  }
+  .mk-cmd__off {
+    opacity: 0.6;
+  }
+  .mk-cmd__foot {
+    padding: 8px 12px 14px;
+    border-top: 1px solid var(--gray-150);
+    background: var(--gray-50);
+  }
+</style>

@@ -1,0 +1,167 @@
+---
+/** Clientes: ficha con visitas, puntos y segmentos. */
+---
+
+<div class="mk mk-cli">
+  <div class="mk-topbar">
+    <span class="mk-logo">
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+    </span>
+    <div class="mk-tabs">
+      <span class="mk-tab">Inicio</span>
+      <span class="mk-tab">Carta</span>
+      <span class="mk-tab is-on">Clientes</span>
+      <span class="mk-tab">Informes</span>
+    </div>
+    <div class="mk-right">
+      <span class="mk-muted">2.418 clientes</span>
+    </div>
+  </div>
+  <div class="mk-cli__body">
+    <aside class="mk-cli__list">
+      <div class="mk-cli__search">Buscar cliente…</div>
+      <div class="mk-row is-on">
+        <span class="mk-avatar">CR</span>
+        <span class="grow mk-strong">
+          Carmen Ruiz<span class="sub">14 visitas · 612 €</span>
+        </span>
+      </div>
+      <div class="mk-row">
+        <span class="mk-avatar">JS</span>
+        <span class="grow">
+          Jordi Soler<span class="sub">3 visitas · 96 €</span>
+        </span>
+      </div>
+      <div class="mk-row">
+        <span class="mk-avatar">AP</span>
+        <span class="grow">
+          Ana Pérez<span class="sub">1 visita · 48 €</span>
+        </span>
+      </div>
+      <div class="mk-row">
+        <span class="mk-avatar">MV</span>
+        <span class="grow">
+          Marc Vidal<span class="sub">22 visitas · 1.040 €</span>
+        </span>
+      </div>
+    </aside>
+    <section class="mk-cli__card">
+      <div class="mk-cli__head">
+        <span class="mk-avatar is-lg">CR</span>
+        <div>
+          <div class="mk-strong mk-cli__name">Carmen Ruiz</div>
+          <div class="mk-muted">Cliente desde marzo · consentimiento marketing ✓</div>
+        </div>
+        <span class="mk-pill is-dark">Habitual</span>
+      </div>
+      <div class="mk-cli__kpis">
+        <div>
+          <span class="mk-muted">Visitas</span>
+          <span class="num mk-strong">14</span>
+        </div>
+        <div>
+          <span class="mk-muted">Gasto medio</span>
+          <span class="num mk-strong">43,70 €</span>
+        </div>
+        <div>
+          <span class="mk-muted">Puntos</span>
+          <span class="num mk-strong">612</span>
+        </div>
+        <div>
+          <span class="mk-muted">Última visita</span>
+          <span class="num mk-strong">hace 6 días</span>
+        </div>
+      </div>
+      <div class="mk-row">
+        <span class="grow mk-muted">Segmentos</span>
+        <span class="mk-pill">Cenas fin de semana</span>
+        <span class="mk-pill">Terraza</span>
+        <span class="mk-pill">Sin gluten</span>
+      </div>
+      <div class="mk-row">
+        <span class="grow mk-muted">Alérgenos declarados</span>
+        <span>Gluten</span>
+      </div>
+      <div class="mk-row">
+        <span class="grow mk-muted">Notas</span>
+        <span>Prefiere mesa junto a la ventana</span>
+      </div>
+    </section>
+  </div>
+</div>
+
+<style>
+  .mk-cli__body {
+    display: grid;
+    grid-template-columns: 36% 1fr;
+    min-height: 260px;
+  }
+  .mk-cli__list {
+    border-right: 1px solid var(--gray-200);
+    padding: 10px;
+  }
+  .mk-cli__list .mk-row.is-on {
+    background: var(--gray-100);
+    border-radius: 8px;
+    padding-inline: 6px;
+  }
+  .mk-cli__search {
+    padding: 6px 10px;
+    border: 1px solid var(--gray-200);
+    border-radius: 7px;
+    color: var(--gray-400);
+    margin-bottom: 6px;
+  }
+  .mk-cli__card {
+    padding: 14px;
+    display: grid;
+    gap: 8px;
+    align-content: start;
+  }
+  .mk-cli__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .mk-cli__head .mk-pill {
+    margin-left: auto;
+  }
+  .mk-avatar.is-lg {
+    width: 30px;
+    height: 30px;
+    font-size: 11px;
+  }
+  .mk-cli__name {
+    font-size: 13px;
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+  .mk-cli__kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    padding: 8px 0;
+  }
+  .mk-cli__kpis div {
+    display: grid;
+    gap: 1px;
+    padding: 8px;
+    border-radius: 8px;
+    background: var(--gray-50);
+  }
+  @container (max-width: 520px) {
+    .mk-cli__body {
+      grid-template-columns: 1fr;
+    }
+    .mk-cli__list {
+      border-right: 0;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .mk-cli__kpis {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

@@ -1,0 +1,147 @@
+---
+/** Informes: ventas de hoy, por hora y los platos que más margen dejan. */
+---
+
+<div class="mk mk-inf">
+  <div class="mk-topbar">
+    <span class="mk-logo">
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+    </span>
+    <div class="mk-tabs">
+      <span class="mk-tab is-on">Inicio</span>
+      <span class="mk-tab">Carta</span>
+      <span class="mk-tab">Locales</span>
+      <span class="mk-tab">Equipo</span>
+      <span class="mk-tab">Informes</span>
+    </div>
+    <div class="mk-right">
+      <span class="mk-pill">Hoy · todos los locales</span>
+    </div>
+  </div>
+  <div class="mk-inf__body">
+    <div class="mk-inf__kpis">
+      <div class="mk-panel mk-inf__kpi">
+        <span class="mk-muted">Ventas</span>
+        <span class="num mk-inf__big">4.812 €</span>
+        <span class="mk-pill is-ok">+8 % vs. viernes pasado</span>
+      </div>
+      <div class="mk-panel mk-inf__kpi">
+        <span class="mk-muted">Tickets</span>
+        <span class="num mk-inf__big">186</span>
+        <span class="mk-muted">
+          ticket medio <b class="num">25,87 €</b>
+        </span>
+      </div>
+      <div class="mk-panel mk-inf__kpi">
+        <span class="mk-muted">Margen bruto</span>
+        <span class="num mk-inf__big">68 %</span>
+        <span class="mk-muted">con escandallos al día</span>
+      </div>
+    </div>
+    <div class="mk-inf__cols">
+      <div class="mk-panel mk-inf__chart">
+        <div class="mk-row">
+          <span class="grow mk-strong">Ventas por hora</span>
+          <span class="mk-muted">Centro · Terraza · Online</span>
+        </div>
+        <div class="mk-bars">
+          <i style="--h:18%"></i>
+          <i style="--h:30%"></i>
+          <i style="--h:62%"></i>
+          <i style="--h:88%" class="is-on"></i>
+          <i style="--h:74%"></i>
+          <i style="--h:28%"></i>
+          <i style="--h:22%"></i>
+          <i style="--h:46%"></i>
+          <i style="--h:92%" class="is-on"></i>
+          <i style="--h:100%" class="is-on"></i>
+          <i style="--h:70%"></i>
+          <i style="--h:34%"></i>
+        </div>
+        <div class="mk-inf__axis num">
+          <span>12</span>
+          <span>14</span>
+          <span>16</span>
+          <span>18</span>
+          <span>20</span>
+          <span>22</span>
+        </div>
+      </div>
+      <div class="mk-panel mk-inf__top">
+        <div class="mk-row">
+          <span class="grow mk-strong">Más margen hoy</span>
+        </div>
+        <div class="mk-row">
+          <span class="grow">Arroz meloso de setas</span>
+          <span class="num">74 %</span>
+        </div>
+        <div class="mk-row">
+          <span class="grow">Ensalada de burrata</span>
+          <span class="num">71 %</span>
+        </div>
+        <div class="mk-row">
+          <span class="grow">Croquetas de jamón</span>
+          <span class="num">66 %</span>
+        </div>
+        <div class="mk-row">
+          <span class="grow">Entrecot 300 g</span>
+          <span class="num">52 %</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .mk-inf__body {
+    padding: 12px;
+    background: var(--gray-50);
+    display: grid;
+    gap: 8px;
+    min-height: 260px;
+  }
+  .mk-inf__kpis {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .mk-inf__kpi {
+    padding: 10px 12px;
+    display: grid;
+    gap: 3px;
+    justify-items: start;
+  }
+  .mk-inf__big {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+  }
+  .mk-inf__cols {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 8px;
+  }
+  .mk-inf__chart,
+  .mk-inf__top {
+    padding: 8px 12px;
+  }
+  .mk-inf__chart .mk-bars {
+    margin-top: 8px;
+  }
+  .mk-inf__axis {
+    display: flex;
+    justify-content: space-between;
+    color: var(--gray-400);
+    font-size: 9px;
+    margin-top: 4px;
+  }
+  @container (max-width: 560px) {
+    .mk-inf__kpis,
+    .mk-inf__cols {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

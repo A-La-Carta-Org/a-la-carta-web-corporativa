@@ -1,0 +1,287 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import Icon from '@/components/ui/Icon.astro';
+import Steps from '@/components/blocks/Steps.astro';
+import SolutionGrid from '@/components/blocks/SolutionGrid.astro';
+import SectorGrid from '@/components/blocks/SectorGrid.astro';
+import FaqSection from '@/components/blocks/FaqSection.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import Mockup from '@/components/mockups/Mockup.astro';
+import { hero, flow, connected, why, trust } from '@/data/home';
+import { homeFaqs } from '@/data/faqs';
+import { SITE_DESCRIPTION } from '@/data/site';
+import { faqJsonLd } from '@/lib/seo';
+---
+
+<BaseLayout
+  title="alaCarta — Software de gestión integral para hostelería"
+  rawTitle
+  description={SITE_DESCRIPTION}
+  path="/"
+  jsonLd={faqJsonLd(homeFaqs)}
+>
+  <!-- 1 · Hero -->
+  <section class="home-hero">
+    <div class="container home-hero__copy">
+      <span class="eyebrow fade-up">{hero.eyebrow}</span>
+      <h1 class="fade-up" style="--delay: 60ms">
+        {hero.title}
+      </h1>
+      <p class="lead fade-up" style="--delay: 120ms">
+        {hero.text}
+      </p>
+      <div class="home-hero__actions fade-up" style="--delay: 180ms">
+        <a href={hero.primary.href} class="btn is-primary is-lg">
+          {hero.primary.label}
+          <Icon name="arrow-right" size={16} class="btn-arrow" />
+        </a>
+        <a href={hero.secondary.href} class="btn is-secondary is-lg">
+          {hero.secondary.label}
+        </a>
+      </div>
+      <p class="home-hero__note muted fade-up" style="--delay: 240ms">
+        {hero.note}
+      </p>
+    </div>
+    <div class="container is-wide home-hero__media fade-up" style="--delay: 200ms">
+      <div class="home-hero__stage">
+        <Mockup kind="tpv" class="home-hero__tpv" />
+        <Mockup kind="comandero" class="home-hero__phone" />
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · El flujo del servicio -->
+  <section class="section has-rule">
+    <div class="container">
+      <SectionHeader eyebrow={flow.eyebrow} title={flow.title} text={flow.text} />
+      <div style="--cols: 6">
+        <Steps steps={flow.steps} />
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · Soluciones -->
+  <section class="section is-soft">
+    <div class="container">
+      <div class="home-solutions__head">
+        <SectionHeader
+          eyebrow="Soluciones"
+          title="Los módulos, a la carta"
+          text="Empieza por lo que necesitas hoy y añade el resto cuando el local lo pida. Todos comparten carta, mesas, usuarios y datos."
+        />
+        <a href="/soluciones" class="link-arrow">
+          Todas las soluciones
+          <Icon name="arrow-right" size={14} />
+        </a>
+      </div>
+      <SolutionGrid columns={3} />
+    </div>
+  </section>
+
+  <!-- 4 · Todo conectado -->
+  <section class="section">
+    <div class="container home-connected">
+      <div class="home-connected__copy">
+        <SectionHeader eyebrow={connected.eyebrow} title={connected.title} text={connected.text} />
+        <ul role="list" class="home-connected__points">
+          {connected.points.map((p) => (
+            <li class="column">
+              <h3>{p.title}</h3>
+              <p>{p.text}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div class="home-connected__media">
+        <Mockup kind="backoffice" />
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · Sectores -->
+  <section class="section has-rule">
+    <div class="container">
+      <div class="home-solutions__head">
+        <SectionHeader
+          eyebrow="Sectores"
+          title="Una plataforma, configurada para tu tipo de local"
+          text="No es un programa distinto por sector: es el mismo sistema con los módulos y los flujos que cada negocio necesita."
+        />
+        <a href="/sectores" class="link-arrow">
+          Todos los sectores
+          <Icon name="arrow-right" size={14} />
+        </a>
+      </div>
+      <SectorGrid />
+    </div>
+  </section>
+
+  <!-- 6 · Por qué -->
+  <section class="section is-dark">
+    <div class="container">
+      <SectionHeader eyebrow={why.eyebrow} title={why.title} />
+      <ul role="list" class="home-why">
+        {why.items.map((item) => (
+          <li class="column">
+            <h3>{item.title}</h3>
+            <p>{item.text}</p>
+          </li>
+        ))}
+      </ul>
+      <a href="/por-que-alacarta" class="link-arrow home-why__link">
+        Por qué alaCarta, con detalle
+        <Icon name="arrow-right" size={14} />
+      </a>
+    </div>
+  </section>
+
+  <!-- 7 · Confianza -->
+  <section class="section is-sm">
+    <div class="container">
+      <ul role="list" class="home-trust">
+        {trust.items.map((t) => (
+          <li>
+            <Icon name={t.icon} size={22} />
+            <div>
+              <h3>{t.title}</h3>
+              <p class="muted">{t.text}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- 8 · FAQ -->
+  <FaqSection items={homeFaqs} soft />
+
+  <!-- 9 · Cierre -->
+  <CtaBand />
+</BaseLayout>
+
+<style>
+  .home-hero {
+    padding-top: clamp(3rem, 2rem + 4vw, 6rem);
+    overflow: hidden;
+  }
+  .home-hero__copy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--space-5);
+    max-width: 54rem;
+  }
+  .home-hero__copy h1 {
+    max-width: 16ch;
+  }
+  .home-hero__copy .lead {
+    max-width: 40rem;
+  }
+  .home-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+  }
+  .home-hero__note {
+    font-size: var(--text-sm);
+  }
+  .home-hero__media {
+    margin-top: clamp(2.5rem, 2rem + 3vw, 5rem);
+  }
+  .home-hero__stage {
+    position: relative;
+    max-width: 62rem;
+    margin-inline: auto;
+    padding-bottom: var(--space-12);
+  }
+  .home-hero__stage :global(.home-hero__phone) {
+    position: absolute;
+    right: -1.5rem;
+    bottom: 0;
+    width: 14rem;
+  }
+  .home-solutions__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: var(--space-6);
+    margin-bottom: var(--space-10);
+  }
+  .home-solutions__head :global(.section-header) {
+    margin-bottom: 0;
+  }
+  .home-solutions__head .link-arrow {
+    margin-bottom: var(--space-2);
+    flex: 0 0 auto;
+  }
+  .home-connected {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: var(--space-16);
+    align-items: center;
+  }
+  .home-connected__points {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .home-why {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-8);
+  }
+  .home-why__link {
+    margin-top: var(--space-10);
+    color: var(--white);
+  }
+  .home-trust {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-8);
+    padding-block: var(--space-6);
+    border-block: 1px solid var(--color-border);
+  }
+  .home-trust li {
+    display: flex;
+    gap: var(--space-4);
+    align-items: flex-start;
+  }
+  .home-trust h3 {
+    font-size: var(--text-base);
+    margin-bottom: var(--space-1);
+  }
+  .home-trust p {
+    font-size: var(--text-sm);
+  }
+  @media (max-width: 1024px) {
+    .home-connected {
+      grid-template-columns: 1fr;
+      gap: var(--space-10);
+    }
+    .home-why {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .home-trust {
+      grid-template-columns: 1fr;
+    }
+    .home-solutions__head {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+  @media (max-width: 720px) {
+    .home-hero__stage {
+      padding-bottom: 0;
+    }
+    .home-hero__stage :global(.home-hero__phone) {
+      display: none;
+    }
+    .home-why {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

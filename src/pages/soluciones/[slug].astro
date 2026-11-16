@@ -1,0 +1,114 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import FeatureColumns from '@/components/blocks/FeatureColumns.astro';
+import FaqSection from '@/components/blocks/FaqSection.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import SolutionGrid from '@/components/blocks/SolutionGrid.astro';
+import SectorGrid from '@/components/blocks/SectorGrid.astro';
+import Mockup from '@/components/mockups/Mockup.astro';
+import { solutions, solutionPath, type Solution } from '@/data/solutions';
+import { sectors } from '@/data/sectors';
+import { plans, addonModules, fmtPrice, FROM_PRICE } from '@/data/pricing';
+import { breadcrumbJsonLd, softwareJsonLd, faqJsonLd } from '@/lib/seo';
+
+export function getStaticPaths() {
+  return solutions.map((s) => ({ params: { slug: s.slug }, props: { solution: s } }));
+}
+
+interface Props {
+  solution: Solution;
+}
+const { solution: s } = Astro.props;
+const path = solutionPath(s.slug);
+const crumbs = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Soluciones', path: '/soluciones' },
+  { name: s.navLabel, path },
+];
+const forSectors = sectors.filter((x) => x.modules.includes(s.slug)).map((x) => x.slug);
+const addon = addonModules.find((a) => a.module === s.slug);
+const inBase = plans[0]!.modules.includes(s.slug);
+const priceLine = inBase
+  ? `Incluido en todos los planes, ${fmtPrice(FROM_PRICE)}/mes por local`
+  : addon
+    ? `Incluido en el plan Completo o ${fmtPrice(addon.monthly)}/mes por local sobre el Esencial`
+    : 'Incluido en el plan Completo';
+---
+
+<BaseLayout
+  title={s.seoTitle}
+  description={s.description}
+  path={path}
+  jsonLd={[
+    breadcrumbJsonLd(crumbs),
+    softwareJsonLd({ name: `${s.name} alaCarta`, description: s.description, path }),
+    faqJsonLd(s.faqs),
+  ]}
+>
+  <PageHero
+    breadcrumbs={crumbs}
+    eyebrow={s.name}
+    title={s.title}
+    text={s.intro}
+    primary={{ label: 'Solicitar demo', href: `/solicitar-demo?modulo=${s.slug}` }}
+    secondary={{ label: 'Ver precios', href: '/precios' }}
+    note={priceLine}
+  >
+    <div class="sol-hero-media">
+      <Mockup kind={s.mockup} />
+    </div>
+  </PageHero>
+
+  <section class="section has-rule">
+    <div class="container">
+      <SectionHeader eyebrow="Qué hace" title={`${s.name}, en concreto`} />
+      <FeatureColumns items={s.features} columns={3} />
+    </div>
+  </section>
+
+  <section class="section is-soft">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Conectado"
+        title="Cómo encaja con el resto"
+        text="Ningún módulo trabaja solo. Esto es lo que gana este cuando el resto está activo."
+      />
+      <FeatureColumns items={s.connected} columns={3} />
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container sol-related">
+      <div>
+        <SectionHeader eyebrow="Se suele combinar con" title="Módulos relacionados" />
+        <SolutionGrid only={s.related} columns={3} compact />
+      </div>
+      {forSectors.length > 0 && (
+        <div class="sol-related__sectors">
+          <SectionHeader eyebrow="Para quién" title="Sectores donde más aporta" />
+          <SectorGrid only={forSectors} />
+        </div>
+      )}
+    </div>
+  </section>
+
+  <FaqSection items={s.faqs} title={`Preguntas sobre ${s.navLabel}`} soft />
+
+  <CtaBand title={`Ver ${s.navLabel} con tu carta`} />
+</BaseLayout>
+
+<style>
+  .sol-hero-media {
+    display: flex;
+    justify-content: center;
+  }
+  .sol-hero-media :global(.device.is-phone) {
+    max-width: 16rem;
+  }
+  .sol-related {
+    display: grid;
+    gap: var(--space-16);
+  }
+</style>

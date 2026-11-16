@@ -1,0 +1,159 @@
+---
+/** Libro de reservas: turno de la noche, lista por hora y ocupación por zona. */
+---
+
+<div class="mk mk-res">
+  <div class="mk-topbar">
+    <span class="mk-logo">
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+    </span>
+    <div class="mk-tabs">
+      <span class="mk-tab">Sala</span>
+      <span class="mk-tab">Barra</span>
+      <span class="mk-tab">Pedidos</span>
+      <span class="mk-tab is-on">Reservas</span>
+    </div>
+    <div class="mk-right">
+      <span class="mk-muted">Viernes 21 nov · Cena</span>
+    </div>
+  </div>
+  <div class="mk-res__body">
+    <section class="mk-res__list">
+      <div class="mk-res__hour">
+        <span class="num">20:30</span>
+        <span class="mk-muted">12 / 20 cubiertos</span>
+      </div>
+      <div class="mk-row">
+        <span class="grow mk-strong">
+          Carmen Ruiz<span class="sub">4 pax · terraza · cumpleaños</span>
+        </span>
+        <span class="mk-pill is-ok">Confirmada</span>
+      </div>
+      <div class="mk-row">
+        <span class="grow mk-strong">
+          Jordi Soler<span class="sub">2 pax · interior · web</span>
+        </span>
+        <span class="mk-pill is-ok">Confirmada</span>
+      </div>
+      <div class="mk-row">
+        <span class="grow mk-strong">
+          Ana Pérez<span class="sub">6 pax · interior · Google</span>
+        </span>
+        <span class="mk-pill is-warn">Pendiente</span>
+      </div>
+      <div class="mk-res__hour">
+        <span class="num">21:30</span>
+        <span class="mk-muted">18 / 20 cubiertos</span>
+      </div>
+      <div class="mk-row">
+        <span class="grow mk-strong">
+          Marc Vidal<span class="sub">2 pax · barra · teléfono</span>
+        </span>
+        <span class="mk-pill is-ok">Confirmada</span>
+      </div>
+      <div class="mk-row">
+        <span class="grow mk-strong">
+          Lucía Gómez<span class="sub">8 pax · privado · tarjeta de garantía</span>
+        </span>
+        <span class="mk-pill is-ok">Confirmada</span>
+      </div>
+      <div class="mk-row">
+        <span class="grow mk-strong">
+          Lista de espera<span class="sub">3 solicitudes para 21:30</span>
+        </span>
+        <span class="mk-pill">Ver</span>
+      </div>
+    </section>
+    <aside class="mk-res__side">
+      <div class="mk-panel is-soft mk-res__kpi">
+        <span class="mk-muted">Ocupación turno</span>
+        <span class="num mk-res__big">86 %</span>
+        <div class="mk-res__bar">
+          <i style="--w:86%"></i>
+        </div>
+      </div>
+      <div class="mk-panel is-soft mk-res__kpi">
+        <span class="mk-muted">No-shows este mes</span>
+        <span class="num mk-res__big">2</span>
+        <span class="mk-muted">de 214 reservas</span>
+      </div>
+      <div class="mk-panel is-soft mk-res__kpi">
+        <span class="mk-muted">Origen</span>
+        <div class="mk-row">
+          <span class="grow">Web propia</span>
+          <span class="num">58 %</span>
+        </div>
+        <div class="mk-row">
+          <span class="grow">Google</span>
+          <span class="num">27 %</span>
+        </div>
+        <div class="mk-row">
+          <span class="grow">Teléfono</span>
+          <span class="num">15 %</span>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<style>
+  .mk-res__body {
+    display: grid;
+    grid-template-columns: 1fr 34%;
+    min-height: 280px;
+  }
+  .mk-res__list {
+    padding: 8px 12px;
+  }
+  .mk-res__hour {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0 4px;
+    font-weight: 600;
+    font-size: 12px;
+  }
+  .mk-res__side {
+    padding: 10px;
+    border-left: 1px solid var(--gray-200);
+    background: var(--gray-50);
+    display: grid;
+    gap: 8px;
+    align-content: start;
+  }
+  .mk-res__kpi {
+    padding: 10px;
+    display: grid;
+    gap: 2px;
+    background: var(--white);
+  }
+  .mk-res__big {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+  }
+  .mk-res__bar {
+    height: 4px;
+    background: var(--gray-200);
+    border-radius: 999px;
+    margin-top: 4px;
+  }
+  .mk-res__bar i {
+    display: block;
+    width: var(--w);
+    height: 100%;
+    background: var(--black);
+    border-radius: 999px;
+  }
+  @container (max-width: 520px) {
+    .mk-res__body {
+      grid-template-columns: 1fr;
+    }
+    .mk-res__side {
+      border-left: 0;
+      border-top: 1px solid var(--gray-200);
+    }
+  }
+</style>

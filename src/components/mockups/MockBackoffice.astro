@@ -1,0 +1,184 @@
+---
+/** Backoffice: editor de carta con precios por local y canal. */
+---
+
+<div class="mk mk-bo">
+  <div class="mk-topbar">
+    <span class="mk-logo">
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+    </span>
+    <div class="mk-tabs">
+      <span class="mk-tab">Inicio</span>
+      <span class="mk-tab is-on">Carta</span>
+      <span class="mk-tab">Locales</span>
+      <span class="mk-tab">Equipo</span>
+      <span class="mk-tab">Inventario</span>
+      <span class="mk-tab">Facturación</span>
+    </div>
+    <div class="mk-right">
+      <span class="mk-pill">Grupo Plaza · 3 locales</span>
+      <span class="mk-avatar">JM</span>
+    </div>
+  </div>
+  <div class="mk-bo__body">
+    <div class="mk-bo__head">
+      <div>
+        <div class="mk-strong mk-bo__title">Carta maestra</div>
+        <div class="mk-muted">142 productos · última publicación hace 2 h</div>
+      </div>
+      <div class="cluster-mk">
+        <span class="mk-btn">Importar</span>
+        <span class="mk-btn is-dark">Publicar cambios</span>
+      </div>
+    </div>
+    <table class="mk-bo__table">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Categoría</th>
+          <th class="num">Precio</th>
+          <th>Centro</th>
+          <th>Terraza</th>
+          <th>Online</th>
+          <th>Alérgenos</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="mk-strong">Ensalada de burrata</td>
+          <td>Entrantes</td>
+          <td class="num">12,50</td>
+          <td>
+            <span class="mk-check is-on"></span>
+          </td>
+          <td>
+            <span class="mk-check is-on"></span>
+          </td>
+          <td>
+            <span class="mk-check is-on"></span>
+          </td>
+          <td>L · F</td>
+        </tr>
+        <tr>
+          <td class="mk-strong">Croquetas de jamón</td>
+          <td>Entrantes</td>
+          <td class="num">9,00</td>
+          <td>
+            <span class="mk-check is-on"></span>
+          </td>
+          <td>
+            <span class="mk-check is-on"></span>
+          </td>
+          <td>
+            <span class="mk-check is-on"></span>
+          </td>
+          <td>G · L · H</td>
+        </tr>
+        <tr class="is-edit">
+          <td class="mk-strong">Entrecot 300 g</td>
+          <td>Carnes</td>
+          <td class="num">
+            24,50 <span class="mk-pill is-warn">13,5 € · +2 €</span>
+          </td>
+          <td>
+            <span class="mk-check is-on"></span>
+          </td>
+          <td>
+            <span class="mk-check is-on"></span>
+          </td>
+          <td>
+            <span class="mk-check"></span>
+          </td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="mk-strong">Arroz meloso de setas</td>
+          <td>Arroces</td>
+          <td class="num">16,00</td>
+          <td>
+            <span class="mk-check is-on"></span>
+          </td>
+          <td>
+            <span class="mk-check"></span>
+          </td>
+          <td>
+            <span class="mk-check is-on"></span>
+          </td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="mk-strong">Tarta de queso</td>
+          <td>Postres</td>
+          <td class="num">6,50</td>
+          <td>
+            <span class="mk-check is-on"></span>
+          </td>
+          <td>
+            <span class="mk-check is-on"></span>
+          </td>
+          <td>
+            <span class="mk-check is-on"></span>
+          </td>
+          <td>G · L · H</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+  .mk-bo__body {
+    padding: 12px;
+    min-height: 260px;
+  }
+  .mk-bo__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 10px;
+    gap: 10px;
+  }
+  .mk-bo__title {
+    font-size: 14px;
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+  .cluster-mk {
+    display: flex;
+    gap: 6px;
+  }
+  .mk-bo__table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .mk-bo__table th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--gray-500);
+    font-size: 9.5px;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .mk-bo__table td {
+    padding: 7px 8px;
+    border-bottom: 1px solid var(--gray-150);
+    white-space: nowrap;
+  }
+  .mk-bo__table .num {
+    text-align: right;
+  }
+  .mk-bo__table tr.is-edit td {
+    background: var(--gray-50);
+  }
+  @container (max-width: 560px) {
+    .mk-bo__table th:nth-child(2),
+    .mk-bo__table td:nth-child(2),
+    .mk-bo__table th:nth-child(7),
+    .mk-bo__table td:nth-child(7) {
+      display: none;
+    }
+  }
+</style>

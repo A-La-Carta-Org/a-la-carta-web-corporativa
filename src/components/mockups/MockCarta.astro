@@ -1,0 +1,159 @@
+---
+/** Carta QR en móvil: categorías, platos con alérgenos y pedido desde la mesa. */
+---
+
+<div class="mk mk-carta">
+  <div class="mk-carta__brand">
+    <span class="mk-carta__logo">La Plaza</span>
+    <span class="mk-muted">Mesa 9 · Español ▾</span>
+  </div>
+  <div class="mk-carta__cats">
+    <span class="mk-tab is-on">Para picar</span>
+    <span class="mk-tab">Arroces</span>
+    <span class="mk-tab">Carnes</span>
+    <span class="mk-tab">Postres</span>
+  </div>
+  <div class="mk-carta__list">
+    <div class="mk-carta__item">
+      <div class="grow">
+        <div class="mk-strong">Croquetas de jamón</div>
+        <div class="mk-muted">6 unidades, caseras</div>
+        <div class="mk-carta__al">
+          <span>G</span>
+          <span>L</span>
+          <span>H</span>
+        </div>
+      </div>
+      <div class="mk-carta__side">
+        <span class="num">9,00 €</span>
+        <span class="mk-carta__add">+</span>
+      </div>
+    </div>
+    <div class="mk-carta__item">
+      <div class="grow">
+        <div class="mk-strong">Ensalada de burrata</div>
+        <div class="mk-muted">Tomate, albahaca, pesto</div>
+        <div class="mk-carta__al">
+          <span>L</span>
+          <span>F</span>
+        </div>
+      </div>
+      <div class="mk-carta__side">
+        <span class="num">12,50 €</span>
+        <span class="mk-carta__add is-on num">2</span>
+      </div>
+    </div>
+    <div class="mk-carta__item">
+      <div class="grow">
+        <div class="mk-strong">Pulpo a la brasa</div>
+        <div class="mk-muted">Con parmentier de patata</div>
+        <div class="mk-carta__al">
+          <span>M</span>
+        </div>
+      </div>
+      <div class="mk-carta__side">
+        <span class="num">18,00 €</span>
+        <span class="mk-carta__add">+</span>
+      </div>
+    </div>
+    <div class="mk-carta__item is-off">
+      <div class="grow">
+        <div class="mk-strong">Alcachofas confitadas</div>
+        <div class="mk-muted">Agotado hoy</div>
+      </div>
+      <div class="mk-carta__side">
+        <span class="num">11,00 €</span>
+      </div>
+    </div>
+  </div>
+  <div class="mk-carta__cart">
+    <span class="mk-btn is-dark is-block">
+      Pedir 2 artículos · <b class="num">25,00 €</b>
+    </span>
+  </div>
+</div>
+
+<style>
+  .mk-carta {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding-top: 34px;
+  }
+  .mk-carta__brand {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 4px 14px 10px;
+  }
+  .mk-carta__logo {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -0.03em;
+  }
+  .mk-carta__cats {
+    display: flex;
+    gap: 2px;
+    padding: 0 10px 8px;
+    border-bottom: 1px solid var(--gray-150);
+    overflow: hidden;
+  }
+  .mk-carta__list {
+    flex: 1 1 auto;
+    padding: 0 14px;
+  }
+  .mk-carta__item {
+    display: flex;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--gray-150);
+  }
+  .mk-carta__item.is-off {
+    opacity: 0.5;
+  }
+  .mk-carta__item .grow {
+    flex: 1 1 auto;
+    display: grid;
+    gap: 2px;
+  }
+  .mk-carta__al {
+    display: flex;
+    gap: 3px;
+    margin-top: 2px;
+  }
+  .mk-carta__al span {
+    width: 13px;
+    height: 13px;
+    border-radius: 999px;
+    border: 1px solid var(--gray-300);
+    font-size: 7.5px;
+    display: grid;
+    place-items: center;
+    color: var(--gray-600);
+  }
+  .mk-carta__side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .mk-carta__add {
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    border: 1px solid var(--gray-300);
+    display: grid;
+    place-items: center;
+    color: var(--gray-600);
+  }
+  .mk-carta__add.is-on {
+    background: var(--black);
+    color: var(--white);
+    border-color: var(--black);
+  }
+  .mk-carta__cart {
+    padding: 10px 14px 16px;
+  }
+</style>

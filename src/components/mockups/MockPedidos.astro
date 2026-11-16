@@ -1,0 +1,132 @@
+---
+/** Tienda de pedidos online en móvil: recogida con franja horaria. */
+---
+
+<div class="mk mk-ped">
+  <div class="mk-carta__brand mk-ped__brand">
+    <span class="mk-ped__logo">Trattoria Nico</span>
+    <span class="mk-pill is-ok">
+      <i class="mk-dot"></i> Abierto
+    </span>
+  </div>
+  <div class="mk-ped__mode">
+    <span class="mk-tab is-on">Recoger</span>
+    <span class="mk-tab">A domicilio</span>
+  </div>
+  <div class="mk-ped__slot">
+    <span class="mk-muted">Hora de recogida</span>
+    <div class="mk-ped__times">
+      <span class="num">20:30</span>
+      <span class="num is-on">20:45</span>
+      <span class="num">21:00</span>
+      <span class="num is-off">21:15</span>
+    </div>
+  </div>
+  <div class="mk-ped__list">
+    <div class="mk-row">
+      <span class="grow mk-strong">
+        Margarita<span class="sub">Masa fina · 32 cm</span>
+      </span>
+      <span class="num">10,50 €</span>
+      <span class="mk-ped__qty num">1</span>
+    </div>
+    <div class="mk-row">
+      <span class="grow mk-strong">
+        Diavola<span class="sub">Mitad sin cebolla</span>
+      </span>
+      <span class="num">12,00 €</span>
+      <span class="mk-ped__qty num">1</span>
+    </div>
+    <div class="mk-row">
+      <span class="grow mk-strong">Tiramisú</span>
+      <span class="num">5,50 €</span>
+      <span class="mk-ped__qty num">2</span>
+    </div>
+  </div>
+  <div class="mk-ped__foot">
+    <div class="mk-row">
+      <span class="grow mk-muted">Total · sin comisiones</span>
+      <span class="num mk-strong">33,50 €</span>
+    </div>
+    <span class="mk-btn is-dark is-block">Pagar y recoger a las 20:45</span>
+  </div>
+</div>
+
+<style>
+  .mk-ped {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding-top: 34px;
+  }
+  .mk-ped__brand {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 14px 10px;
+  }
+  .mk-ped__logo {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -0.03em;
+  }
+  .mk-ped__mode {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    margin: 0 14px;
+    padding: 3px;
+    border-radius: 8px;
+    background: var(--gray-100);
+  }
+  .mk-ped__mode .mk-tab {
+    text-align: center;
+  }
+  .mk-ped__mode .mk-tab.is-on {
+    background: var(--white);
+    box-shadow: var(--shadow-sm);
+  }
+  .mk-ped__slot {
+    padding: 12px 14px 6px;
+    display: grid;
+    gap: 6px;
+  }
+  .mk-ped__times {
+    display: flex;
+    gap: 4px;
+  }
+  .mk-ped__times span {
+    flex: 1;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 6px;
+    border: 1px solid var(--gray-200);
+  }
+  .mk-ped__times .is-on {
+    background: var(--black);
+    color: var(--white);
+    border-color: var(--black);
+  }
+  .mk-ped__times .is-off {
+    opacity: 0.4;
+    text-decoration: line-through;
+  }
+  .mk-ped__list {
+    flex: 1 1 auto;
+    padding: 0 14px;
+  }
+  .mk-ped__qty {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    background: var(--gray-100);
+    display: grid;
+    place-items: center;
+  }
+  .mk-ped__foot {
+    padding: 8px 14px 16px;
+    border-top: 1px solid var(--gray-150);
+    background: var(--gray-50);
+  }
+</style>

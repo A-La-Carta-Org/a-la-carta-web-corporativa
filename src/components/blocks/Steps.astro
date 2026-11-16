@@ -1,0 +1,41 @@
+---
+/** Pasos numerados en columnas con filete. */
+interface Props {
+  steps: { title: string; text: string }[];
+}
+const { steps } = Astro.props;
+---
+
+<ol role="list" class="steps">
+  {steps.map((s, i) => (
+    <li class="column">
+      <span class="steps__num num">{String(i + 1).padStart(2, '0')}</span>
+      <h3>{s.title}</h3>
+      <p>{s.text}</p>
+    </li>
+  ))}
+</ol>
+
+<style>
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
+    gap: var(--space-8);
+  }
+  .steps__num {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    letter-spacing: 0.04em;
+  }
+  @media (max-width: 1024px) {
+    .steps {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 640px) {
+    .steps {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

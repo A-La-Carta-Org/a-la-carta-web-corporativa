@@ -1,0 +1,105 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import FaqList from '@/components/blocks/FaqList.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import { faqGroups } from '@/data/faqs';
+import { breadcrumbJsonLd, faqJsonLd } from '@/lib/seo';
+
+const crumbs = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Recursos', path: '/recursos' },
+  { name: 'Preguntas frecuentes', path: '/recursos/preguntas-frecuentes' },
+];
+const all = faqGroups.flatMap((g) => g.items);
+---
+
+<BaseLayout
+  title="Preguntas frecuentes sobre alaCarta"
+  description="Respuestas directas sobre la plataforma alaCarta: hardware, internet, VeriFactu, varios locales, precios sin comisiones, permanencia, prueba, puesta en marcha y soporte."
+  path="/recursos/preguntas-frecuentes"
+  jsonLd={[breadcrumbJsonLd(crumbs), faqJsonLd(all)]}
+>
+  <PageHero
+    variant="compact"
+    breadcrumbs={crumbs}
+    eyebrow="Preguntas frecuentes"
+    title="Lo que suelen preguntarnos"
+    text="Si tu duda no está aquí, escríbenos. Te contestamos en menos de un día laborable."
+  />
+
+  <section class="section is-sm">
+    <div class="container faq-page">
+      <nav class="faq-page__nav" aria-label="Secciones">
+        <ul role="list">
+          {faqGroups.map((g) => (
+            <li>
+              <a href={`#${g.id}`}>{g.title}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <div class="faq-page__groups">
+        {faqGroups.map((g) => (
+          <section id={g.id} class="faq-page__group">
+            <h2>{g.title}</h2>
+            <FaqList items={g.items} />
+          </section>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <CtaBand
+    title="¿Otra pregunta?"
+    text="Cuéntanos tu caso y te respondemos con detalle, sin guion comercial."
+    primary={{ label: 'Escribirnos', href: '/contacto' }}
+    secondary={{ label: 'Solicitar demo', href: '/solicitar-demo' }}
+  />
+</BaseLayout>
+
+<style>
+  .faq-page {
+    display: grid;
+    grid-template-columns: 14rem minmax(0, 1fr);
+    gap: var(--space-16);
+    align-items: start;
+  }
+  .faq-page__nav {
+    position: sticky;
+    top: calc(var(--header-h) + var(--space-6));
+  }
+  .faq-page__nav ul {
+    display: grid;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+  }
+  .faq-page__nav a {
+    color: var(--color-text-muted);
+  }
+  .faq-page__nav a:hover {
+    color: var(--color-text-strong);
+  }
+  .faq-page__groups {
+    display: grid;
+    gap: var(--space-16);
+  }
+  .faq-page__group h2 {
+    font-size: var(--text-2xl);
+    margin-bottom: var(--space-6);
+  }
+  @media (max-width: 1024px) {
+    .faq-page {
+      grid-template-columns: 1fr;
+      gap: var(--space-8);
+    }
+    .faq-page__nav {
+      position: static;
+    }
+    .faq-page__nav ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+  }
+</style>

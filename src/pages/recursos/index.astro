@@ -1,0 +1,151 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { getCollection } from 'astro:content';
+import { breadcrumbJsonLd } from '@/lib/seo';
+
+const crumbs = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Recursos', path: '/recursos' },
+];
+const guias = (await getCollection('guias', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime()
+);
+const blocks = [
+  {
+    href: '/recursos/preguntas-frecuentes',
+    title: 'Preguntas frecuentes',
+    text: 'Lo que suelen preguntarnos sobre la plataforma, los precios y la puesta en marcha.',
+  },
+  {
+    href: '/recursos/guias',
+    title: 'Guías',
+    text: 'Artículos largos y útiles: cómo elegir un TPV, VeriFactu, carta QR bien hecha.',
+  },
+  {
+    href: '/recursos/ayuda',
+    title: 'Centro de ayuda',
+    text: 'Documentación de uso de cada módulo, para clientes. En construcción.',
+  },
+];
+---
+
+<BaseLayout
+  title="Recursos: guías, preguntas frecuentes y ayuda"
+  description="Guías prácticas para hostelería, preguntas frecuentes sobre alaCarta y el centro de ayuda de la plataforma."
+  path="/recursos"
+  jsonLd={breadcrumbJsonLd(crumbs)}
+>
+  <PageHero
+    variant="compact"
+    breadcrumbs={crumbs}
+    eyebrow="Recursos"
+    title="Para decidir con criterio"
+    text="Lo que publicamos aquí está pensado para servir aunque no contrates alaCarta: guías sin relleno, respuestas directas y documentación del producto."
+  />
+
+  <section class="section is-sm">
+    <div class="container">
+      <ul role="list" class="res-grid">
+        {blocks.map((b) => (
+          <li>
+            <a href={b.href} class="card is-link res-card">
+              <h2>{b.title}</h2>
+              <p class="muted">{b.text}</p>
+              <span class="link-arrow">
+                Abrir
+                <Icon name="arrow-right" size={14} />
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section is-soft">
+    <div class="container">
+      <div class="res-head">
+        <h2>Últimas guías</h2>
+        <a href="/recursos/guias" class="link-arrow">
+          Todas <Icon name="arrow-right" size={14} />
+        </a>
+      </div>
+      <ul role="list" class="guide-list">
+        {guias.map((g) => (
+          <li>
+            <a href={`/recursos/guias/${g.id}`} class="guide-row">
+              <span class="guide-row__meta muted">{g.data.readingMinutes} min de lectura</span>
+              <span class="guide-row__title">{g.data.title}</span>
+              <span class="guide-row__desc muted">{g.data.description}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <CtaBand />
+</BaseLayout>
+
+<style>
+  .res-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+  .res-card {
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+    height: 100%;
+  }
+  .res-card h2 {
+    font-size: var(--text-xl);
+  }
+  .res-card p {
+    font-size: var(--text-sm);
+  }
+  .res-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: var(--space-8);
+  }
+  .guide-list {
+    border-top: 1px solid var(--color-border);
+  }
+  .guide-row {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-6) 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .guide-row:hover {
+    text-decoration: none;
+  }
+  .guide-row:hover .guide-row__title {
+    text-decoration: underline;
+  }
+  .guide-row__meta {
+    font-size: var(--text-xs);
+  }
+  .guide-row__title {
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-xl);
+    letter-spacing: var(--tracking-snug);
+    color: var(--color-text-strong);
+  }
+  .guide-row__desc {
+    font-size: var(--text-sm);
+    max-width: 44rem;
+  }
+  @media (max-width: 1024px) {
+    .res-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

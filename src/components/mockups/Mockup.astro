@@ -1,0 +1,52 @@
+---
+/**
+ * Pinta la maqueta de un módulo dentro de su marco. Las de móvil (comandero, carta, pedidos)
+ * van en un teléfono; el resto, en una ventana de navegador.
+ */
+import type { MockupKey } from '@/data/solutions';
+import DeviceFrame from './DeviceFrame.astro';
+import MockTpv from './MockTpv.astro';
+import MockComandero from './MockComandero.astro';
+import MockKds from './MockKds.astro';
+import MockCarta from './MockCarta.astro';
+import MockReservas from './MockReservas.astro';
+import MockPedidos from './MockPedidos.astro';
+import MockBackoffice from './MockBackoffice.astro';
+import MockInformes from './MockInformes.astro';
+import MockClientes from './MockClientes.astro';
+
+interface Props {
+  kind: MockupKey;
+  class?: string;
+  shadow?: boolean;
+}
+const { kind, class: className = '', shadow = true } = Astro.props;
+
+const phones: MockupKey[] = ['comandero', 'carta', 'pedidos'];
+const isPhone = phones.includes(kind);
+const urls: Partial<Record<MockupKey, string>> = {
+  tpv: 'tpv.alacarta.com/sala',
+  kds: 'cocina.alacarta.com/pase',
+  reservas: 'app.alacarta.com/reservas',
+  backoffice: 'app.alacarta.com/carta',
+  informes: 'app.alacarta.com',
+  clientes: 'app.alacarta.com/clientes',
+};
+---
+
+<DeviceFrame
+  kind={isPhone ? 'phone' : 'browser'}
+  url={urls[kind]}
+  class={className}
+  shadow={shadow}
+>
+  {kind === 'tpv' && <MockTpv />}
+  {kind === 'comandero' && <MockComandero />}
+  {kind === 'kds' && <MockKds />}
+  {kind === 'carta' && <MockCarta />}
+  {kind === 'reservas' && <MockReservas />}
+  {kind === 'pedidos' && <MockPedidos />}
+  {kind === 'backoffice' && <MockBackoffice />}
+  {kind === 'informes' && <MockInformes />}
+  {kind === 'clientes' && <MockClientes />}
+</DeviceFrame>

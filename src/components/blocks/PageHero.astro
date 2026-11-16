@@ -1,0 +1,111 @@
+---
+/**
+ * Hero de página. Dos variantes:
+ * - `split`: texto a la izquierda y maqueta (slot) a la derecha. Para producto y sectores.
+ * - `compact`: una columna, antetítulo, H1 y una línea. Para precios, recursos, contacto.
+ */
+import Icon from '@/components/ui/Icon.astro';
+import Breadcrumbs from '@/components/ui/Breadcrumbs.astro';
+
+interface Props {
+  eyebrow?: string;
+  title: string;
+  text?: string;
+  variant?: 'split' | 'compact' | 'center';
+  primary?: { label: string; href: string };
+  secondary?: { label: string; href: string };
+  breadcrumbs?: { name: string; path: string }[];
+  note?: string;
+}
+const {
+  eyebrow,
+  title,
+  text,
+  variant = 'split',
+  primary,
+  secondary,
+  breadcrumbs,
+  note,
+} = Astro.props;
+---
+
+<section class:list={['page-hero', `is-${variant}`]}>
+  <div class="container page-hero__inner">
+    <div class="page-hero__copy">
+      {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
+      {eyebrow && <span class="eyebrow">{eyebrow}</span>}
+      <h1>{title}</h1>
+      {text && <p class="lead">{text}</p>}
+      {(primary || secondary) && (
+        <div class="page-hero__actions">
+          {primary && (
+            <a href={primary.href} class="btn is-primary is-lg">
+              {primary.label}
+              <Icon name="arrow-right" size={16} class="btn-arrow" />
+            </a>
+          )}
+          {secondary && (
+            <a href={secondary.href} class="btn is-secondary is-lg">
+              {secondary.label}
+            </a>
+          )}
+        </div>
+      )}
+      {note && <p class="page-hero__note muted">{note}</p>}
+    </div>
+    {variant === 'split' && (
+      <div class="page-hero__media">
+        <slot />
+      </div>
+    )}
+  </div>
+</section>
+
+<style>
+  .page-hero {
+    padding-block: clamp(2.5rem, 2rem + 3vw, 5rem) clamp(2rem, 1.5rem + 2vw, 4rem);
+  }
+  .page-hero__inner {
+    display: grid;
+    gap: var(--space-12);
+    align-items: center;
+  }
+  .is-split .page-hero__inner {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  }
+  .page-hero__copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    align-items: flex-start;
+  }
+  .is-center .page-hero__copy {
+    align-items: center;
+    text-align: center;
+    margin-inline: auto;
+    max-width: 52rem;
+  }
+  .is-center .lead {
+    margin-inline: auto;
+  }
+  .is-compact .page-hero__copy {
+    max-width: 46rem;
+  }
+  .page-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+  }
+  .page-hero__note {
+    font-size: var(--text-sm);
+  }
+  .page-hero__media {
+    min-width: 0;
+  }
+  @media (max-width: 1024px) {
+    .is-split .page-hero__inner {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

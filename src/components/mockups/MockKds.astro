@@ -1,0 +1,151 @@
+---
+/** Pantalla de cocina: comandas en columnas, tiempos, un retraso marcado. */
+---
+
+<div class="mk mk-kds">
+  <div class="mk-topbar">
+    <span class="mk-logo">
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+    </span>
+    <div class="mk-tabs">
+      <span class="mk-tab is-on">Pase</span>
+      <span class="mk-tab">Calientes</span>
+      <span class="mk-tab">Fríos</span>
+      <span class="mk-tab">Postres</span>
+    </div>
+    <div class="mk-right">
+      <span class="mk-muted">
+        6 comandas · media <b class="num mk-strong">11 min</b>
+      </span>
+    </div>
+  </div>
+  <div class="mk-kds__board">
+    <article class="mk-kds__card is-late">
+      <header>
+        <span class="mk-strong">Mesa 4</span>
+        <span class="num mk-pill is-danger">18:42</span>
+      </header>
+      <div class="mk-row">
+        <span class="mk-check is-on"></span>
+        <span class="grow">2 Croquetas</span>
+      </div>
+      <div class="mk-row">
+        <span class="mk-check is-on"></span>
+        <span class="grow">1 Pulpo brasa</span>
+      </div>
+      <div class="mk-row">
+        <span class="mk-check"></span>
+        <span class="grow">
+          1 Arroz meloso<span class="sub">sin setas</span>
+        </span>
+      </div>
+      <footer>
+        <span class="mk-btn is-dark is-block">Marchar</span>
+      </footer>
+    </article>
+    <article class="mk-kds__card">
+      <header>
+        <span class="mk-strong">Mesa 12</span>
+        <span class="num mk-pill">07:15</span>
+      </header>
+      <div class="mk-row">
+        <span class="mk-check is-on"></span>
+        <span class="grow">
+          2 Burrata<span class="sub">sin cebolla</span>
+        </span>
+      </div>
+      <div class="mk-row">
+        <span class="mk-check"></span>
+        <span class="grow">
+          1 Entrecot<span class="sub">al punto</span>
+        </span>
+      </div>
+      <div class="mk-row">
+        <span class="mk-check"></span>
+        <span class="grow">1 Arroz meloso</span>
+      </div>
+      <footer>
+        <span class="mk-btn is-block">Listo</span>
+      </footer>
+    </article>
+    <article class="mk-kds__card">
+      <header>
+        <span class="mk-strong">Recogida #214</span>
+        <span class="num mk-pill">03:50</span>
+      </header>
+      <div class="mk-row">
+        <span class="mk-check"></span>
+        <span class="grow">1 Pizza margarita</span>
+      </div>
+      <div class="mk-row">
+        <span class="mk-check"></span>
+        <span class="grow">
+          1 Pizza 4 quesos<span class="sub">mitad sin cebolla</span>
+        </span>
+      </div>
+      <footer>
+        <span class="mk-muted">Entrega 21:15</span>
+      </footer>
+    </article>
+    <article class="mk-kds__card is-new">
+      <header>
+        <span class="mk-strong">Mesa 2 · QR</span>
+        <span class="num mk-pill is-ok">00:40</span>
+      </header>
+      <div class="mk-row">
+        <span class="mk-check"></span>
+        <span class="grow">1 Tartar de atún</span>
+      </div>
+      <div class="mk-row">
+        <span class="mk-check"></span>
+        <span class="grow">2 Bravas</span>
+      </div>
+      <footer>
+        <span class="mk-muted">Pedido desde la mesa</span>
+      </footer>
+    </article>
+  </div>
+</div>
+
+<style>
+  .mk-kds__board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 10px;
+    background: var(--gray-50);
+    min-height: 240px;
+  }
+  .mk-kds__card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+  }
+  .mk-kds__card.is-late {
+    border-color: var(--gray-900);
+  }
+  .mk-kds__card header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--gray-150);
+    margin-bottom: 2px;
+  }
+  .mk-kds__card footer {
+    margin-top: auto;
+    padding-top: 8px;
+    font-size: 9.5px;
+  }
+  @container (max-width: 560px) {
+    .mk-kds__board {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

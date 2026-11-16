@@ -1,0 +1,67 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import SectorGrid from '@/components/blocks/SectorGrid.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import FeatureColumns from '@/components/blocks/FeatureColumns.astro';
+import { breadcrumbJsonLd } from '@/lib/seo';
+
+const crumbs = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Sectores', path: '/sectores' },
+];
+---
+
+<BaseLayout
+  title="Software de hostelería por tipo de negocio: restaurantes, bares, cafeterías…"
+  description="alaCarta se configura para restaurantes, bares, cafeterías, pizzerías, hamburgueserías, cervecerías, pubs, take away, delivery y grupos con varios locales. Misma plataforma, distinto flujo."
+  path="/sectores"
+  jsonLd={breadcrumbJsonLd(crumbs)}
+>
+  <PageHero
+    variant="compact"
+    breadcrumbs={crumbs}
+    eyebrow="Sectores"
+    title="Una plataforma para cada tipo de local"
+    text="Un bar de barrio y un grupo con doce restaurantes no trabajan igual, pero necesitan lo mismo: cobrar bien, servir rápido y saber qué pasa. alaCarta es un solo sistema que se configura para cada caso."
+  />
+
+  <section class="section is-sm">
+    <div class="container">
+      <SectorGrid />
+    </div>
+  </section>
+
+  <section class="section is-soft">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Cómo lo hacemos"
+        title="Mismo sistema, distinta configuración"
+        text="Lo que cambia entre sectores no es el programa, son los módulos activos, el flujo de cobro y la forma de la carta."
+      />
+      <FeatureColumns
+        columns={3}
+        items={[
+          {
+            title: 'Módulos a medida',
+            text: 'Un bar arranca con TPV y carta QR; un restaurante añade comandero, cocina y reservas; una pizzería, pedidos online. Nada sobra.',
+          },
+          {
+            title: 'Flujo de cobro',
+            text: 'Modo barra para vender sin abrir mesa, modo sala para gestionar mesas y tiempos, modo mostrador para recogidas.',
+          },
+          {
+            title: 'Carta con su lógica',
+            text: 'Combos y modificadores guiados, pizzas por mitades, grifos por tamaño, recetas con dosis: la carta se modela como se vende.',
+          },
+        ]}
+      />
+    </div>
+  </section>
+
+  <CtaBand
+    title="¿Tu local no está en la lista?"
+    text="Si es hostelería, lo más probable es que encaje. Cuéntanos cómo trabajas y te decimos qué módulos te harían falta."
+  />
+</BaseLayout>

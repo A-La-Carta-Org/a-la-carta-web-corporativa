@@ -1,0 +1,68 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Icon from '@/components/ui/Icon.astro';
+---
+
+<BaseLayout
+  title="Página no encontrada"
+  description="La página que buscas no existe o ha cambiado de dirección."
+  path="/404"
+  noindex
+>
+  <section class="section nf">
+    <div class="container is-narrow nf__inner">
+      <span class="eyebrow">Error 404</span>
+      <h1>Esta página no está en la carta</h1>
+      <p class="lead">
+        Puede que el enlace sea antiguo o que la dirección esté mal escrita. Estas son las salidas
+        más habituales.
+      </p>
+      <ul role="list" class="nf__links">
+        <li>
+          <a href="/" class="link-arrow">
+            Inicio <Icon name="arrow-right" size={14} />
+          </a>
+        </li>
+        <li>
+          <a href="/soluciones" class="link-arrow">
+            Soluciones <Icon name="arrow-right" size={14} />
+          </a>
+        </li>
+        <li>
+          <a href="/sectores" class="link-arrow">
+            Sectores <Icon name="arrow-right" size={14} />
+          </a>
+        </li>
+        <li>
+          <a href="/precios" class="link-arrow">
+            Precios <Icon name="arrow-right" size={14} />
+          </a>
+        </li>
+        <li>
+          <a href="/contacto" class="link-arrow">
+            Contacto <Icon name="arrow-right" size={14} />
+          </a>
+        </li>
+      </ul>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .nf {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+  }
+  .nf__inner {
+    display: grid;
+    gap: var(--space-5);
+    justify-items: start;
+  }
+  .nf__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-6);
+    margin-top: var(--space-4);
+  }
+</style>

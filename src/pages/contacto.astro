@@ -1,0 +1,120 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import LeadForm from '@/components/islands/LeadForm.vue';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import { CONTACT_EMAIL, SUPPORT_EMAIL, REPLY_HOURS } from '@/data/site';
+import { breadcrumbJsonLd } from '@/lib/seo';
+
+const crumbs = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Contacto', path: '/contacto' },
+];
+const contactJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ContactPage',
+  name: 'Contacto alaCarta',
+  url: 'https://alacarta.com/contacto',
+};
+---
+
+<BaseLayout
+  title="Contacto"
+  description={`Escribe a alaCarta: información general, grupos y cadenas, colaboraciones o soporte. Respondemos en menos de ${REPLY_HOURS} horas laborables.`}
+  path="/contacto"
+  jsonLd={[breadcrumbJsonLd(crumbs), contactJsonLd]}
+>
+  <section class="contact">
+    <div class="container contact__inner">
+      <div class="contact__copy">
+        <span class="eyebrow">Contacto</span>
+        <h1>Hablemos</h1>
+        <p class="lead">
+          Para dudas, grupos con varios locales, colaboraciones o cualquier otra cosa. Si lo que
+          quieres es ver la plataforma, pide una <a href="/solicitar-demo">demo</a>.
+        </p>
+        <dl class="contact__channels">
+          <div>
+            <dt>Correo general</dt>
+            <dd>
+              <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+            </dd>
+          </div>
+          <div>
+            <dt>Soporte a clientes</dt>
+            <dd>
+              <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
+            </dd>
+          </div>
+          <div>
+            <dt>Horario de respuesta</dt>
+            <dd>Lunes a viernes, en menos de {REPLY_HOURS} horas laborables.</dd>
+          </div>
+        </dl>
+      </div>
+      <div class="contact__form card">
+        <LeadForm client:load variant="contacto" />
+      </div>
+    </div>
+  </section>
+  <CtaBand
+    title="¿Prefieres verlo?"
+    text="En una videollamada corta te enseñamos la plataforma con un caso parecido al tuyo."
+  />
+</BaseLayout>
+
+<style>
+  .contact {
+    padding-block: clamp(2.5rem, 2rem + 3vw, 5rem) var(--section-y);
+  }
+  .contact__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: var(--space-16);
+    align-items: start;
+  }
+  .contact__copy {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .contact__copy h1 {
+    font-size: var(--text-4xl);
+  }
+  .contact__copy .lead a {
+    text-decoration: underline;
+    color: var(--color-text-strong);
+  }
+  .contact__channels {
+    display: grid;
+    gap: var(--space-4);
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-6);
+  }
+  .contact__channels div {
+    display: grid;
+    gap: 2px;
+  }
+  .contact__channels dt {
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    color: var(--color-text-muted);
+  }
+  .contact__channels dd {
+    font-size: var(--text-base);
+    color: var(--color-text-strong);
+  }
+  .contact__form {
+    padding: var(--space-8);
+  }
+  @media (max-width: 1024px) {
+    .contact__inner {
+      grid-template-columns: 1fr;
+      gap: var(--space-10);
+    }
+  }
+  @media (max-width: 640px) {
+    .contact__form {
+      padding: var(--space-5);
+    }
+  }
+</style>

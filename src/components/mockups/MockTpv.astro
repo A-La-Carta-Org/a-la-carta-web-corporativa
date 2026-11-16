@@ -1,0 +1,194 @@
+---
+/** TPV: ticket de la mesa a la izquierda, carta a la derecha, cobro abajo. */
+---
+
+<div class="mk mk-tpv">
+  <div class="mk-topbar">
+    <span class="mk-logo">
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+    </span>
+    <div class="mk-tabs">
+      <span class="mk-tab is-on">Sala</span>
+      <span class="mk-tab">Barra</span>
+      <span class="mk-tab">
+        Pedidos <b class="mk-pill is-dark num">3</b>
+      </span>
+      <span class="mk-tab">Reservas</span>
+    </div>
+    <div class="mk-right">
+      <span class="mk-pill is-ok">
+        <i class="mk-dot"></i> Conectado
+      </span>
+      <span class="mk-avatar">MR</span>
+    </div>
+  </div>
+  <div class="mk-tpv__body">
+    <aside class="mk-tpv__ticket">
+      <div class="mk-tpv__head">
+        <div>
+          <div class="mk-strong">Mesa 12</div>
+          <div class="mk-muted">4 comensales · 42 min</div>
+        </div>
+        <span class="mk-pill">Abierta</span>
+      </div>
+      <div class="mk-tpv__lines">
+        <div class="mk-row">
+          <span class="num mk-muted">2</span>
+          <span class="grow">
+            Ensalada de burrata<span class="sub">sin cebolla</span>
+          </span>
+          <span class="num">25,00</span>
+        </div>
+        <div class="mk-row">
+          <span class="num mk-muted">1</span>
+          <span class="grow">
+            Entrecot 300 g<span class="sub">al punto · guarnición patata</span>
+          </span>
+          <span class="num">24,50</span>
+        </div>
+        <div class="mk-row">
+          <span class="num mk-muted">1</span>
+          <span class="grow">Arroz meloso de setas</span>
+          <span class="num">16,00</span>
+        </div>
+        <div class="mk-row">
+          <span class="num mk-muted">3</span>
+          <span class="grow">Agua 1 l</span>
+          <span class="num">8,70</span>
+        </div>
+        <div class="mk-row">
+          <span class="num mk-muted">1</span>
+          <span class="grow">Vino tinto crianza</span>
+          <span class="num">19,00</span>
+        </div>
+      </div>
+      <div class="mk-tpv__total">
+        <div class="mk-row">
+          <span class="grow mk-muted">Subtotal</span>
+          <span class="num">93,20</span>
+        </div>
+        <div class="mk-row">
+          <span class="grow mk-muted">IVA incl.</span>
+          <span class="num mk-muted">8,47</span>
+        </div>
+        <div class="mk-tpv__sum">
+          <span>Total</span>
+          <span class="num">93,20 €</span>
+        </div>
+      </div>
+      <div class="mk-tpv__pay">
+        <span class="mk-btn is-soft">Dividir</span>
+        <span class="mk-btn is-soft">Tarjeta</span>
+        <span class="mk-btn is-dark">Cobrar</span>
+      </div>
+    </aside>
+    <section class="mk-tpv__menu">
+      <div class="mk-tpv__cats">
+        <span class="mk-tab is-on">Entrantes</span>
+        <span class="mk-tab">Carnes</span>
+        <span class="mk-tab">Arroces</span>
+        <span class="mk-tab">Postres</span>
+        <span class="mk-tab">Bebidas</span>
+        <span class="mk-tab">Menú del día</span>
+      </div>
+      <div class="mk-grid mk-tpv__tiles">
+        <span class="mk-tile is-sel">
+          Ensalada de burrata <span class="num">12,50</span>
+        </span>
+        <span class="mk-tile">
+          Croquetas de jamón <span class="num">9,00</span>
+        </span>
+        <span class="mk-tile">
+          Pulpo a la brasa <span class="num">18,00</span>
+        </span>
+        <span class="mk-tile">
+          Tartar de atún <span class="num">16,50</span>
+        </span>
+        <span class="mk-tile is-off">
+          Alcachofas confitadas <span class="num">11,00</span>
+        </span>
+        <span class="mk-tile">
+          Bravas de la casa <span class="num">7,50</span>
+        </span>
+        <span class="mk-tile">
+          Jamón ibérico <span class="num">22,00</span>
+        </span>
+        <span class="mk-tile">
+          Tabla de quesos <span class="num">14,00</span>
+        </span>
+        <span class="mk-tile">
+          Pan y alioli <span class="num">2,50</span>
+        </span>
+      </div>
+    </section>
+  </div>
+</div>
+
+<style>
+  .mk-tpv__body {
+    display: grid;
+    grid-template-columns: 38% 1fr;
+    min-height: 300px;
+  }
+  .mk-tpv__ticket {
+    border-right: 1px solid var(--gray-200);
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    gap: 10px;
+  }
+  .mk-tpv__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .mk-tpv__lines {
+    flex: 1 1 auto;
+  }
+  .mk-tpv__total {
+    border-top: 1px dashed var(--gray-300);
+    padding-top: 4px;
+  }
+  .mk-tpv__sum {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+    font-size: 13px;
+    padding-top: 6px;
+  }
+  .mk-tpv__pay {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.4fr;
+    gap: 6px;
+  }
+  .mk-tpv__menu {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--gray-50);
+  }
+  .mk-tpv__cats {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+  }
+  .mk-tpv__tiles {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  @container (max-width: 520px) {
+    .mk-tpv__body {
+      grid-template-columns: 1fr;
+    }
+    .mk-tpv__ticket {
+      border-right: 0;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .mk-tpv__tiles {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

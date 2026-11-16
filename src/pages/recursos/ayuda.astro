@@ -1,0 +1,105 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { solutions } from '@/data/solutions';
+import { SUPPORT_EMAIL } from '@/data/site';
+import { breadcrumbJsonLd } from '@/lib/seo';
+
+const crumbs = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Recursos', path: '/recursos' },
+  { name: 'Centro de ayuda', path: '/recursos/ayuda' },
+];
+---
+
+<BaseLayout
+  title="Centro de ayuda de alaCarta"
+  description="Documentación de uso de la plataforma alaCarta por módulo: TPV, comandero, cocina, carta QR, reservas, pedidos, gestión, informes y clientes."
+  path="/recursos/ayuda"
+  jsonLd={breadcrumbJsonLd(crumbs)}
+>
+  <PageHero
+    variant="compact"
+    breadcrumbs={crumbs}
+    eyebrow="Centro de ayuda"
+    title="Documentación de la plataforma"
+    text="Guías de uso por módulo, para el equipo del local y para el responsable. Se publica junto con la plataforma; mientras tanto, el soporte está disponible por correo."
+  />
+
+  <section class="section is-sm">
+    <div class="container">
+      <div class="notice help-notice">
+        <strong>En construcción.</strong> La documentación se publicará con el acceso a la
+        plataforma. Si ya eres cliente, escribe a{' '}
+        <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>.
+      </div>
+      <ul role="list" class="help-grid">
+        {solutions.map((s) => (
+          <li class="help-item">
+            <h2>{s.name}</h2>
+            <p class="muted">{s.tagline}</p>
+            <ul role="list" class="help-item__topics muted">
+              <li>Primeros pasos</li>
+              <li>Configuración</li>
+              <li>Uso diario</li>
+              <li>Preguntas habituales</li>
+            </ul>
+            <a href={`/soluciones/${s.slug}`} class="link-arrow">
+              Ver el módulo
+              <Icon name="arrow-right" size={14} />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <CtaBand
+    title="¿Aún no eres cliente?"
+    text="Pide una demo y te enseñamos la plataforma con un caso parecido al tuyo."
+  />
+</BaseLayout>
+
+<style>
+  .help-notice {
+    margin-bottom: var(--space-10);
+  }
+  .help-notice a {
+    text-decoration: underline;
+  }
+  .help-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-8) var(--space-8);
+  }
+  .help-item {
+    display: grid;
+    gap: var(--space-3);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-border);
+    align-content: start;
+  }
+  .help-item h2 {
+    font-size: var(--text-lg);
+  }
+  .help-item p {
+    font-size: var(--text-sm);
+  }
+  .help-item__topics {
+    font-size: var(--text-sm);
+    display: grid;
+    gap: var(--space-1);
+  }
+  @media (max-width: 1024px) {
+    .help-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 640px) {
+    .help-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

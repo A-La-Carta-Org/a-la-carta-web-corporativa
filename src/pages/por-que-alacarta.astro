@@ -1,0 +1,272 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import FeatureColumns from '@/components/blocks/FeatureColumns.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import Mockup from '@/components/mockups/Mockup.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { breadcrumbJsonLd } from '@/lib/seo';
+import { TRIAL_DAYS } from '@/data/pricing';
+
+const crumbs = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Por qué alaCarta', path: '/por-que-alacarta' },
+];
+
+const compare = [
+  {
+    topic: 'Proveedores',
+    typical: 'TPV de uno, reservas de otro, QR de un tercero, agregadores aparte.',
+    ours: 'Un proveedor, una cuota, un soporte.',
+  },
+  {
+    topic: 'Carta y precios',
+    typical: 'Se mantienen por duplicado en cada herramienta.',
+    ours: 'Una carta maestra que se publica en todos los canales.',
+  },
+  {
+    topic: 'Comisiones',
+    typical: 'Por reserva, por pedido, por pago con QR.',
+    ours: 'Cuota fija. 0 % de comisión.',
+  },
+  {
+    topic: 'Hardware',
+    typical: 'Terminales propietarios con permanencia.',
+    ours: 'Tablets y equipos estándar. Sin permanencia.',
+  },
+  {
+    topic: 'Datos',
+    typical: 'Exportar de tres sitios y cruzar en una hoja.',
+    ours: 'Un registro. Los informes se hacen solos.',
+  },
+  {
+    topic: 'Varios locales',
+    typical: 'Una cuenta por local, sin vista de grupo.',
+    ours: 'Multiempresa y multilocal desde el primer día.',
+  },
+];
+
+const principles = [
+  {
+    title: 'Claridad antes que cantidad',
+    text: 'Cada pantalla enseña lo necesario para la tarea. Lo demás está a un toque, no encima.',
+  },
+  {
+    title: 'Pensado para muchas horas',
+    text: 'Contraste alto, tipografía legible, botones grandes y pocos colores. Cansa menos a las dos de la mañana.',
+  },
+  {
+    title: 'Lo mismo en cada módulo',
+    text: 'Quien sabe usar el TPV sabe usar el comandero. La lógica, los nombres y los gestos se repiten.',
+  },
+  {
+    title: 'Rápido de aprender',
+    text: 'Un camarero nuevo toma su primera comanda en el primer turno. La carta se parece a la carta.',
+  },
+];
+---
+
+<BaseLayout
+  title="Por qué alaCarta: una plataforma, sin comisiones, con tu hardware"
+  description="Qué hace distinta a alaCarta: un solo proveedor para sala, cocina y gestión, precio fijo sin comisiones, hardware estándar, multilocal desde el inicio y una interfaz hecha para usarse muchas horas."
+  path="/por-que-alacarta"
+  jsonLd={breadcrumbJsonLd(crumbs)}
+>
+  <PageHero
+    variant="compact"
+    breadcrumbs={crumbs}
+    eyebrow="Por qué alaCarta"
+    title="Menos piezas. Menos fricción. Más control."
+    text="La mayoría de locales trabaja con tres o cuatro programas que no se hablan y pagan comisiones por cosas que ya eran suyas. alaCarta nace para resolver eso desde el diseño, no con integraciones."
+  />
+
+  <section class="section is-sm">
+    <div class="container">
+      <SectionHeader eyebrow="Comparado" title="Lo habitual y lo nuestro" />
+      <div class="table-wrap">
+        <table class="cmp">
+          <thead>
+            <tr>
+              <th scope="col"></th>
+              <th scope="col">Lo habitual</th>
+              <th scope="col">Con alaCarta</th>
+            </tr>
+          </thead>
+          <tbody>
+            {compare.map((r) => (
+              <tr>
+                <th scope="row">{r.topic}</th>
+                <td class="muted">{r.typical}</td>
+                <td>
+                  <strong>{r.ours}</strong>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section is-soft">
+    <div class="container why-split">
+      <div>
+        <SectionHeader
+          eyebrow="Diseño del producto"
+          title="Una interfaz que no estorba"
+          text="El TPV, el comandero y el backoffice comparten un mismo lenguaje: fondo blanco, negro para lo importante, gris para lo secundario y color solo para avisar."
+        />
+        <FeatureColumns items={principles} columns={2} />
+      </div>
+      <div class="why-split__media">
+        <Mockup kind="informes" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Compromisos"
+        title="Lo que puedes esperar de nosotros"
+        align="center"
+      />
+      <ul role="list" class="commit-grid">
+        <li>
+          <Icon name="shield" size={22} />
+          <h3>Transparencia en el precio</h3>
+          <p class="muted">
+            Lo que ves en la web es lo que se factura. Sin comisiones escondidas ni módulos
+            sorpresa.
+          </p>
+        </li>
+        <li>
+          <Icon name="lock" size={22} />
+          <h3>Tus datos son tuyos</h3>
+          <p class="muted">
+            Exportación completa en cualquier momento. Alojamiento en la Unión Europea.
+          </p>
+        </li>
+        <li>
+          <Icon name="clock" size={22} />
+          <h3>Respuesta en 24 h laborables</h3>
+          <p class="muted">
+            Por correo y chat en todos los planes. Prioritario en Completo y Grupos.
+          </p>
+        </li>
+        <li>
+          <Icon name="layers" size={22} />
+          <h3>Producto en evolución</h3>
+          <p class="muted">
+            Publicamos las novedades y lo que viene. Lo que aún no existe se dice que no existe.
+          </p>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section is-sm has-rule">
+    <div class="container why-honest">
+      <SectionHeader
+        eyebrow="En qué punto estamos"
+        title="Una plataforma nueva, contada con honestidad"
+      />
+      <div class="prose">
+        <p>
+          alaCarta es una empresa nueva. No tenemos todavía cientos de clientes que enseñar ni
+          premios que colgar, y no vamos a inventarlos. Lo que sí tenemos es un producto diseñado
+          desde cero para que la sala, la cocina y la gestión trabajen sobre los mismos datos, y un
+          modelo de precios que no depende de cobrar por cada reserva o cada pedido.
+        </p>
+        <p>
+          Algunas integraciones, como las plataformas de reparto externas o los programas de
+          contabilidad, están en nuestro plan de producto y así lo decimos en cada página. Si algo
+          que necesitas no está, te lo diremos en la demo antes de que firmes nada.
+        </p>
+        <p>Si quieres probarlo, tienes {TRIAL_DAYS} días con todo activado y sin tarjeta.</p>
+      </div>
+    </div>
+  </section>
+
+  <CtaBand />
+</BaseLayout>
+
+<style>
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+  }
+  .cmp {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+    min-width: 40rem;
+  }
+  .cmp th,
+  .cmp td {
+    padding: var(--space-4) var(--space-5);
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: top;
+  }
+  .cmp thead th {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    background: var(--color-bg-soft);
+  }
+  .cmp tbody th {
+    font-weight: var(--weight-medium);
+    color: var(--color-text-strong);
+    width: 12rem;
+  }
+  .cmp tbody tr:last-child :is(td, th) {
+    border-bottom: 0;
+  }
+  .why-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-16);
+    align-items: center;
+  }
+  .commit-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-8);
+  }
+  .commit-grid li {
+    display: grid;
+    gap: var(--space-3);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-border);
+  }
+  .commit-grid h3 {
+    font-size: var(--text-lg);
+  }
+  .commit-grid p {
+    font-size: var(--text-sm);
+  }
+  .why-honest {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: var(--space-12);
+  }
+  @media (max-width: 1024px) {
+    .why-split,
+    .why-honest {
+      grid-template-columns: 1fr;
+    }
+    .commit-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 640px) {
+    .commit-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

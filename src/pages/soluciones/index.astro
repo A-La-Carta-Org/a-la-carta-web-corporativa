@@ -1,0 +1,122 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import SolutionGrid from '@/components/blocks/SolutionGrid.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import Mockup from '@/components/mockups/Mockup.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { solutions, solutionPath } from '@/data/solutions';
+import { breadcrumbJsonLd } from '@/lib/seo';
+
+const crumbs = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Soluciones', path: '/soluciones' },
+];
+const base = solutions.filter((s) => s.availability === 'base');
+const modules = solutions.filter((s) => s.availability === 'modulo');
+---
+
+<BaseLayout
+  title="Soluciones para hostelería: TPV, comandero, cocina, QR, reservas y gestión"
+  description="Todos los módulos de alaCarta: TPV, comandero, pantalla de cocina, carta QR, reservas, pedidos online, gestión, informes y clientes. Un solo sistema, a la carta."
+  path="/soluciones"
+  jsonLd={breadcrumbJsonLd(crumbs)}
+>
+  <PageHero
+    variant="compact"
+    breadcrumbs={crumbs}
+    eyebrow="Soluciones"
+    title="Nueve módulos. Un sistema."
+    text="Cada módulo resuelve una parte del servicio o de la gestión, y todos trabajan sobre la misma carta, las mismas mesas y los mismos datos. Empieza por lo que necesitas; el resto se activa cuando toque."
+  />
+
+  <section class="section is-sm">
+    <div class="container">
+      <SectionHeader
+        eyebrow="En el plan base"
+        title="Lo que todo local necesita"
+        text="Cobrar, tener la carta al día, gobernar el negocio y ver los números. Está en todos los planes."
+      />
+      <SolutionGrid only={base.map((s) => s.slug)} columns={4} />
+    </div>
+  </section>
+
+  <section class="section is-sm">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Módulos"
+        title="Lo que añade cada tipo de servicio"
+        text="Incluidos en el plan Completo o contratables uno a uno sobre el Esencial."
+      />
+      <SolutionGrid only={modules.map((s) => s.slug)} columns={3} />
+    </div>
+  </section>
+
+  <section class="section has-rule">
+    <div class="container">
+      <SectionHeader eyebrow="Uno a uno" title="Qué hace cada módulo" align="center" />
+      <div class="sol-list">
+        {solutions.map((s, i) => (
+          <article class:list={['sol-item', { 'is-reverse': i % 2 === 1 }]}>
+            <div class="sol-item__copy">
+              <span class="eyebrow">{s.navLabel}</span>
+              <h3>{s.title}</h3>
+              <p class="muted">{s.intro}</p>
+              <a href={solutionPath(s.slug)} class="link-arrow">
+                Ver {s.navLabel}
+                <Icon name="arrow-right" size={14} />
+              </a>
+            </div>
+            <div class="sol-item__media">
+              <Mockup kind={s.mockup} />
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <CtaBand />
+</BaseLayout>
+
+<style>
+  .sol-list {
+    display: grid;
+    gap: var(--space-20);
+  }
+  .sol-item {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: var(--space-12);
+    align-items: center;
+  }
+  .sol-item.is-reverse .sol-item__copy {
+    order: 2;
+  }
+  .sol-item__copy {
+    display: grid;
+    gap: var(--space-4);
+    justify-items: start;
+  }
+  .sol-item__copy h3 {
+    font-size: var(--text-2xl);
+  }
+  .sol-item__media {
+    display: flex;
+    justify-content: center;
+    min-width: 0;
+  }
+  .sol-item__media :global(.device.is-phone) {
+    max-width: 15rem;
+  }
+  @media (max-width: 1024px) {
+    .sol-item {
+      grid-template-columns: 1fr;
+      gap: var(--space-8);
+    }
+    .sol-item.is-reverse .sol-item__copy {
+      order: 0;
+    }
+  }
+</style>

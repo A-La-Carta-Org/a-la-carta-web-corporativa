@@ -1,0 +1,273 @@
+/*
+ * Maquetas del producto. Son HTML y CSS, no imágenes: pesan poco, se leen nítidas en
+ * cualquier pantalla y comparten el lenguaje visual que tendrá el producto real
+ * (fondo blanco, negro como color fuerte, grises para superficies, estados discretos).
+ * Prefijo `mk-`. Todo el texto es decorativo (aria-hidden en el marco).
+ */
+.mk {
+  --mk-fs: 11px;
+  font-family: var(--font-body);
+  font-size: var(--mk-fs);
+  line-height: 1.35;
+  color: var(--gray-900);
+  background: var(--white);
+  user-select: none;
+  container-type: inline-size;
+}
+.mk * {
+  box-sizing: border-box;
+}
+.mk .num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.mk .mk-muted {
+  color: var(--gray-500);
+}
+.mk .mk-strong {
+  font-weight: 600;
+  color: var(--black);
+}
+
+/* Barra superior de la app: navegación horizontal limpia, sin sidebar */
+.mk-topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--white);
+  overflow: hidden;
+  white-space: nowrap;
+}
+.mk-topbar .mk-logo {
+  width: 14px;
+  height: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+}
+.mk-topbar .mk-logo i {
+  display: block;
+  border-radius: 2px;
+  border: 1.2px solid var(--black);
+}
+.mk-topbar .mk-logo i:first-child {
+  background: var(--black);
+}
+.mk-tabs {
+  display: flex;
+  gap: 2px;
+  flex: 0 1 auto;
+  overflow: hidden;
+}
+.mk-tab {
+  padding: 4px 9px;
+  border-radius: 6px;
+  color: var(--gray-500);
+  font-weight: 500;
+}
+.mk-tab.is-on {
+  background: var(--gray-100);
+  color: var(--black);
+}
+.mk-topbar .mk-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mk-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--gray-200);
+  display: grid;
+  place-items: center;
+  font-size: 8px;
+  font-weight: 600;
+}
+
+/* Botones */
+.mk-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 7px;
+  font-weight: 500;
+  border: 1px solid var(--gray-300);
+  background: var(--white);
+  white-space: nowrap;
+}
+.mk-btn.is-dark {
+  background: var(--black);
+  color: var(--white);
+  border-color: var(--black);
+}
+.mk-btn.is-soft {
+  background: var(--gray-100);
+  border-color: transparent;
+}
+.mk-btn.is-block {
+  width: 100%;
+}
+
+/* Chips de estado */
+.mk-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 500;
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+.mk-pill.is-ok {
+  background: var(--color-ok-soft);
+  color: var(--color-ok);
+}
+.mk-pill.is-warn {
+  background: var(--color-warn-soft);
+  color: var(--color-warn);
+}
+.mk-pill.is-danger {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+.mk-pill.is-dark {
+  background: var(--black);
+  color: var(--white);
+}
+.mk-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+/* Filas de lista */
+.mk-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--gray-150);
+}
+.mk-row:last-child {
+  border-bottom: 0;
+}
+.mk-row .grow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.mk-row .sub {
+  display: block;
+  color: var(--gray-500);
+  font-size: 9.5px;
+}
+
+/* Tarjetas / paneles */
+.mk-panel {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+}
+.mk-panel.is-soft {
+  background: var(--gray-50);
+  border-color: transparent;
+}
+
+/* Rejilla de productos del TPV */
+.mk-grid {
+  display: grid;
+  gap: 6px;
+}
+.mk-tile {
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-150);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 46px;
+  font-weight: 500;
+}
+.mk-tile .num {
+  color: var(--gray-500);
+  font-weight: 400;
+}
+.mk-tile.is-sel {
+  background: var(--black);
+  color: var(--white);
+  border-color: var(--black);
+}
+.mk-tile.is-sel .num {
+  color: var(--gray-300);
+}
+.mk-tile.is-off {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+/* Casillas de check */
+.mk-check {
+  width: 13px;
+  height: 13px;
+  border-radius: 4px;
+  border: 1.3px solid var(--gray-300);
+  flex: 0 0 auto;
+  position: relative;
+}
+.mk-check.is-on {
+  background: var(--black);
+  border-color: var(--black);
+}
+.mk-check.is-on::after {
+  content: '';
+  position: absolute;
+  left: 3.5px;
+  top: 1px;
+  width: 3.5px;
+  height: 7px;
+  border: solid var(--white);
+  border-width: 0 1.5px 1.5px 0;
+  rotate: 45deg;
+}
+
+/* Barras (informes) */
+.mk-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 64px;
+}
+.mk-bars i {
+  flex: 1 1 0;
+  background: var(--gray-200);
+  border-radius: 3px 3px 0 0;
+  height: var(--h, 40%);
+}
+.mk-bars i.is-on {
+  background: var(--black);
+}
+
+/* Teclado de cobro */
+.mk-keys {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+.mk-keys span {
+  padding: 7px 0;
+  text-align: center;
+  border-radius: 6px;
+  background: var(--gray-100);
+  font-weight: 500;
+}

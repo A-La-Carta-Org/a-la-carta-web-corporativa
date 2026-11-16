@@ -1,0 +1,154 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import LeadForm from '@/components/islands/LeadForm.vue';
+import Icon from '@/components/ui/Icon.astro';
+import { DEMO_MINUTES, REPLY_HOURS } from '@/data/site';
+import { TRIAL_DAYS } from '@/data/pricing';
+import { breadcrumbJsonLd } from '@/lib/seo';
+
+const crumbs = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Solicitar demo', path: '/solicitar-demo' },
+];
+const steps = [
+  {
+    title: 'Nos cuentas tu local',
+    text: 'Rellenas el formulario: tipo de local, cuántos sois, qué usas ahora.',
+  },
+  {
+    title: 'Fijamos la videollamada',
+    text: `Te escribimos en menos de ${REPLY_HOURS} horas laborables para buscar un hueco.`,
+  },
+  {
+    title: `${DEMO_MINUTES} minutos con tu caso`,
+    text: 'Te enseñamos la plataforma con una carta y un flujo parecidos a los tuyos.',
+  },
+  {
+    title: 'Propuesta por escrito',
+    text: `Módulos, dispositivos y precio cerrado. Y ${TRIAL_DAYS} días de prueba si quieres seguir.`,
+  },
+];
+---
+
+<BaseLayout
+  title="Solicitar una demo de alaCarta"
+  description={`Pide una demo de alaCarta: una videollamada de ${DEMO_MINUTES} minutos con tu caso, propuesta por escrito y ${TRIAL_DAYS} días de prueba sin tarjeta.`}
+  path="/solicitar-demo"
+  jsonLd={breadcrumbJsonLd(crumbs)}
+  headerVariant="minimal"
+>
+  <section class="demo">
+    <div class="container demo__inner">
+      <div class="demo__copy">
+        <span class="eyebrow">Solicitar demo</span>
+        <h1>Vamos a ver tu local</h1>
+        <p class="lead">
+          Una videollamada corta, sin guion comercial: miramos cómo trabajas y te enseñamos cómo
+          quedaría con alaCarta.
+        </p>
+        <ol role="list" class="demo__steps">
+          {steps.map((s, i) => (
+            <li>
+              <span class="demo__num num">{i + 1}</span>
+              <div>
+                <h2>{s.title}</h2>
+                <p class="muted">{s.text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <ul role="list" class="demo__facts muted">
+          <li>
+            <Icon name="check" size={16} /> Sin compromiso
+          </li>
+          <li>
+            <Icon name="check" size={16} /> Sin tarjeta para la prueba
+          </li>
+          <li>
+            <Icon name="check" size={16} /> Sin permanencia
+          </li>
+        </ul>
+      </div>
+      <div class="demo__form card">
+        <LeadForm client:load variant="demo" />
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .demo {
+    padding-block: clamp(2.5rem, 2rem + 3vw, 5rem) var(--section-y);
+  }
+  .demo__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: var(--space-16);
+    align-items: start;
+  }
+  .demo__copy {
+    display: grid;
+    gap: var(--space-6);
+    position: sticky;
+    top: calc(var(--header-h) + var(--space-8));
+  }
+  .demo__copy h1 {
+    font-size: var(--text-4xl);
+  }
+  .demo__steps {
+    display: grid;
+    gap: var(--space-5);
+    margin-top: var(--space-2);
+  }
+  .demo__steps li {
+    display: flex;
+    gap: var(--space-4);
+    align-items: flex-start;
+  }
+  .demo__steps h2 {
+    font-size: var(--text-base);
+    margin-bottom: 2px;
+  }
+  .demo__steps p {
+    font-size: var(--text-sm);
+  }
+  .demo__num {
+    flex: 0 0 auto;
+    width: 1.75rem;
+    height: 1.75rem;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-pill);
+    background: var(--color-bg-muted);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+  }
+  .demo__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-5);
+    font-size: var(--text-sm);
+  }
+  .demo__facts li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .demo__form {
+    padding: var(--space-8);
+  }
+  @media (max-width: 1024px) {
+    .demo__inner {
+      grid-template-columns: 1fr;
+      gap: var(--space-10);
+    }
+    .demo__copy {
+      position: static;
+    }
+  }
+  @media (max-width: 640px) {
+    .demo__form {
+      padding: var(--space-5);
+    }
+  }
+</style>

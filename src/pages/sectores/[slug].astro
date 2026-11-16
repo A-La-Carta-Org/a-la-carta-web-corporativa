@@ -1,0 +1,151 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import FaqSection from '@/components/blocks/FaqSection.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import SolutionGrid from '@/components/blocks/SolutionGrid.astro';
+import SectorGrid from '@/components/blocks/SectorGrid.astro';
+import Mockup from '@/components/mockups/Mockup.astro';
+import { sectors, sectorPath, type Sector } from '@/data/sectors';
+import { getSolution } from '@/data/solutions';
+import { fromLabel } from '@/data/pricing';
+import { breadcrumbJsonLd, faqJsonLd } from '@/lib/seo';
+
+export function getStaticPaths() {
+  return sectors.map((s) => ({ params: { slug: s.slug }, props: { sector: s } }));
+}
+
+interface Props {
+  sector: Sector;
+}
+const { sector: s } = Astro.props;
+const path = sectorPath(s.slug);
+const crumbs = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Sectores', path: '/sectores' },
+  { name: s.name, path },
+];
+const heroMockup = getSolution(s.modules[0]!).mockup;
+const others = sectors
+  .filter((x) => x.slug !== s.slug)
+  .slice(0, 3)
+  .map((x) => x.slug);
+---
+
+<BaseLayout
+  title={s.seoTitle}
+  description={s.description}
+  path={path}
+  jsonLd={[breadcrumbJsonLd(crumbs), faqJsonLd(s.faqs)]}
+>
+  <PageHero
+    breadcrumbs={crumbs}
+    eyebrow={`Software para ${s.name.toLowerCase()}`}
+    title={s.title}
+    text={s.intro}
+    primary={{ label: 'Solicitar demo', href: `/solicitar-demo?sector=${s.slug}` }}
+    secondary={{ label: 'Ver precios', href: '/precios' }}
+    note={`Sin permanencia · ${fromLabel}`}
+  >
+    <div class="sec-hero-media">
+      <Mockup kind={heroMockup} />
+    </div>
+  </PageHero>
+
+  <section class="section has-rule">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Lo que suele fallar"
+        title={`Los problemas de ${s.name.toLowerCase()}, y cómo se resuelven`}
+      />
+      <div class="sec-pairs">
+        {s.pains.map((p, i) => (
+          <div class="sec-pair">
+            <div class="sec-pair__pain">
+              <span class="eyebrow">Problema</span>
+              <h3>{p.title}</h3>
+              <p class="muted">{p.text}</p>
+            </div>
+            <div class="sec-pair__answer">
+              <span class="eyebrow">Con alaCarta</span>
+              <h3>{s.answers[i]!.title}</h3>
+              <p class="muted">{s.answers[i]!.text}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section is-soft">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Módulos recomendados"
+        title={`Lo que suele llevar un ${s.name.toLowerCase().replace(/s$/, '').replace('grupos y cadena', 'grupo')}`}
+        text="Empieza por los primeros y añade el resto cuando el servicio lo pida."
+      />
+      <SolutionGrid only={s.modules} columns={s.modules.length > 4 ? 3 : 4} />
+    </div>
+  </section>
+
+  <FaqSection items={s.faqs} title={`Preguntas de ${s.name.toLowerCase()}`} />
+
+  <section class="section is-sm has-rule">
+    <div class="container">
+      <SectionHeader eyebrow="Otros sectores" title="También configuramos la plataforma para" />
+      <SectorGrid only={others} />
+    </div>
+  </section>
+
+  <CtaBand title={`Vamos a ver tu ${s.slug === 'grupos-y-cadenas' ? 'grupo' : 'local'}`} />
+</BaseLayout>
+
+<style>
+  .sec-hero-media {
+    display: flex;
+    justify-content: center;
+  }
+  .sec-hero-media :global(.device.is-phone) {
+    max-width: 16rem;
+  }
+  .sec-pairs {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .sec-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+  }
+  .sec-pair__pain,
+  .sec-pair__answer {
+    padding: var(--space-8);
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+  }
+  .sec-pair__pain {
+    background: var(--color-bg-soft);
+  }
+  .sec-pair__answer {
+    border-left: 1px solid var(--color-border);
+  }
+  .sec-pair h3 {
+    font-size: var(--text-lg);
+  }
+  .sec-pair p {
+    font-size: var(--text-sm);
+  }
+  @media (max-width: 720px) {
+    .sec-pair {
+      grid-template-columns: 1fr;
+    }
+    .sec-pair__answer {
+      border-left: 0;
+      border-top: 1px solid var(--color-border);
+    }
+  }
+</style>

@@ -1,0 +1,87 @@
+---
+import LegalLayout from '@/layouts/LegalLayout.astro';
+import { CONTACT_EMAIL } from '@/data/site';
+---
+
+<LegalLayout
+  title="Política de privacidad"
+  description="Política de privacidad de alacarta.com: qué datos tratamos, para qué y cómo ejercer tus derechos."
+  path="/legal/privacidad"
+>
+  <h2>1. Responsable del tratamiento</h2>
+  <p>
+    <strong>[Denominación social]</strong>, NIF <strong>[NIF]</strong>, <strong>[Dirección]</strong>
+    . Correo: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+  </p>
+
+  <h2>2. Qué datos tratamos y con qué finalidad</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Origen</th>
+        <th>Datos</th>
+        <th>Finalidad</th>
+        <th>Base jurídica</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Formulario de demo</td>
+        <td>
+          Nombre, correo, teléfono (opcional), nombre y tipo de local, número de locales, módulos de
+          interés, mensaje
+        </td>
+        <td>
+          Atender la solicitud, preparar y realizar la demostración, enviar la propuesta comercial
+        </td>
+        <td>Consentimiento y medidas precontractuales (art. 6.1.a y b RGPD)</td>
+      </tr>
+      <tr>
+        <td>Formulario de contacto</td>
+        <td>Nombre, correo, teléfono (opcional), motivo, mensaje</td>
+        <td>Responder a la consulta</td>
+        <td>Consentimiento (art. 6.1.a RGPD)</td>
+      </tr>
+      <tr>
+        <td>Navegación</td>
+        <td>Datos técnicos de conexión (registros del servidor)</td>
+        <td>Seguridad y funcionamiento del sitio</td>
+        <td>Interés legítimo (art. 6.1.f RGPD)</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>
+    Este sitio no utiliza cookies de seguimiento ni herramientas de analítica de terceros en su
+    configuración por defecto. Si se activa alguna herramienta de analítica, se informará en la{' '}
+    <a href="/legal/cookies">política de cookies</a> y se pedirá consentimiento cuando sea exigible.
+  </p>
+
+  <h2>3. Conservación</h2>
+  <p>
+    Los datos de solicitudes se conservan mientras dure la relación precontractual o comercial y,
+    después, durante los plazos de prescripción legal. Los registros técnicos se conservan el tiempo
+    necesario para la seguridad del servicio.
+  </p>
+
+  <h2>4. Destinatarios</h2>
+  <p>
+    Los datos se alojan en proveedores de infraestructura ubicados en la Unión Europea. Pueden
+    tratarlos, como encargados del tratamiento, los proveedores de correo, alojamiento y gestión de
+    solicitudes que alaCarta contrate, con los que existen los contratos exigidos por el artículo 28
+    del RGPD. No se ceden a terceros salvo obligación legal.
+  </p>
+
+  <h2>5. Derechos</h2>
+  <p>
+    Puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, limitación y
+    portabilidad escribiendo a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. También
+    puedes retirar el consentimiento en cualquier momento y reclamar ante la Agencia Española de
+    Protección de Datos (aepd.es).
+  </p>
+
+  <h2>6. Seguridad</h2>
+  <p>
+    Aplicamos medidas técnicas y organizativas adecuadas para proteger los datos: cifrado en
+    tránsito, control de accesos y copias de seguridad.
+  </p>
+</LegalLayout>

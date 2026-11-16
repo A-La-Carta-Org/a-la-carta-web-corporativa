@@ -1,0 +1,59 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Breadcrumbs from '@/components/ui/Breadcrumbs.astro';
+import { LEGAL_UPDATED } from '@/data/site';
+
+interface Props {
+  title: string;
+  description: string;
+  path: string;
+}
+const { title, description, path } = Astro.props;
+const crumbs = [
+  { name: 'Inicio', path: '/' },
+  { name: title, path },
+];
+const fmt = new Date(LEGAL_UPDATED).toLocaleDateString('es-ES', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+---
+
+<BaseLayout title={title} description={description} path={path} noindex>
+  <article class="legal">
+    <div class="container is-narrow">
+      <Breadcrumbs items={crumbs} />
+      <h1>{title}</h1>
+      <p class="muted legal__date">Última actualización: {fmt}</p>
+      <div class="notice legal__notice">
+        <strong>Borrador.</strong> Este texto es una base de trabajo preparada para la puesta en
+        marcha de alaCarta. Debe completarse con los datos de la sociedad titular y revisarse por un
+        asesor legal antes de publicar la web (ver docs/TODO.md).
+      </div>
+      <div class="prose legal__body">
+        <slot />
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .legal {
+    padding-block: var(--space-12) var(--space-24);
+  }
+  .legal h1 {
+    font-size: var(--text-4xl);
+    margin-top: var(--space-6);
+  }
+  .legal__date {
+    margin-top: var(--space-3);
+    font-size: var(--text-sm);
+  }
+  .legal__notice {
+    margin-block: var(--space-8);
+  }
+  .legal__body {
+    font-size: var(--text-base);
+  }
+</style>

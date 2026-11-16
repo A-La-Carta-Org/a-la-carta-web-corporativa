@@ -1,0 +1,85 @@
+---
+import '@/styles/main.css';
+import SiteHeader from '@/components/layout/SiteHeader.astro';
+import SiteFooter from '@/components/layout/SiteFooter.astro';
+import JsonLd from '@/components/ui/JsonLd.astro';
+import { SITE_NAME, SITE_LOCALE } from '@/data/site';
+import { pageTitle, canonical, defaultImage, organizationJsonLd, websiteJsonLd } from '@/lib/seo';
+import type { SeoProps } from '@/lib/seo';
+
+interface Props extends SeoProps {
+  /** JSON-LD adicional de la página */
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  /** Cabecera transparente sobre fondo blanco (por defecto) o sin cabecera */
+  headerVariant?: 'default' | 'minimal';
+  /** Clase del <main> */
+  mainClass?: string;
+}
+
+const {
+  title,
+  description,
+  path,
+  image = defaultImage,
+  type = 'website',
+  noindex = false,
+  rawTitle = false,
+  jsonLd,
+  headerVariant = 'default',
+  mainClass = '',
+} = Astro.props;
+
+const fullTitle = pageTitle(title, rawTitle);
+const url = canonical(path);
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={noindex ? 'noindex, follow' : 'index, follow'} />
+    <link rel="canonical" href={url} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="application-name" content={SITE_NAME} />
+
+    <meta property="og:type" content={type} />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:locale" content={SITE_LOCALE} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={url} />
+    <meta property="og:image" content={image} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={image} />
+
+    <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+
+    <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
+    {jsonLd && <JsonLd data={jsonLd} />}
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">
+      Saltar al contenido
+    </a>
+    <SiteHeader variant={headerVariant} />
+    <main id="contenido" class={mainClass}>
+      <slot />
+    </main>
+    <SiteFooter />
+  </body>
+</html>

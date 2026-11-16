@@ -1,0 +1,105 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/ui/Breadcrumbs.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import SolutionGrid from '@/components/blocks/SolutionGrid.astro';
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import type { SolutionSlug } from '@/data/solutions';
+import { breadcrumbJsonLd } from '@/lib/seo';
+import { SITE_NAME, SITE_URL, absoluteUrl } from '@/data/site';
+
+export async function getStaticPaths() {
+  const guias = await getCollection('guias', ({ data }) => !data.draft);
+  return guias.map((g) => ({ params: { id: g.id }, props: { entry: g } }));
+}
+
+interface Props {
+  entry: CollectionEntry<'guias'>;
+}
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const path = `/recursos/guias/${entry.id}`;
+const crumbs = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Recursos', path: '/recursos' },
+  { name: 'Guías', path: '/recursos/guias' },
+  { name: entry.data.title, path },
+];
+const fmt = (d: Date) =>
+  d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: entry.data.title,
+  description: entry.data.description,
+  datePublished: entry.data.publishedAt.toISOString(),
+  dateModified: (entry.data.updatedAt ?? entry.data.publishedAt).toISOString(),
+  inLanguage: 'es-ES',
+  mainEntityOfPage: absoluteUrl(path),
+  author: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+  publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+};
+---
+
+<BaseLayout
+  title={entry.data.title}
+  description={entry.data.description}
+  path={path}
+  type="article"
+  jsonLd={[breadcrumbJsonLd(crumbs), articleJsonLd]}
+>
+  <article class="guide-page">
+    <header class="container is-narrow guide-page__head">
+      <Breadcrumbs items={crumbs.slice(0, 3)} />
+      <p class="muted guide-page__meta">
+        <time datetime={entry.data.publishedAt.toISOString()}>{fmt(entry.data.publishedAt)}</time>
+        {entry.data.updatedAt && <> · actualizado el {fmt(entry.data.updatedAt)}</>}·{' '}
+        {entry.data.readingMinutes} min de lectura
+      </p>
+      <h1>{entry.data.title}</h1>
+      <p class="lead">{entry.data.description}</p>
+    </header>
+    <div class="container is-narrow prose guide-page__body">
+      <Content />
+    </div>
+    {entry.data.related.length > 0 && (
+      <aside class="container is-narrow guide-page__related">
+        <h2>Relacionado en alaCarta</h2>
+        <SolutionGrid only={entry.data.related as SolutionSlug[]} columns={3} compact />
+      </aside>
+    )}
+  </article>
+  <CtaBand />
+</BaseLayout>
+
+<style>
+  .guide-page {
+    padding-block: var(--space-12) var(--space-20);
+  }
+  .guide-page__head {
+    display: grid;
+    gap: var(--space-4);
+    margin-bottom: var(--space-12);
+  }
+  .guide-page__head h1 {
+    font-size: var(--text-4xl);
+  }
+  .guide-page__meta {
+    font-size: var(--text-sm);
+  }
+  .guide-page__body {
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+  }
+  .guide-page__related {
+    margin-top: var(--space-16);
+    padding-top: var(--space-10);
+    border-top: 1px solid var(--color-border);
+    display: grid;
+    gap: var(--space-6);
+  }
+  .guide-page__related h2 {
+    font-size: var(--text-xl);
+  }
+</style>
