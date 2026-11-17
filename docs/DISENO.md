@@ -110,8 +110,8 @@ container queries para reorganizarse según el ancho disponible, no el de la ven
 | `.section-header`            | Antetítulo + titular + entradilla                        |
 | `.field`, `.input`, `.select`, `.textarea`, `.notice` | Formularios                     |
 
-Home (`src/components/home`): `HeroStage` (TPV + comandero + comanda impresa animada),
-`SolutionBento` (núcleo grande con maqueta, resto compacto). `SectionHeader` admite el título en
+Home (`src/components/home`): `HeroStage` (TPV + comandero + comanda impresa animada). El
+ecosistema por familias de la home sustituye al antiguo bento de 9 módulos. `SectionHeader` admite el título en
 el slot `title` para poder usar `<em>`. Utilidad `.reveal` para aparición al hacer scroll.
 
 **Estilos entre componentes:** un `<style>` con ámbito no alcanza el HTML que pinta un componente
@@ -144,14 +144,10 @@ marco y tamaño**, para que la web no cambie de aspecto.
 
 ## 6. Accesibilidad
 
-<<<<<<< HEAD
 - Contraste mínimo AA en todo el texto: gris 500 sobre blanco 5,5:1, sobre `--gray-50` 5,2:1 y sobre
   `--gray-100` 4,9:1; aviso sobre su fondo suave 4,7:1. `--gray-400` (2,5:1) solo para iconos,
   flechas y separadores decorativos, nunca para texto (ajustado en la QA del 17-11-2026).
-=======
-- Contraste mínimo AA en todo el texto (gris 500 sobre blanco: 4,7:1; sobre gris 50 no llega,
-  por eso `.is-soft` usa gris 600). Acento sobre blanco 4,8:1; sobre negro, `--accent-on-dark`.
->>>>>>> exp/identidad-home
+  Acento sobre blanco 4,8:1; sobre negro, `--accent-on-dark` (7:1).
 - Foco visible de 2 px en negro con separación de 3 px.
 - Menús operables con teclado (botón con `aria-expanded`, cierre con Escape), acordeones nativos
   (`<details>`), formularios con etiquetas, errores asociados y `aria-invalid`.

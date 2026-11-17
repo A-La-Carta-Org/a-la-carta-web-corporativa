@@ -1,6 +1,8 @@
 # 14 · Identidad visual: acento, serif, movimiento y motivos propios
 
-**Estado:** aprobado por Jordi el 16-11-2026 · aplicado en la home · pendiente en el resto ·
+**Estado:** aprobado por Jordi el 16-11-2026 · fusionado con el ecosistema el 17-11-2026
+(tokens, serif, `.reveal`, `HeroStage`, confianza bajo el hero, banda oscura con halo y modo
+noche en la home nueva) · pendiente su aplicación fina en el resto de vistas (§4) ·
 **Prioridad:** transversal (se aplica en cada paso del loop, no es un paso aparte)
 
 Se probó en la home un rediseño visual y Jordi lo aprobó. La base (tokens, Manrope, Inter,
@@ -108,6 +110,7 @@ cuadrados se rellenan según módulos), prueba social real.
 - [x] Tokens de acento y serif, utilidad `.reveal`, `SectionHeader` con slot de título.
 - [x] Home con hero animado, confianza arriba, bento, banda oscura con modo noche.
 - [x] Flechas de sectores y soluciones, ancho del móvil del hero, contraste en `.is-soft`.
-- [ ] Icono de menú y X a la vez en la cabecera móvil (ver §3).
-- [ ] Sistema aplicado en 03-13 según §4.
+- [x] Icono de menú y X a la vez en la cabecera móvil (ver §3): resuelto en la cabecera nueva.
+- [ ] Sistema aplicado en 03-13 según §4 (hecho en la home y en piezas globales; el bento de 9
+      módulos se sustituyó por el ecosistema por familias; falta el resto de vistas).
 - [ ] `docs/DISENO.md` al día al terminar el loop.
