@@ -78,7 +78,7 @@ const forMoments = moments.filter(
 );
 const guides = await getCollection(
   'guias',
-  ({ data }) => !data.draft && data.related.includes(s.slug)
+  ({ data }) => !data.draft && (data.related ?? []).includes(s.slug)
 );
 const hasForWho = Boolean(s.forWho?.length) || forSectors.length > 0;
 const hasReading = forMoments.length > 0 || guides.length > 0;

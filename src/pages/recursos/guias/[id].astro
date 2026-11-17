@@ -36,7 +36,8 @@ const { publishedAt, updatedAt, reviewedAt, cta } = entry.data;
 const modified = [publishedAt, updatedAt, reviewedAt]
   .filter((d): d is Date => Boolean(d))
   .reduce((a, b) => (b.getTime() > a.getTime() ? b : a));
-const relatedMoments = moments.filter((m) => entry.data.moments.includes(m.slug));
+const relatedSlugs = (entry.data.related ?? []) as EcosystemSlug[];
+const relatedMoments = moments.filter((m) => (entry.data.moments ?? []).includes(m.slug));
 /* Valida en build: un slug mal escrito en el frontmatter rompe la compilación */
 const modulo = cta?.modulo ? getItem(cta.modulo as EcosystemSlug).slug : undefined;
 const origen = `guia-${entry.id}-cierre`;
@@ -108,10 +109,10 @@ const articleJsonLd = {
         ))}
       </aside>
     )}
-    {entry.data.related.length > 0 && (
+    {relatedSlugs.length > 0 && (
       <aside class="container is-narrow guide-page__related">
         <h2>Relacionado en alaCarta</h2>
-        <SolutionGrid only={entry.data.related as EcosystemSlug[]} columns={3} compact />
+        <SolutionGrid only={relatedSlugs} columns={3} compact />
       </aside>
     )}
   </article>

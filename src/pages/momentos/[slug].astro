@@ -68,7 +68,7 @@ const channelItems = m.channels?.items.map((c) => ({ ...c, item: getItem(c.piece
 /* Guías que se declaran de este momento (frontmatter `moments`) */
 const guides = await getCollection(
   'guias',
-  ({ data }) => !data.draft && data.moments.includes(m.slug)
+  ({ data }) => !data.draft && (data.moments ?? []).includes(m.slug)
 );
 ---
 
