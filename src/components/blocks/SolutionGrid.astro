@@ -98,15 +98,15 @@ const solutionIcons: Record<SolutionSlug, IconName> = {
     color: var(--color-text-muted);
     line-height: var(--leading-normal);
   }
-  .solution-card__arrow {
+  .solution-card :global(.solution-card__arrow) {
     color: var(--color-text-subtle);
     margin-top: 0.6rem;
     transition: translate var(--dur-fast) var(--ease);
   }
-  .is-compact .solution-card__arrow {
+  .is-compact :global(.solution-card__arrow) {
     margin-top: 0;
   }
-  .solution-card:hover .solution-card__arrow {
+  .solution-card:hover :global(.solution-card__arrow) {
     translate: 3px 0;
     color: var(--color-text-strong);
   }

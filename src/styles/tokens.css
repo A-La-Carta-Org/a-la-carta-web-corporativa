@@ -2,9 +2,11 @@
  * Tokens de diseño de alaCarta. Todo valor de color, espacio, radio, sombra o tiempo
  * sale de aquí. Ver docs/DISENO.md para el porqué de cada decisión.
  *
- * La identidad es monocroma: blanco, negro y una escala de grises neutros muy ligeramente
- * cálidos. Los únicos colores aparecen como estados pequeños dentro de las maquetas del
- * producto (correcto / aviso / error) y nunca como relleno de secciones.
+ * La base es monocroma: blanco, negro y una escala de grises neutros muy ligeramente
+ * cálidos. Encima hay un único acento cálido («pimentón») que se usa con cuentagotas: puntos
+ * de antetítulo, detalles activos, la impresión de comandas. Nunca como relleno de secciones
+ * ni en botones principales (esos siguen en negro). Los estados (correcto / aviso / error)
+ * viven dentro de las maquetas del producto.
  */
 :root {
   /* ── Escala neutra ─────────────────────────────────────────────── */
@@ -44,6 +46,13 @@
   --color-ink: var(--black);
   --color-ink-hover: var(--gray-800);
 
+  /* Acento de marca: pimentón. 4,8:1 sobre blanco (vale para texto); sobre negro se usa
+     la variante clara (7:1). Tono más anaranjado que --color-danger para no confundirse. */
+  --accent: #c8471a;
+  --accent-hover: #a93a13;
+  --accent-soft: #fbece4;
+  --accent-on-dark: #f2794d;
+
   /* Estados: solo dentro del producto (maquetas) y en formularios */
   --color-ok: #1f7a4d;
   --color-ok-soft: #e6f3ec;
@@ -57,6 +66,8 @@
   /* ── Tipografía ────────────────────────────────────────────────── */
   --font-display: 'Manrope', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Serif en cursiva solo para palabras de acento dentro de titulares, nunca para párrafos */
+  --font-accent: 'Instrument Serif', Georgia, 'Times New Roman', serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
 
   --text-xs: 0.75rem; /* 12 */

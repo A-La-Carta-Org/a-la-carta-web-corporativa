@@ -4,6 +4,9 @@ import { TRIAL_DAYS, fromLabel } from './pricing';
 export const hero = {
   eyebrow: 'Plataforma integral para hostelería',
   title: 'Sala, cocina, pedidos y gestión. Un solo sistema.',
+  /** El titular partido: la segunda parte va en serif cursiva y color de acento */
+  titleLead: 'Sala, cocina, pedidos y gestión.',
+  titleAccent: 'Un solo sistema.',
   text: 'alaCarta reúne el TPV, el comandero, la pantalla de cocina, la carta QR, las reservas, los pedidos online y los informes en una plataforma que se adapta a tu tipo de local.',
   primary: { label: 'Solicitar demo', href: '/solicitar-demo' },
   secondary: { label: 'Ver precios', href: '/precios' },

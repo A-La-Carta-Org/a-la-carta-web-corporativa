@@ -1,7 +1,11 @@
 ---
+/**
+ * Cabecera de sección. El título va en `title` o, si lleva una palabra de acento
+ * (`<em>`), en el slot `title`.
+ */
 interface Props {
   eyebrow?: string;
-  title: string;
+  title?: string;
   text?: string;
   align?: 'left' | 'center';
   as?: 'h1' | 'h2' | 'h3';
@@ -12,7 +16,13 @@ const { eyebrow, title, text, align = 'left', as: Tag = 'h2', class: className =
 
 <div class:list={['section-header', className, { 'is-center': align === 'center' }]}>
   {eyebrow && <span class="eyebrow">{eyebrow}</span>}
-  <Tag>{title}</Tag>
+  {Astro.slots.has('title') ? (
+    <Tag>
+      <slot name="title" />
+    </Tag>
+  ) : (
+    <Tag>{title}</Tag>
+  )}
   {text && <p>{text}</p>}
   <slot />
 </div>

@@ -31,6 +31,7 @@ const list = only ? only.map((s) => sectors.find((x) => x.slug === s)!).filter(B
   .sector-link {
     position: relative;
     display: grid;
+    align-content: start;
     gap: var(--space-1);
     padding: var(--space-5) var(--space-8) var(--space-5) 0;
     border-top: 1px solid var(--color-border);
@@ -50,14 +51,14 @@ const list = only ? only.map((s) => sectors.find((x) => x.slug === s)!).filter(B
     font-size: var(--text-sm);
     color: var(--color-text-muted);
   }
-  .sector-link__arrow {
+  .sector-link :global(.sector-link__arrow) {
     position: absolute;
     right: 0;
     top: var(--space-6);
     color: var(--color-text-subtle);
     transition: translate var(--dur-fast) var(--ease);
   }
-  .sector-link:hover .sector-link__arrow {
+  .sector-link:hover :global(.sector-link__arrow) {
     translate: 3px 0;
     color: var(--color-text-strong);
   }

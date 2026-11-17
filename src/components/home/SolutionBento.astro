@@ -1,0 +1,199 @@
+---
+/**
+ * Los módulos en rejilla «bento»: el núcleo del servicio (TPV, comandero y cocina) en grande
+ * y con su maqueta; el resto, compacto. La jerarquía cuenta qué es lo esencial y qué se añade.
+ */
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/Icon.astro';
+import Mockup from '@/components/mockups/Mockup.astro';
+import { solutions, solutionPath, type SolutionSlug } from '@/data/solutions';
+
+const icons: Record<SolutionSlug, IconName> = {
+  tpv: 'tpv',
+  comandero: 'phone',
+  cocina: 'kitchen',
+  'carta-qr': 'qr',
+  reservas: 'calendar',
+  pedidos: 'bag',
+  gestion: 'settings',
+  informes: 'chart',
+  clientes: 'users',
+};
+const featured: SolutionSlug[] = ['tpv', 'comandero', 'cocina'];
+const ordered = [
+  ...featured.map((slug) => solutions.find((s) => s.slug === slug)!),
+  ...solutions.filter((s) => !featured.includes(s.slug)),
+];
+---
+
+<ul role="list" class="bento">
+  {ordered.map((s) => {
+    const isFeatured = featured.includes(s.slug);
+    return (
+      <li class:list={['bento__item', 'reveal', { [`is-${s.slug}`]: isFeatured }]}>
+        <a href={solutionPath(s.slug)} class:list={['bento-card', { 'is-featured': isFeatured }]}>
+          <span class="bento-card__top">
+            <span class="bento-card__icon">
+              <Icon name={icons[s.slug]} size={20} />
+            </span>
+            <span class="bento-card__arrow">
+              <Icon name="arrow-right" size={16} />
+            </span>
+          </span>
+          <span class="bento-card__name">{s.navLabel}</span>
+          <span class="bento-card__text">{s.tagline}</span>
+          {isFeatured && (
+            <span class="bento-card__visual">
+              <Mockup kind={s.mockup} shadow={false} />
+            </span>
+          )}
+        </a>
+      </li>
+    );
+  })}
+</ul>
+
+<style>
+  .bento {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+      'tpv tpv cmd'
+      'kds kds cmd';
+    gap: var(--space-3);
+  }
+  .bento__item.is-tpv {
+    grid-area: tpv;
+  }
+  .bento__item.is-comandero {
+    grid-area: cmd;
+  }
+  .bento__item.is-cocina {
+    grid-area: kds;
+  }
+
+  .bento-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    height: 100%;
+    padding: var(--space-5);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    background: var(--white);
+    overflow: hidden;
+    transition:
+      border-color var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease);
+  }
+  .bento-card:hover {
+    text-decoration: none;
+    border-color: var(--color-ink);
+  }
+  .bento-card.is-featured {
+    padding: var(--space-6) var(--space-6) 0;
+  }
+  .bento-card__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-1);
+  }
+  .bento-card__icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-muted);
+    color: var(--color-text-strong);
+    transition:
+      background-color var(--dur) var(--ease),
+      color var(--dur) var(--ease);
+  }
+  .bento-card:hover .bento-card__icon {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .bento-card__arrow {
+    color: var(--color-text-subtle);
+    transition:
+      translate var(--dur-fast) var(--ease),
+      color var(--dur-fast) var(--ease);
+  }
+  .bento-card:hover .bento-card__arrow {
+    translate: 3px 0;
+    color: var(--accent);
+  }
+  .bento-card__name {
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-lg);
+    letter-spacing: var(--tracking-snug);
+    color: var(--color-text-strong);
+  }
+  .is-featured .bento-card__name {
+    font-size: var(--text-xl);
+  }
+  .bento-card__text {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    line-height: var(--leading-normal);
+    max-width: 30rem;
+  }
+
+  /* La maqueta asoma por abajo y por la derecha, cortada en degradado */
+  .bento-card__visual {
+    display: block;
+    margin-top: auto;
+    padding-top: var(--space-6);
+    margin-right: calc(var(--space-6) * -1 - 2rem);
+    height: 14rem;
+    box-sizing: content-box;
+    overflow: hidden;
+    mask-image: linear-gradient(to bottom, #000 55%, transparent);
+    transition: translate var(--dur-slow) var(--ease);
+  }
+  .bento-card:hover .bento-card__visual {
+    translate: 0 -6px;
+  }
+  .is-comandero .bento-card__visual {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 22rem;
+    margin-right: 0;
+    display: flex;
+    justify-content: center;
+  }
+  .is-comandero .bento-card__visual :global(.device) {
+    flex: 0 0 auto;
+    max-width: 15rem;
+  }
+
+  @media (max-width: 1024px) {
+    .bento {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-areas:
+        'tpv tpv'
+        'kds kds'
+        'cmd cmd';
+    }
+    .is-comandero .bento-card__visual {
+      min-height: 0;
+      height: 18rem;
+    }
+  }
+  @media (max-width: 640px) {
+    .bento {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'tpv'
+        'kds'
+        'cmd';
+    }
+    .bento-card__visual {
+      height: 12rem;
+    }
+  }
+</style>
