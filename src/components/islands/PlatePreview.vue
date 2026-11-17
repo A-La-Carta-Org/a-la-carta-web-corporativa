@@ -70,29 +70,35 @@ const href = computed(() =>
         <div class="pp__face">
           <p class="pp__brand">{{ brandLabel }}</p>
           <div class="pp__qr"><slot /></div>
-          <p class="pp__hint">
-            {{ plate.nfc ? 'Escanea o acerca el móvil' : 'Escanea para ver la carta y pedir' }}
-          </p>
+          <Transition name="pp-in">
+            <p :key="String(plate.nfc)" class="pp__hint">
+              {{ plate.nfc ? 'Escanea o acerca el móvil' : 'Escanea para ver la carta y pedir' }}
+            </p>
+          </Transition>
           <p class="pp__table">{{ tableLabel }}</p>
-          <span v-if="plate.nfc" class="pp__nfc" aria-hidden="true">
-            <svg
-              viewBox="0 0 24 24"
-              width="16"
-              height="16"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.75"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M6 8.32a7.43 7.43 0 0 1 0 7.36" />
-              <path d="M9.46 6.21a11.76 11.76 0 0 1 0 11.58" />
-              <path d="M12.91 4.1a15.91 15.91 0 0 1 .01 15.8" />
-              <path d="M16.37 2a20.16 20.16 0 0 1 0 20" />
-            </svg>
-          </span>
+          <Transition name="t-pop">
+            <span v-if="plate.nfc" class="pp__nfc" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M6 8.32a7.43 7.43 0 0 1 0 7.36" />
+                <path d="M9.46 6.21a11.76 11.76 0 0 1 0 11.58" />
+                <path d="M12.91 4.1a15.91 15.91 0 0 1 .01 15.8" />
+                <path d="M16.37 2a20.16 20.16 0 0 1 0 20" />
+              </svg>
+            </span>
+          </Transition>
         </div>
-        <div v-if="plate.format !== 'adhesiva'" class="pp__base" aria-hidden="true"></div>
+        <Transition name="pp-base">
+          <div v-if="plate.format !== 'adhesiva'" class="pp__base" aria-hidden="true"></div>
+        </Transition>
       </figure>
       <p class="pp__caption">
         <span class="pp__desk">El QR funciona: escanéalo y abre la carta de ejemplo.</span>
@@ -218,8 +224,9 @@ const href = computed(() =>
   border-radius: var(--radius-lg) var(--radius-lg) var(--radius-sm) var(--radius-sm);
   box-shadow: var(--shadow-device);
   transition:
-    background var(--dur) var(--ease),
-    color var(--dur) var(--ease),
+    background-color var(--dur-slow) var(--ease),
+    color var(--dur-slow) var(--ease),
+    box-shadow var(--dur-slow) var(--ease),
     border-radius var(--dur) var(--ease);
 }
 .pp__brand {
@@ -237,9 +244,12 @@ const href = computed(() =>
   background: var(--white);
   border-radius: var(--radius-md);
   line-height: 0;
+  /* Solo el marco cambia: el QR no se escala ni se difumina, siempre nítido */
+  transition: box-shadow var(--dur-slow) var(--ease);
 }
 .pp__hint {
   font-size: var(--text-xs);
+  transition: color var(--dur-slow) var(--ease);
 }
 .pp__table {
   font-family: var(--font-display);
@@ -260,7 +270,9 @@ const href = computed(() =>
   background: var(--gray-800);
   transition:
     height var(--dur) var(--ease),
-    width var(--dur) var(--ease);
+    width var(--dur) var(--ease),
+    border-radius var(--dur) var(--ease),
+    background-color var(--dur-slow) var(--ease);
 }
 
 /* Acabados */
@@ -361,7 +373,9 @@ const href = computed(() =>
   font-weight: var(--weight-medium);
   color: var(--color-text-strong);
   cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease);
+  transition:
+    border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
 }
 .pp__opt.is-stacked {
   align-items: flex-start;
@@ -462,5 +476,31 @@ const href = computed(() =>
   .pp__seg {
     grid-template-columns: 1fr;
   }
+}
+
+/* ── Movimiento ── */
+/* La peana aparece o se retira (formato adhesiva) creciendo desde la placa */
+.pp-base-enter-active,
+.pp-base-leave-active {
+  transition:
+    height var(--dur) var(--ease),
+    width var(--dur) var(--ease),
+    opacity var(--dur) var(--ease);
+}
+/* Especificidad suficiente para ganar a la peana de terraza (.is-terraza .pp__base) */
+.pp__plate .pp__base.pp-base-enter-from,
+.pp__plate .pp__base.pp-base-leave-to {
+  height: 0;
+  opacity: 0;
+}
+/* Texto de la placa que cambia (con o sin NFC): el nuevo entra con fundido, sin solaparse */
+.pp-in-enter-active {
+  transition: opacity var(--dur) var(--ease);
+}
+.pp-in-enter-from {
+  opacity: 0;
+}
+.pp-in-leave-active {
+  display: none;
 }
 </style>

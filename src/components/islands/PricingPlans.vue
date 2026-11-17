@@ -4,6 +4,7 @@
  * En móvil van en carrusel horizontal, con el recomendado (Completo) primero.
  */
 import { ref, computed } from 'vue';
+import { useTweened } from '@/lib/tween';
 import {
   plans,
   billingOptions,
@@ -25,6 +26,18 @@ const cards = computed(() =>
     return { ...p, monthlyNow: monthly, yearly };
   })
 );
+
+/* Movimiento: el precio de cada plan corre hasta la cifra nueva al cambiar mensual/anual */
+const tweened = Object.fromEntries(
+  plans.map((p) => [p.id, useTweened(() => planMonthly(p, billing.value) ?? 0)])
+);
+/** Mientras corre, se redondea como la cifra final (sin decimales si es entera, si no a céntimos) */
+const shownPrice = (id: string, target: number) => {
+  const n = tweened[id]?.value ?? target;
+  return fmtPrice(Number.isInteger(target) ? Math.round(n) : Math.round(n * 100) / 100);
+};
+/** La línea de debajo del precio se sustituye sin hueco: la vieja sale al momento, la nueva funde */
+const swapLeave = (_el: Element, done: () => void) => done();
 </script>
 
 <template>
@@ -57,19 +70,21 @@ const cards = computed(() =>
 
         <div class="plan__price">
           <template v-if="p.monthlyNow !== null">
-            <span class="plan__amount">{{ fmtPrice(p.monthlyNow) }}</span>
+            <span class="plan__amount">{{ shownPrice(p.id, p.monthlyNow) }}</span>
             <span class="plan__unit"
               >/mes por local <small>{{ VAT_NOTE }}</small></span
             >
-            <span v-if="billing === 'anual' && p.yearly" class="plan__yearly">
-              {{ fmtPrice(p.yearly) }} al año, en un pago
-            </span>
-            <span v-else-if="p.id === 'total'" class="plan__yearly">
-              Por separado saldría a {{ fmtPrice(totalAsSeparate) }}/mes
-            </span>
-            <span v-else class="plan__yearly"
-              >Sin permanencia · {{ TRIAL_DAYS }} días de prueba</span
-            >
+            <Transition name="t-fade" @leave="swapLeave">
+              <span v-if="billing === 'anual' && p.yearly" key="anual" class="plan__yearly">
+                {{ fmtPrice(p.yearly) }} al año, en un pago
+              </span>
+              <span v-else-if="p.id === 'total'" key="total" class="plan__yearly">
+                Por separado saldría a {{ fmtPrice(totalAsSeparate) }}/mes
+              </span>
+              <span v-else key="mensual" class="plan__yearly"
+                >Sin permanencia · {{ TRIAL_DAYS }} días de prueba</span
+              >
+            </Transition>
           </template>
           <template v-else>
             <span class="plan__amount is-text">A medida</span>
@@ -114,8 +129,9 @@ const cards = computed(() =>
   font-weight: var(--weight-medium);
   color: var(--color-text-muted);
   transition:
-    background-color var(--dur-fast) var(--ease),
-    color var(--dur-fast) var(--ease);
+    background-color var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
 }
 .pricing__opt.is-on {
   background: var(--white);

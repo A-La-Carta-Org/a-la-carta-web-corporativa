@@ -38,6 +38,7 @@ import {
 } from '@/data/demo';
 import { ctaHref } from '@/lib/cta';
 import { markDemoDone } from '@/lib/attribution';
+import { useTweened } from '@/lib/tween';
 
 const props = withDefaults(defineProps<{ origen?: string; readUrl?: boolean }>(), {
   origen: 'demo-simulador',
@@ -194,6 +195,37 @@ const top3 = computed(() =>
     .map(([id, n]) => ({ name: dishById(id)?.short ?? id, n }))
 );
 const ctaDemo = computed(() => ctaHref({ to: 'demo', origen: props.origen }));
+
+/* ── Movimiento (solo presentación: no toca el flujo) ── */
+// Cifras que cambian con suavidad; se muestran redondeadas a céntimos o unidades
+const draftShown = useTweened(draftTotal);
+const partShown = useTweened(() => parts.value[pay.paid] ?? 0);
+const salesShown = useTweened(() => sales.total);
+const ticketsShown = useTweened(() => sales.tickets);
+const avgShown = useTweened(avg);
+// Sentido del cambio de pestaña (en estrecho): la pantalla nueva entra desde ese lado
+const stepDir = ref(16);
+watch(tab, (to, from) => {
+  const i = (s: Screen) => screens.findIndex((x) => x.id === s);
+  stepDir.value = i(to) >= i(from) ? 16 : -16;
+});
+/**
+ * Al salir de una lista animada, el elemento se queda fijo donde estaba (absoluto) mientras se
+ * desvanece, para que los demás se recoloquen con suavidad en vez de saltar al final.
+ */
+function pinLeave(el: Element) {
+  const e = el as HTMLElement;
+  const { offsetTop, offsetLeft, offsetWidth, offsetHeight } = e;
+  Object.assign(e.style, {
+    position: 'absolute',
+    top: `${offsetTop}px`,
+    left: `${offsetLeft}px`,
+    width: `${offsetWidth}px`,
+    height: `${offsetHeight}px`,
+    margin: '0',
+    boxSizing: 'border-box',
+  });
+}
 
 /* ── Avisos ── */
 function say(msg: string) {
@@ -422,7 +454,11 @@ const panelAttrs = (s: Screen) =>
 </script>
 
 <template>
-  <div class="sim" :class="{ 'is-ready': ready, 'is-narrow': narrow && ready }">
+  <div
+    class="sim"
+    :class="{ 'is-ready': ready, 'is-narrow': narrow && ready }"
+    :style="{ '--step-dir': `${stepDir}px` }"
+  >
     <!-- Guía de pasos -->
     <div class="sim__guide">
       <ol class="sim__steps" role="list">
@@ -481,7 +517,9 @@ const panelAttrs = (s: Screen) =>
         @keydown="onTabKey($event, i)"
       >
         {{ s.label }}
-        <span v-if="fresh[s.id]" class="sim__dot"><span class="sr-only">(novedad)</span></span>
+        <Transition name="t-pop">
+          <span v-if="fresh[s.id]" class="sim__dot"><span class="sr-only">(novedad)</span></span>
+        </Transition>
       </button>
     </div>
 
@@ -497,22 +535,29 @@ const panelAttrs = (s: Screen) =>
               <span class="mk-muted">‹ Sala</span>
               <span class="mk-strong">Mesa {{ TABLE }} · 4 pax</span>
             </div>
-            <div v-if="readyNotice" class="sim__notice" role="note">
-              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-              </svg>
-              <span
-                ><b>Mesa {{ TABLE }} lista</b> · recoger en el pase</span
+            <Transition name="sim-note">
+              <div v-if="readyNotice" key="lista" class="sim__notice" role="note">
+                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                  <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                  <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                </svg>
+                <span
+                  ><b>Mesa {{ TABLE }} lista</b> · recoger en el pase</span
+                >
+              </div>
+              <div
+                v-else-if="ticket && !closed"
+                key="cocina"
+                class="sim__notice is-soft"
+                role="note"
               >
-            </div>
-            <div v-else-if="ticket && !closed" class="sim__notice is-soft" role="note">
-              <span>{{
-                ticket.source === 'qr'
-                  ? 'Pedido desde la carta QR · en cocina'
-                  : 'Comanda enviada · en cocina'
-              }}</span>
-            </div>
+                <span>{{
+                  ticket.source === 'qr'
+                    ? 'Pedido desde la carta QR · en cocina'
+                    : 'Comanda enviada · en cocina'
+                }}</span>
+              </div>
+            </Transition>
 
             <div class="sim__cats" role="group" aria-label="Categorías de la carta">
               <button
@@ -529,63 +574,68 @@ const panelAttrs = (s: Screen) =>
               </button>
             </div>
 
-            <div v-if="picking" class="sim__pick">
-              <p id="sim-pick-title" class="mk-strong" tabindex="-1">
-                {{ picking.short }} · {{ picking.modifiers?.find((m) => m.required)?.label.es }}
-              </p>
-              <p class="mk-muted">Obligatorio: cocina necesita saberlo.</p>
-              <template v-for="m in picking.modifiers?.filter((x) => x.required)" :key="m.id">
-                <div class="sim__pick-opts" role="group" :aria-label="m.label.es">
-                  <button
-                    v-for="o in m.options"
-                    :key="o.id"
-                    type="button"
-                    class="mk-btn"
-                    :class="{ 'is-dark': picked[m.id] === o.id }"
-                    @click="pick(m.id, o.id)"
-                  >
-                    {{ o.label.es }}
-                  </button>
-                </div>
-              </template>
-              <button type="button" class="sim__textbtn" @click="picking = null">Cancelar</button>
-            </div>
+            <Transition name="sim-swap">
+              <div v-if="picking" key="pick" class="sim__pick">
+                <p id="sim-pick-title" class="mk-strong" tabindex="-1">
+                  {{ picking.short }} · {{ picking.modifiers?.find((m) => m.required)?.label.es }}
+                </p>
+                <p class="mk-muted">Obligatorio: cocina necesita saberlo.</p>
+                <template v-for="m in picking.modifiers?.filter((x) => x.required)" :key="m.id">
+                  <div class="sim__pick-opts" role="group" :aria-label="m.label.es">
+                    <button
+                      v-for="o in m.options"
+                      :key="o.id"
+                      type="button"
+                      class="mk-btn"
+                      :class="{ 'is-dark': picked[m.id] === o.id }"
+                      @click="pick(m.id, o.id)"
+                    >
+                      {{ o.label.es }}
+                    </button>
+                  </div>
+                </template>
+                <button type="button" class="sim__textbtn" @click="picking = null">Cancelar</button>
+              </div>
 
-            <ul v-else class="sim__menu" role="list">
-              <li
-                v-for="d in dishes.filter((x) => x.category === cat)"
-                :key="d.id"
-                class="mk-row"
-                :class="{ 'is-off': d.soldOut }"
-              >
-                <span class="grow">
-                  {{ d.short }}
-                  <span class="sub"
-                    >{{ eur(d.price)
-                    }}{{ d.modifiers?.some((m) => m.required) ? ' · elige punto' : '' }}</span
-                  >
-                </span>
-                <span v-if="d.soldOut" class="mk-pill is-warn">Agotado</span>
-                <button
-                  v-else
-                  :id="`sim-add-${d.id}`"
-                  type="button"
-                  class="sim__add"
-                  :aria-label="`Añadir ${d.short}`"
-                  :disabled="!ready"
-                  @click="addDish(d)"
+              <ul v-else :key="cat" class="sim__menu" role="list">
+                <li
+                  v-for="d in dishes.filter((x) => x.category === cat)"
+                  :key="d.id"
+                  class="mk-row"
+                  :class="{ 'is-off': d.soldOut }"
                 >
-                  +
-                </button>
-              </li>
-            </ul>
+                  <span class="grow">
+                    {{ d.short }}
+                    <span class="sub"
+                      >{{ eur(d.price)
+                      }}{{ d.modifiers?.some((m) => m.required) ? ' · elige punto' : '' }}</span
+                    >
+                  </span>
+                  <span v-if="d.soldOut" class="mk-pill is-warn">Agotado</span>
+                  <button
+                    v-else
+                    :id="`sim-add-${d.id}`"
+                    type="button"
+                    class="sim__add"
+                    :aria-label="`Añadir ${d.short}`"
+                    :disabled="!ready"
+                    @click="addDish(d)"
+                  >
+                    +
+                  </button>
+                </li>
+              </ul>
+            </Transition>
 
             <div class="sim__cmd-foot">
-              <ul
+              <TransitionGroup
                 v-if="draft.length"
+                tag="ul"
+                name="t-list"
                 class="sim__draft"
                 role="list"
                 aria-label="Comanda de la mesa 7"
+                @before-leave="pinLeave"
               >
                 <li v-for="l in draft" :key="l.id">
                   <button
@@ -604,12 +654,12 @@ const panelAttrs = (s: Screen) =>
                     >
                   </span>
                 </li>
-              </ul>
+              </TransitionGroup>
               <div class="mk-row">
                 <span class="grow mk-muted"
                   >{{ draftCount }} {{ draftCount === 1 ? 'artículo' : 'artículos' }}</span
                 >
-                <span class="num mk-strong">{{ eur(draftTotal) }}</span>
+                <span class="num mk-strong">{{ eur(Math.round(draftShown)) }}</span>
               </div>
               <button
                 type="button"
@@ -636,8 +686,12 @@ const panelAttrs = (s: Screen) =>
           </div>
           <div class="sim__kds">
             <p class="sim__col-title mk-muted">En preparación</p>
-            <div class="sim__cards">
-              <article v-if="ticket && ticket.status === 'cocina'" class="sim__card is-new">
+            <TransitionGroup tag="div" name="t-list" class="sim__cards" @before-leave="pinLeave">
+              <article
+                v-if="ticket && ticket.status === 'cocina'"
+                key="mesa"
+                class="sim__card is-new"
+              >
                 <header>
                   <span class="mk-strong"
                     >Mesa {{ TABLE
@@ -676,6 +730,7 @@ const panelAttrs = (s: Screen) =>
               </article>
               <article
                 v-if="backlog.status === 'cocina'"
+                key="backlog"
                 class="sim__card"
                 :class="{ 'is-late': backlogElapsed >= KITCHEN_LATE }"
               >
@@ -713,28 +768,35 @@ const panelAttrs = (s: Screen) =>
                   Listo
                 </button>
               </article>
-              <p v-if="!ticket && ready" class="sim__empty mk-muted">
+              <p v-if="!ticket && ready" key="vacio" class="sim__empty mk-muted">
                 La comanda de la mesa {{ TABLE }} aparecerá aquí en cuanto la envíes desde el
                 comandero.
               </p>
-            </div>
+            </TransitionGroup>
             <p class="sim__col-title mk-muted">Para recoger</p>
-            <ul class="sim__pickup" role="list">
-              <li v-if="ticket && ticket.status === 'listo'" class="mk-row">
+            <TransitionGroup
+              tag="ul"
+              name="t-list"
+              class="sim__pickup"
+              role="list"
+              @before-leave="pinLeave"
+            >
+              <li v-if="ticket && ticket.status === 'listo'" key="mesa" class="mk-row">
                 <span class="grow mk-strong">Mesa {{ TABLE }}</span>
                 <span class="mk-pill is-ok">Avisado</span>
               </li>
-              <li v-if="backlog.status === 'listo'" class="mk-row">
+              <li v-if="backlog.status === 'listo'" key="backlog" class="mk-row">
                 <span class="grow mk-strong">{{ backlog.label }}</span>
                 <span class="mk-pill is-ok">Avisado</span>
               </li>
               <li
                 v-if="!(ticket && ticket.status === 'listo') && backlog.status !== 'listo'"
+                key="nada"
                 class="mk-row mk-muted"
               >
                 Nada esperando en el pase.
               </li>
-            </ul>
+            </TransitionGroup>
           </div>
         </div>
       </section>
@@ -775,91 +837,101 @@ const panelAttrs = (s: Screen) =>
                 >
               </div>
 
-              <template v-if="closed">
-                <p class="sim__closed">
-                  <b>Venta cerrada</b> · ticket
-                  <span class="num">T-{{ String(closed.number).padStart(4, '0') }}</span> ·
-                  <span class="num">{{ eur(closed.total) }}</span>
-                </p>
-                <p class="mk-muted">
-                  La mesa {{ TABLE }} vuelve a estar libre y la venta ya está en los números.
-                </p>
-              </template>
-
-              <template v-else-if="ticket">
-                <ul class="sim__lines" role="list">
-                  <li v-for="l in ticket.lines" :key="l.id" class="mk-row">
-                    <span class="num mk-muted">{{ l.qty }}</span>
-                    <span class="grow">
-                      {{ dishById(l.dish).short }}
-                      <span v-if="detail(l)" class="sub">{{ detail(l) }}</span>
-                    </span>
-                    <span class="num">{{ eur(lineTotal(l), false) }}</span>
-                  </li>
-                </ul>
-                <div class="sim__sum">
-                  <span>Total</span><span class="num">{{ eur(ticketTotal) }}</span>
+              <Transition name="sim-swap">
+                <div v-if="closed" key="cerrada" class="sim__bill-body">
+                  <p class="sim__closed">
+                    <b>Venta cerrada</b> · ticket
+                    <span class="num">T-{{ String(closed.number).padStart(4, '0') }}</span> ·
+                    <span class="num">{{ eur(closed.total) }}</span>
+                  </p>
+                  <p class="mk-muted">
+                    La mesa {{ TABLE }} vuelve a estar libre y la venta ya está en los números.
+                  </p>
                 </div>
 
-                <div v-if="pay.open" class="sim__pay">
-                  <p id="sim-pay-title" class="mk-strong" tabindex="-1">
-                    Cobrar la mesa {{ TABLE }}
-                  </p>
-                  <div class="sim__opts" role="group" aria-label="Dividir entre comensales">
-                    <span class="mk-muted">Dividir</span>
-                    <button
-                      v-for="n in [1, 2, 3, 4]"
-                      :key="n"
-                      type="button"
-                      class="mk-btn"
-                      :class="{ 'is-dark': pay.split === n }"
-                      :aria-pressed="pay.split === n"
-                      :disabled="pay.paid > 0"
-                      @click="pay.split = n"
-                    >
-                      {{ n === 1 ? 'No' : n }}
-                    </button>
+                <div v-else-if="ticket" key="cuenta" class="sim__bill-body">
+                  <ul class="sim__lines" role="list">
+                    <li v-for="l in ticket.lines" :key="l.id" class="mk-row">
+                      <span class="num mk-muted">{{ l.qty }}</span>
+                      <span class="grow">
+                        {{ dishById(l.dish).short }}
+                        <span v-if="detail(l)" class="sub">{{ detail(l) }}</span>
+                      </span>
+                      <span class="num">{{ eur(lineTotal(l), false) }}</span>
+                    </li>
+                  </ul>
+                  <div class="sim__sum">
+                    <span>Total</span><span class="num">{{ eur(ticketTotal) }}</span>
                   </div>
-                  <div class="sim__opts" role="group" aria-label="Forma de pago">
-                    <span class="mk-muted">Pago</span>
-                    <button
-                      v-for="m in ['tarjeta', 'efectivo'] as const"
-                      :key="m"
-                      type="button"
-                      class="mk-btn"
-                      :class="{ 'is-dark': pay.method === m }"
-                      :aria-pressed="pay.method === m"
-                      @click="pay.method = m"
-                    >
-                      {{ m === 'tarjeta' ? 'Tarjeta' : 'Efectivo' }}
-                    </button>
-                  </div>
-                  <button type="button" class="mk-btn is-dark is-block sim__go" @click="payPart">
-                    {{
-                      pay.split > 1 ? `Cobrar parte ${pay.paid + 1} de ${pay.split} ·` : 'Cobrar ·'
-                    }}
-                    <span class="num">{{ eur(parts[pay.paid] ?? 0) }}</span>
-                  </button>
-                </div>
-                <template v-else>
-                  <button
-                    type="button"
-                    class="mk-btn is-block sim__go"
-                    :class="{ 'is-dark': mesa7 === 'cuenta' }"
-                    :disabled="mesa7 !== 'cuenta'"
-                    @click="openPay"
-                  >
-                    Cobrar
-                  </button>
-                  <p v-if="mesa7 !== 'cuenta'" class="mk-muted sim__hint">
-                    Se cobra cuando cocina la marque como lista.
-                  </p>
-                </template>
-              </template>
 
-              <p v-else class="mk-muted">
-                Libre. La comanda aparecerá aquí sola en cuanto el camarero la envíe.
-              </p>
+                  <Transition name="sim-swap">
+                    <div v-if="pay.open" key="cobro" class="sim__pay">
+                      <p id="sim-pay-title" class="mk-strong" tabindex="-1">
+                        Cobrar la mesa {{ TABLE }}
+                      </p>
+                      <div class="sim__opts" role="group" aria-label="Dividir entre comensales">
+                        <span class="mk-muted">Dividir</span>
+                        <button
+                          v-for="n in [1, 2, 3, 4]"
+                          :key="n"
+                          type="button"
+                          class="mk-btn"
+                          :class="{ 'is-dark': pay.split === n }"
+                          :aria-pressed="pay.split === n"
+                          :disabled="pay.paid > 0"
+                          @click="pay.split = n"
+                        >
+                          {{ n === 1 ? 'No' : n }}
+                        </button>
+                      </div>
+                      <div class="sim__opts" role="group" aria-label="Forma de pago">
+                        <span class="mk-muted">Pago</span>
+                        <button
+                          v-for="m in ['tarjeta', 'efectivo'] as const"
+                          :key="m"
+                          type="button"
+                          class="mk-btn"
+                          :class="{ 'is-dark': pay.method === m }"
+                          :aria-pressed="pay.method === m"
+                          @click="pay.method = m"
+                        >
+                          {{ m === 'tarjeta' ? 'Tarjeta' : 'Efectivo' }}
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        class="mk-btn is-dark is-block sim__go"
+                        @click="payPart"
+                      >
+                        {{
+                          pay.split > 1
+                            ? `Cobrar parte ${pay.paid + 1} de ${pay.split} ·`
+                            : 'Cobrar ·'
+                        }}
+                        <span class="num">{{ eur(Math.round(partShown)) }}</span>
+                      </button>
+                    </div>
+                    <div v-else key="cobrar" class="sim__bill-body">
+                      <button
+                        type="button"
+                        class="mk-btn is-block sim__go"
+                        :class="{ 'is-dark': mesa7 === 'cuenta' }"
+                        :disabled="mesa7 !== 'cuenta'"
+                        @click="openPay"
+                      >
+                        Cobrar
+                      </button>
+                      <p v-if="mesa7 !== 'cuenta'" class="mk-muted sim__hint">
+                        Se cobra cuando cocina la marque como lista.
+                      </p>
+                    </div>
+                  </Transition>
+                </div>
+
+                <p v-else key="libre" class="mk-muted">
+                  Libre. La comanda aparecerá aquí sola en cuanto el camarero la envíe.
+                </p>
+              </Transition>
             </div>
           </div>
         </div>
@@ -874,43 +946,53 @@ const panelAttrs = (s: Screen) =>
           <dl class="sim__stats">
             <div>
               <dt>Ventas de hoy</dt>
-              <dd class="num">{{ eur(sales.total) }}</dd>
-              <dd v-if="closed" class="sim__delta num">+{{ eur(closed.total) }}</dd>
+              <dd class="num">{{ eur(Math.round(salesShown)) }}</dd>
+              <Transition name="t-pop">
+                <dd v-if="closed" class="sim__delta num">+{{ eur(closed.total) }}</dd>
+              </Transition>
             </div>
             <div>
               <dt>Tickets</dt>
-              <dd class="num">{{ sales.tickets }}</dd>
+              <dd class="num">{{ Math.round(ticketsShown) }}</dd>
             </div>
             <div>
               <dt>Ticket medio</dt>
-              <dd class="num">{{ eur(avg) }}</dd>
+              <dd class="num">{{ eur(Math.round(avgShown)) }}</dd>
             </div>
             <div>
               <dt>Más vendidos</dt>
               <dd>
-                <ol class="sim__top" role="list">
+                <TransitionGroup
+                  tag="ol"
+                  name="t-list"
+                  class="sim__top"
+                  role="list"
+                  @before-leave="pinLeave"
+                >
                   <li v-for="t in top3" :key="t.name">
                     <span>{{ t.name }}</span> <span class="num">{{ t.n }}</span>
                   </li>
-                </ol>
+                </TransitionGroup>
               </dd>
             </div>
           </dl>
-          <div v-if="closed" class="sim__end">
-            <p>
-              <b>Eso es un solo sistema:</b> nadie ha copiado la comanda ni ha cuadrado nada a mano.
-              ¿Quieres verlo con tu carta?
-            </p>
-            <div class="sim__end-actions">
-              <a :href="ctaDemo" class="btn is-primary">Solicitar demo</a>
-              <button type="button" class="btn is-secondary" @click="restart">
-                Volver a empezar
-              </button>
+          <Transition name="sim-swap">
+            <div v-if="closed" key="fin" class="sim__end">
+              <p>
+                <b>Eso es un solo sistema:</b> nadie ha copiado la comanda ni ha cuadrado nada a
+                mano. ¿Quieres verlo con tu carta?
+              </p>
+              <div class="sim__end-actions">
+                <a :href="ctaDemo" class="btn is-primary">Solicitar demo</a>
+                <button type="button" class="btn is-secondary" @click="restart">
+                  Volver a empezar
+                </button>
+              </div>
             </div>
-          </div>
-          <p v-else class="sim__fict">
-            La Plaza es un restaurante ficticio: sus números son de ejemplo.
-          </p>
+            <p v-else key="ficticio" class="sim__fict">
+              La Plaza es un restaurante ficticio: sus números son de ejemplo.
+            </p>
+          </Transition>
         </div>
       </section>
     </div>
@@ -960,7 +1042,9 @@ const panelAttrs = (s: Screen) =>
   font-weight: var(--weight-medium);
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease);
+  transition:
+    border-color var(--dur) var(--ease),
+    color var(--dur) var(--ease);
 }
 .sim__step:hover:not(:disabled) {
   border-color: var(--gray-400);
@@ -974,6 +1058,9 @@ const panelAttrs = (s: Screen) =>
   background: var(--color-bg-muted);
   font-size: var(--text-xs);
   color: var(--color-text-strong);
+  transition:
+    background-color var(--dur) var(--ease),
+    color var(--dur) var(--ease);
 }
 .sim__step.is-current {
   border-color: var(--black);
@@ -1456,7 +1543,7 @@ const panelAttrs = (s: Screen) =>
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--white);
-  transition: background var(--dur-fast) var(--ease);
+  transition: background-color var(--dur-slow) var(--ease);
 }
 .sim__nums.is-flash {
   background: var(--gray-100);
@@ -1608,5 +1695,90 @@ const panelAttrs = (s: Screen) =>
     width: 100%;
     font-size: var(--text-xs);
   }
+}
+
+/* ── Movimiento: todo cambio de estado llega con suavidad ── */
+/* Contenedores de listas animadas: lo que sale se fija aquí (pinLeave) */
+.sim__draft,
+.sim__cards,
+.sim__pickup,
+.sim__top {
+  position: relative;
+}
+/* Cuenta de la caja: envoltorio neutro (misma rejilla y hueco que .sim__bill) */
+.sim__bill-body {
+  display: grid;
+  gap: 6px;
+}
+.sim .mk-pill {
+  transition:
+    background-color var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+.sim .mk-check {
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
+}
+.sim .mk-check.is-on::after {
+  animation: sim-tick var(--dur) var(--ease);
+}
+@keyframes sim-tick {
+  from {
+    opacity: 0;
+    scale: 0.4;
+  }
+}
+.sim__card {
+  transition:
+    border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
+}
+.sim__table {
+  transition:
+    background-color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
+}
+/* En estrecho, la pantalla elegida entra desde el lado de la pestaña (--step-dir) */
+@media (max-width: 900px) {
+  .sim.is-narrow .sim__panel:not([hidden]) {
+    animation: sim-panel-in var(--dur) var(--ease);
+  }
+}
+@keyframes sim-panel-in {
+  from {
+    opacity: 0;
+    translate: var(--step-dir, 16px) 0;
+  }
+}
+/*
+ * Contenido que se sustituye dentro de una pantalla de altura fija: entra con fundido y lo que
+ * sale desaparece al instante (sin ocupar sitio a la vez ni retrasar el foco que se le pone).
+ */
+.sim-swap-enter-active {
+  transition:
+    opacity var(--dur) var(--ease),
+    translate var(--dur) var(--ease);
+}
+.sim-swap-enter-from {
+  opacity: 0;
+  translate: 0 6px;
+}
+.sim-swap-leave-active,
+.sim-note-leave-active {
+  display: none;
+}
+/* Avisos del comandero («Comanda enviada», «Mesa 7 lista»): aparecen con un pequeño rebote */
+.sim-note-enter-active {
+  transition:
+    opacity var(--dur) var(--ease),
+    scale var(--dur) cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.sim-note-enter-from {
+  opacity: 0;
+  scale: 0.94;
 }
 </style>

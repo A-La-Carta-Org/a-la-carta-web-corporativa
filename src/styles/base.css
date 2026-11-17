@@ -70,14 +70,21 @@ p {
   text-wrap: pretty;
 }
 
+/* El subrayado aparece en fundido: la línea existe siempre y solo cambia de color */
 a {
   color: inherit;
   text-decoration: none;
-  text-underline-offset: 0.15em;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  transition:
+    color var(--dur) var(--ease),
+    text-decoration-color var(--dur) var(--ease);
 }
 
 a:hover {
-  text-decoration: underline;
+  text-decoration-line: underline;
+  text-decoration-color: currentColor;
 }
 
 img,

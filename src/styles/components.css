@@ -13,10 +13,17 @@
   line-height: 1;
   border: 1px solid transparent;
   transition:
-    background-color var(--dur-fast) var(--ease),
-    border-color var(--dur-fast) var(--ease),
-    color var(--dur-fast) var(--ease);
+    background-color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease),
+    scale var(--dur) var(--ease);
   white-space: nowrap;
+}
+/* Pulsación: el botón cede un poco y vuelve con la misma curva */
+.btn:active {
+  scale: 0.97;
+  transition-duration: var(--dur-press);
 }
 .btn:hover {
   text-decoration: none;
@@ -75,7 +82,7 @@
 .btn .btn-arrow {
   width: 1em;
   height: 1em;
-  transition: translate var(--dur-fast) var(--ease);
+  transition: translate var(--dur) var(--ease);
 }
 .btn:hover .btn-arrow {
   translate: 2px 0;
@@ -93,7 +100,7 @@
 .link-arrow svg {
   width: 1em;
   height: 1em;
-  transition: translate var(--dur-fast) var(--ease);
+  transition: translate var(--dur) var(--ease);
 }
 .link-arrow:hover {
   text-decoration: none;

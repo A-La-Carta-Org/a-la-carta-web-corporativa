@@ -1,7 +1,7 @@
 # 14 · Identidad visual: acento, serif, movimiento y motivos propios
 
 **Estado:** aprobado por Jordi el 16-11-2026 · fusionado con el ecosistema el 17-11-2026
-(tokens, serif, `.reveal`, `HeroStage`, confianza bajo el hero, banda oscura con halo y modo
+(tokens, serif, `.reveal`, hero animado, confianza bajo el hero, banda oscura con halo y modo
 noche en la home nueva) · pendiente su aplicación fina en el resto de vistas (§4) ·
 **Prioridad:** transversal (se aplica en cada paso del loop, no es un paso aparte)
 
@@ -21,7 +21,7 @@ con este sistema. No hay que volver atrás al final: hay que hacerlo bien a la p
 | Serif de acento | `--font-accent` (Instrument Serif cursiva, autoalojada; `fonts.css`, `npm run sync:fonts`) | Se activa con `<em>` dentro de `h1`/`h2`/`h3` (`components.css`) |
 | Título con acento | `SectionHeader` acepta `<Fragment slot="title">… <em>…</em></Fragment>` | Para no partir strings en datos |
 | Aparición al hacer scroll | `.reveal` en `components.css` | CSS nativo `animation-timeline: view()`, con `@supports` y `prefers-reduced-motion`. Sin JS |
-| Hero animado | `src/components/home/HeroStage.astro` | TPV + comandero + **comanda impresa** en bucle de 10 s: pulsar "Enviar a cocina" → se imprime el ticket → cocina marca platos → "Listo para servir". Inclinado → plano al hacer scroll. Todo CSS |
+| Hero animado (sustituido el 17-11-2026 por `HeroScroll.astro`, historia ligada al scroll) | antes `src/components/home/HeroStage.astro` | TPV + comandero + **comanda impresa** en bucle de 10 s: pulsar "Enviar a cocina" → se imprime el ticket → cocina marca platos → "Listo para servir". Inclinado → plano al hacer scroll. Todo CSS |
 | Bento de módulos | `src/components/home/SolutionBento.astro` | Núcleo en grande con maqueta que asoma recortada; resto compacto. Hover: icono en `--accent-soft` y flecha en acento |
 | Banda oscura con calidez | `index.astro` → `.home-why-wrap` | Halo radial de pimentón al 16 % + grano SVG al 8 % |
 | Maqueta en modo noche | `index.astro` → `.home-why__night` | Invierte la escala de grises redefiniendo `--white`, `--gray-*`, `--black` y estados **solo dentro del contenedor**. Sirve para cualquier maqueta |
@@ -37,7 +37,7 @@ con este sistema. No hay que volver atrás al final: hay que hacerlo bien a la p
    mucho). Nunca en párrafos, botones ni menús. En el H1 de la home va en color acento; en el
    resto de titulares, en el color del texto.
 3. **El motivo propio es el ticket/comanda**: papel térmico (`#fffdf8`), monoespaciada, filetes
-   discontinuos, borde dentado (`mask: conic-gradient(...)`, ver `HeroStage`). Úsalo para
+   discontinuos, borde dentado (`mask: conic-gradient(...)`, ver el ticket de `HeroScroll`). Úsalo para
    resúmenes, precios y confirmaciones. Las **líneas de puntos de carta** (`TPV ······ 49 €`)
    son el mismo lenguaje para listas de precio.
 4. **Movimiento que cuenta el producto, no adorno.** Cada animación debe enseñar un flujo real

@@ -246,7 +246,9 @@ function onMailto() {
           </span>
         </label>
       </div>
-      <p v-if="errors.motivo" id="cf-motivo-error" class="form-error">{{ errors.motivo }}</p>
+      <Transition name="t-fade">
+        <p v-if="errors.motivo" id="cf-motivo-error" class="form-error">{{ errors.motivo }}</p>
+      </Transition>
     </fieldset>
 
     <div class="cf-grid">
@@ -265,7 +267,9 @@ function onMailto() {
           :aria-describedby="describedBy('nombre')"
           @input="revalidate('nombre')"
         />
-        <p v-if="errors.nombre" id="cf-nombre-error" class="form-error">{{ errors.nombre }}</p>
+        <Transition name="t-fade">
+          <p v-if="errors.nombre" id="cf-nombre-error" class="form-error">{{ errors.nombre }}</p>
+        </Transition>
       </div>
       <div class="field">
         <label for="cf-email">Correo electrónico</label>
@@ -282,7 +286,9 @@ function onMailto() {
           :aria-describedby="describedBy('email')"
           @input="revalidate('email')"
         />
-        <p v-if="errors.email" id="cf-email-error" class="form-error">{{ errors.email }}</p>
+        <Transition name="t-fade">
+          <p v-if="errors.email" id="cf-email-error" class="form-error">{{ errors.email }}</p>
+        </Transition>
       </div>
       <div class="field cf-full">
         <label for="cf-empresa"
@@ -312,7 +318,9 @@ function onMailto() {
           :aria-describedby="describedBy('mensaje')"
           @input="revalidate('mensaje')"
         />
-        <p v-if="errors.mensaje" id="cf-mensaje-error" class="form-error">{{ errors.mensaje }}</p>
+        <Transition name="t-fade">
+          <p v-if="errors.mensaje" id="cf-mensaje-error" class="form-error">{{ errors.mensaje }}</p>
+        </Transition>
       </div>
       <div class="field cf-full">
         <label class="cf-consent">
@@ -331,9 +339,11 @@ function onMailto() {
             use estos datos para responder a mi mensaje.
           </span>
         </label>
-        <p v-if="errors.consentimiento" id="cf-consentimiento-error" class="form-error">
-          {{ errors.consentimiento }}
-        </p>
+        <Transition name="t-fade">
+          <p v-if="errors.consentimiento" id="cf-consentimiento-error" class="form-error">
+            {{ errors.consentimiento }}
+          </p>
+        </Transition>
       </div>
     </div>
 
@@ -358,31 +368,35 @@ function onMailto() {
       <p class="cf-actions__note">Te contestamos en menos de {{ REPLY_HOURS }} horas laborables.</p>
     </div>
 
-    <div
-      v-if="status === 'noendpoint'"
-      ref="noticeRef"
-      class="notice cf-notice"
-      role="status"
-      tabindex="-1"
-    >
-      <p>
-        <strong>El envío automático aún no está activo.</strong> Te abrimos el correo con tu mensaje
-        ya escrito; solo tienes que darle a enviar.
-      </p>
-      <a :href="mailto" class="btn is-primary" @click="onMailto">Enviar por correo</a>
-    </div>
-    <div
-      v-if="status === 'error'"
-      ref="noticeRef"
-      class="notice is-danger cf-notice"
-      role="alert"
-      tabindex="-1"
-    >
-      <p>
-        No se ha podido enviar ({{ errorText }}). Inténtalo de nuevo en unos minutos o
-        <a :href="mailto" @click="onMailto">mándanoslo por correo</a>.
-      </p>
-    </div>
+    <Transition name="t-rise">
+      <div
+        v-if="status === 'noendpoint'"
+        ref="noticeRef"
+        class="notice cf-notice"
+        role="status"
+        tabindex="-1"
+      >
+        <p>
+          <strong>El envío automático aún no está activo.</strong> Te abrimos el correo con tu
+          mensaje ya escrito; solo tienes que darle a enviar.
+        </p>
+        <a :href="mailto" class="btn is-primary" @click="onMailto">Enviar por correo</a>
+      </div>
+    </Transition>
+    <Transition name="t-rise">
+      <div
+        v-if="status === 'error'"
+        ref="noticeRef"
+        class="notice is-danger cf-notice"
+        role="alert"
+        tabindex="-1"
+      >
+        <p>
+          No se ha podido enviar ({{ errorText }}). Inténtalo de nuevo en unos minutos o
+          <a :href="mailto" @click="onMailto">mándanoslo por correo</a>.
+        </p>
+      </div>
+    </Transition>
   </form>
 </template>
 
@@ -420,7 +434,9 @@ legend {
   background: var(--white);
   cursor: pointer;
   font-size: var(--text-sm);
-  transition: border-color var(--dur-fast) var(--ease);
+  transition:
+    border-color var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
 }
 .cf-option:hover {
   border-color: var(--color-text-muted);
@@ -454,6 +470,13 @@ legend {
   flex: 0 0 auto;
   margin-top: 1px;
   color: var(--color-text-muted);
+  transition: color var(--dur) var(--ease);
+}
+.cf-option__arrow {
+  transition: translate var(--dur) var(--ease);
+}
+.cf-option.is-sales:hover .cf-option__arrow {
+  translate: 2px 0;
 }
 .cf-option:has(input:checked) .cf-option__icon,
 .cf-option.is-sales .cf-option__icon {

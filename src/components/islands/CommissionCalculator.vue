@@ -13,6 +13,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { addonModules, fmtPrice, getPlan } from '@/data/pricing';
 import { ctaHref } from '@/lib/cta';
+import { useTweened } from '@/lib/tween';
 
 const props = withDefaults(
   defineProps<{
@@ -68,6 +69,17 @@ const r = computed(() => {
   const ownYear = ownMonthly * 12;
   return { delivery, bookings, qr, totalYear, saved, ownMonthly, ownYear, net: saved - ownYear };
 });
+
+/* Movimiento: cada cifra del ticket corre hasta su valor nuevo (con «reducir movimiento», salta) */
+const t = {
+  delivery: useTweened(() => r.value.delivery),
+  bookings: useTweened(() => r.value.bookings),
+  qr: useTweened(() => r.value.qr),
+  totalYear: useTweened(() => r.value.totalYear),
+  saved: useTweened(() => r.value.saved),
+  ownYear: useTweened(() => r.value.ownYear),
+  net: useTweened(() => r.value.net),
+};
 
 const money = (n: number) =>
   `${Math.round(n)
@@ -280,21 +292,25 @@ const fullHref = ctaHref({ to: 'calculadora', origen: props.origen });
         <dl>
           <div class="cc__row">
             <dt>Pedidos por agregadores</dt>
-            <dd>{{ money(r.delivery) }}</dd>
+            <dd>{{ money(t.delivery.value) }}</dd>
           </div>
           <template v-if="!compact">
             <div class="cc__row">
               <dt>Reservas por comensal</dt>
-              <dd>{{ money(r.bookings) }}</dd>
+              <dd>{{ money(t.bookings.value) }}</dd>
             </div>
             <div class="cc__row">
               <dt>Pagos con QR</dt>
-              <dd>{{ money(r.qr) }}</dd>
+              <dd>{{ money(t.qr.value) }}</dd>
             </div>
           </template>
           <div class="cc__row is-total" aria-live="polite">
             <dt>Pagas al año</dt>
-            <dd>{{ money(r.totalYear) }}</dd>
+            <!-- La cifra que corre es visual; el lector de pantalla oye solo la final -->
+            <dd>
+              <span aria-hidden="true">{{ money(t.totalYear.value) }}</span>
+              <span class="sr-only">{{ money(r.totalYear) }}</span>
+            </dd>
           </div>
         </dl>
         <div class="cc__rule" aria-hidden="true"></div>
@@ -304,15 +320,20 @@ const fullHref = ctaHref({ to: 'calculadora', origen: props.origen });
             <dt>
               Dejas de pagar ({{ v.shift }} %{{ !compact && r.qr > 0 ? ' + todo el QR' : '' }})
             </dt>
-            <dd>{{ money(r.saved) }}</dd>
+            <dd>{{ money(t.saved.value) }}</dd>
           </div>
           <div class="cc__row">
             <dt>Cuota del canal propio</dt>
-            <dd>{{ r.ownYear > 0 ? `−${money(r.ownYear)}` : money(0) }}</dd>
+            <dd>{{ t.ownYear.value >= 0.5 ? `−${money(t.ownYear.value)}` : money(0) }}</dd>
           </div>
           <div class="cc__row is-total" aria-live="polite">
             <dt>{{ r.net >= 0 ? 'Te quedas al año' : 'Diferencia al año' }}</dt>
-            <dd>{{ r.net >= 0 ? money(r.net) : `−${money(-r.net)}` }}</dd>
+            <dd>
+              <span aria-hidden="true">{{
+                t.net.value >= 0 ? money(t.net.value) : `−${money(-t.net.value)}`
+              }}</span>
+              <span class="sr-only">{{ r.net >= 0 ? money(r.net) : `−${money(-r.net)}` }}</span>
+            </dd>
           </div>
           <div class="cc__row is-muted">
             <dt>Comisión por pedido o reserva</dt>

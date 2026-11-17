@@ -26,6 +26,7 @@ import {
   type Lang,
 } from '@/data/demo';
 import { ctaHref } from '@/lib/cta';
+import { useTweened } from '@/lib/tween';
 
 const props = withDefaults(defineProps<{ mode?: 'page' | 'embed'; origen?: string }>(), {
   mode: 'page',
@@ -287,6 +288,9 @@ const cartCount = computed(() => cart.value.reduce((n, l) => n + l.qty, 0));
 const cartTotal = computed(() => cart.value.reduce((n, l) => n + linePrice(l), 0));
 const sentTotal = computed(() => sent.value.reduce((n, l) => n + linePrice(l), 0));
 const myPart = computed(() => Math.ceil(sentTotal.value / split.value));
+// Totales que cambian con suavidad (en céntimos; se muestran redondeados)
+const cartShown = useTweened(cartTotal);
+const myPartShown = useTweened(myPart);
 const qtyOf = (dish: string) =>
   cart.value.filter((l) => l.dish === dish).reduce((n, l) => n + l.qty, 0);
 
@@ -501,6 +505,24 @@ watch(
   { deep: true }
 );
 
+/**
+ * Movimiento: al salir de una lista animada, el elemento se queda fijo donde estaba (absoluto)
+ * mientras se desvanece, para que los demás se recoloquen con suavidad.
+ */
+function pinLeave(el: Element) {
+  const e = el as HTMLElement;
+  const { offsetTop, offsetLeft, offsetWidth, offsetHeight } = e;
+  Object.assign(e.style, {
+    position: 'absolute',
+    top: `${offsetTop}px`,
+    left: `${offsetLeft}px`,
+    width: `${offsetWidth}px`,
+    height: `${offsetHeight}px`,
+    margin: '0',
+    boxSizing: 'border-box',
+  });
+}
+
 function toggleFilter(id: string) {
   active.value = active.value.includes(id)
     ? active.value.filter((x) => x !== id)
@@ -551,204 +573,232 @@ function toggleFilter(id: string) {
         </header>
 
         <!-- ── Carta ── -->
-        <div v-show="view === 'carta'" class="dc__body">
-          <div v-if="ready" class="dc__filters">
-            <button
-              type="button"
-              class="dc__filters-toggle"
-              :aria-expanded="filtersOpen"
-              :aria-controls="`${uid}-filters`"
-              @click="filtersOpen = !filtersOpen"
-            >
-              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                <path d="M3 5h18M6 12h12M10 19h4" />
-              </svg>
-              {{ t.filters }}
-              <span v-if="active.length" class="dc__count">{{ active.length }}</span>
-            </button>
-            <div v-show="filtersOpen" :id="`${uid}-filters`" class="dc__filters-panel">
-              <p class="dc__hint">{{ t.filtersHint }}</p>
-              <div class="dc__chips">
-                <button
-                  v-for="f in dietFilters"
-                  :key="f.id"
-                  type="button"
-                  class="dc__chip"
-                  :class="{ 'is-on': active.includes(f.id) }"
-                  :aria-pressed="active.includes(f.id)"
-                  @click="toggleFilter(f.id)"
-                >
-                  {{ f.label[lang] }}
-                </button>
-              </div>
-            </div>
-            <p v-if="hiddenCount > 0" class="dc__hidden" aria-live="polite">
-              {{ t.hidden(hiddenCount) }} ·
-              <button type="button" class="dc__link" @click="active = []">{{ t.clear }}</button>
-            </p>
-          </div>
-
-          <p v-if="ready && !menuVisible" class="dc__menu-off">
-            {{ t.menuOff }}
-            <button type="button" class="dc__link" @click="forceMenu = true">
-              {{ t.menuShow }}
-            </button>
-          </p>
-
-          <section
-            v-for="s in sections"
-            :id="`${uid}-${s.cat.id}`"
-            :key="s.cat.id"
-            class="dc__section"
-          >
-            <h2 class="dc__title" tabindex="-1">
-              {{ s.cat.label[lang] }}
-              <span v-if="s.cat.schedule" class="dc__sched">{{ t.menuWhen }}</span>
-            </h2>
-            <ul class="dc__list" role="list">
-              <li
-                v-for="d in s.items"
-                :key="d.id"
-                class="dc__item"
-                :class="{ 'is-off': d.soldOut }"
+        <Transition name="dc-in">
+          <div v-show="view === 'carta'" class="dc__body">
+            <div v-if="ready" class="dc__filters">
+              <button
+                type="button"
+                class="dc__filters-toggle"
+                :aria-expanded="filtersOpen"
+                :aria-controls="`${uid}-filters`"
+                @click="filtersOpen = !filtersOpen"
               >
-                <div class="dc__copy">
-                  <p class="dc__dish">{{ d.name[lang] }}</p>
-                  <p class="dc__text">{{ d.soldOut ? t.soldOut : d.text[lang] }}</p>
-                  <p v-if="d.allergens.length || d.vegetarian" class="dc__al">
-                    <abbr
-                      v-for="a in d.allergens"
-                      :key="a"
-                      :title="allergenById(a).label[lang]"
-                      aria-hidden="true"
-                      >{{ allergenById(a).code }}</abbr
-                    >
-                    <span v-if="d.vegetarian" class="dc__veg">{{ t.veg }}</span>
-                    <span v-if="d.allergens.length" class="sr-only">
-                      {{ t.contains }}:
-                      {{ d.allergens.map((a) => allergenById(a).label[lang]).join(', ') }}
-                    </span>
-                  </p>
+                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                  <path d="M3 5h18M6 12h12M10 19h4" />
+                </svg>
+                {{ t.filters }}
+                <Transition name="t-pop">
+                  <span v-if="active.length" class="dc__count">{{ active.length }}</span>
+                </Transition>
+              </button>
+              <Transition name="t-collapse">
+                <div v-show="filtersOpen" :id="`${uid}-filters`" class="dc__filters-panel">
+                  <div class="dc__filters-inner">
+                    <p class="dc__hint">{{ t.filtersHint }}</p>
+                    <div class="dc__chips">
+                      <button
+                        v-for="f in dietFilters"
+                        :key="f.id"
+                        type="button"
+                        class="dc__chip"
+                        :class="{ 'is-on': active.includes(f.id) }"
+                        :aria-pressed="active.includes(f.id)"
+                        @click="toggleFilter(f.id)"
+                      >
+                        {{ f.label[lang] }}
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div class="dc__side">
-                  <span class="dc__price">{{ eur(d.price) }}</span>
-                  <div v-if="ready && !d.soldOut" class="dc__qty">
-                    <template v-if="qtyOf(d.id) > 0 && !d.modifiers?.length">
+              </Transition>
+              <p v-if="hiddenCount > 0" class="dc__hidden" aria-live="polite">
+                {{ t.hidden(hiddenCount) }} ·
+                <button type="button" class="dc__link" @click="active = []">{{ t.clear }}</button>
+              </p>
+            </div>
+
+            <p v-if="ready && !menuVisible" class="dc__menu-off">
+              {{ t.menuOff }}
+              <button type="button" class="dc__link" @click="forceMenu = true">
+                {{ t.menuShow }}
+              </button>
+            </p>
+
+            <section
+              v-for="s in sections"
+              :id="`${uid}-${s.cat.id}`"
+              :key="s.cat.id"
+              class="dc__section"
+            >
+              <h2 class="dc__title" tabindex="-1">
+                {{ s.cat.label[lang] }}
+                <span v-if="s.cat.schedule" class="dc__sched">{{ t.menuWhen }}</span>
+              </h2>
+              <TransitionGroup
+                tag="ul"
+                name="t-list"
+                class="dc__list"
+                role="list"
+                @before-leave="pinLeave"
+              >
+                <li
+                  v-for="d in s.items"
+                  :key="d.id"
+                  class="dc__item"
+                  :class="{ 'is-off': d.soldOut }"
+                >
+                  <div class="dc__copy">
+                    <p class="dc__dish">{{ d.name[lang] }}</p>
+                    <p class="dc__text">{{ d.soldOut ? t.soldOut : d.text[lang] }}</p>
+                    <p v-if="d.allergens.length || d.vegetarian" class="dc__al">
+                      <abbr
+                        v-for="a in d.allergens"
+                        :key="a"
+                        :title="allergenById(a).label[lang]"
+                        aria-hidden="true"
+                        >{{ allergenById(a).code }}</abbr
+                      >
+                      <span v-if="d.vegetarian" class="dc__veg">{{ t.veg }}</span>
+                      <span v-if="d.allergens.length" class="sr-only">
+                        {{ t.contains }}:
+                        {{ d.allergens.map((a) => allergenById(a).label[lang]).join(', ') }}
+                      </span>
+                    </p>
+                  </div>
+                  <div class="dc__side">
+                    <span class="dc__price">{{ eur(d.price) }}</span>
+                    <div v-if="ready && !d.soldOut" class="dc__qty">
+                      <TransitionGroup name="t-pop">
+                        <button
+                          v-if="qtyOf(d.id) > 0 && !d.modifiers?.length"
+                          key="menos"
+                          type="button"
+                          class="dc__btn-q"
+                          :aria-label="t.remove(d.name[lang])"
+                          @click="quickRemove(d)"
+                        >
+                          −
+                        </button>
+                        <span
+                          v-if="qtyOf(d.id) > 0 && !d.modifiers?.length"
+                          key="cuantos"
+                          class="dc__q"
+                          aria-hidden="true"
+                          >{{ qtyOf(d.id) }}</span
+                        >
+                      </TransitionGroup>
                       <button
                         type="button"
                         class="dc__btn-q"
-                        :aria-label="t.remove(d.name[lang])"
-                        @click="quickRemove(d)"
+                        :class="{ 'is-on': qtyOf(d.id) > 0 }"
+                        :aria-label="t.add(d.name[lang])"
+                        @click="quickAdd(d, $event)"
                       >
-                        −
+                        <span v-if="d.modifiers?.length && qtyOf(d.id) > 0">{{ qtyOf(d.id) }}</span>
+                        <span v-else>+</span>
                       </button>
-                      <span class="dc__q" aria-hidden="true">{{ qtyOf(d.id) }}</span>
-                    </template>
-                    <button
-                      type="button"
-                      class="dc__btn-q"
-                      :class="{ 'is-on': qtyOf(d.id) > 0 }"
-                      :aria-label="t.add(d.name[lang])"
-                      @click="quickAdd(d, $event)"
-                    >
-                      <span v-if="d.modifiers?.length && qtyOf(d.id) > 0">{{ qtyOf(d.id) }}</span>
-                      <span v-else>+</span>
-                    </button>
+                    </div>
                   </div>
-                </div>
-              </li>
-            </ul>
-          </section>
+                </li>
+              </TransitionGroup>
+            </section>
 
-          <section class="dc__legend" :aria-label="t.allergens">
-            <h2 class="dc__legend-title">{{ t.allergens }}</h2>
-            <ul role="list">
-              <li v-for="a in usedAllergens" :key="a.id">
-                <abbr aria-hidden="true">{{ a.code }}</abbr> {{ a.label[lang] }}
-              </li>
-            </ul>
-            <p class="dc__hint">{{ t.allergensNote }}</p>
-          </section>
-        </div>
+            <section class="dc__legend" :aria-label="t.allergens">
+              <h2 class="dc__legend-title">{{ t.allergens }}</h2>
+              <ul role="list">
+                <li v-for="a in usedAllergens" :key="a.id">
+                  <abbr aria-hidden="true">{{ a.code }}</abbr> {{ a.label[lang] }}
+                </li>
+              </ul>
+              <p class="dc__hint">{{ t.allergensNote }}</p>
+            </section>
+          </div>
+        </Transition>
 
         <!-- ── Pedido enviado ── -->
-        <div v-if="view === 'sent'" class="dc__body dc__done">
-          <span class="dc__ok" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M20 6 9 17l-5-5" /></svg>
-          </span>
-          <h2 ref="viewHead" tabindex="-1">{{ t.sentTitle }}</h2>
-          <p class="dc__muted">{{ t.sentText(demoVenue.table) }}</p>
-          <ul class="dc__ticket" role="list">
-            <li v-for="l in sent" :key="l.key">
-              <span class="dc__tq">{{ l.qty }}</span>
-              <span class="dc__tn">
-                {{ dishById(l.dish).name[lang] }}
-                <small v-if="modsText(dishById(l.dish), l.mods, lang) || l.note">
-                  {{
-                    [modsText(dishById(l.dish), l.mods, lang), l.note].filter(Boolean).join(' · ')
-                  }}
-                </small>
-              </span>
-              <span class="dc__tp">{{ eur(linePrice(l), false) }}</span>
-            </li>
-          </ul>
-          <a :href="kitchenHref" class="btn is-primary dc__wide">
-            {{ t.seeKitchen }} <span aria-hidden="true">→</span>
-          </a>
-          <button type="button" class="btn is-secondary dc__wide" @click="goView('pay')">
-            {{ t.pay }}
-          </button>
-          <button type="button" class="dc__link" @click="goView('carta')">{{ t.keep }}</button>
-        </div>
+        <Transition name="dc-in">
+          <div v-if="view === 'sent'" class="dc__body dc__done">
+            <span class="dc__ok" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22"><path d="M20 6 9 17l-5-5" /></svg>
+            </span>
+            <h2 ref="viewHead" tabindex="-1">{{ t.sentTitle }}</h2>
+            <p class="dc__muted">{{ t.sentText(demoVenue.table) }}</p>
+            <ul class="dc__ticket" role="list">
+              <li v-for="l in sent" :key="l.key">
+                <span class="dc__tq">{{ l.qty }}</span>
+                <span class="dc__tn">
+                  {{ dishById(l.dish).name[lang] }}
+                  <small v-if="modsText(dishById(l.dish), l.mods, lang) || l.note">
+                    {{
+                      [modsText(dishById(l.dish), l.mods, lang), l.note].filter(Boolean).join(' · ')
+                    }}
+                  </small>
+                </span>
+                <span class="dc__tp">{{ eur(linePrice(l), false) }}</span>
+              </li>
+            </ul>
+            <a :href="kitchenHref" class="btn is-primary dc__wide">
+              {{ t.seeKitchen }} <span aria-hidden="true">→</span>
+            </a>
+            <button type="button" class="btn is-secondary dc__wide" @click="goView('pay')">
+              {{ t.pay }}
+            </button>
+            <button type="button" class="dc__link" @click="goView('carta')">{{ t.keep }}</button>
+          </div>
+        </Transition>
 
         <!-- ── Pagar mi parte (simulado) ── -->
-        <div v-if="view === 'pay'" class="dc__body dc__done">
-          <h2 ref="viewHead" tabindex="-1">{{ t.payTitle }}</h2>
-          <p class="dc__sim">{{ t.sim }}</p>
-          <div class="dc__row">
-            <span>{{ t.tableTotal }}</span><b class="dc__num">{{ eur(sentTotal) }}</b>
-          </div>
-          <fieldset class="dc__split">
-            <legend>{{ t.split }}</legend>
-            <div class="dc__chips">
-              <button
-                v-for="n in [1, 2, 3, 4]"
-                :key="n"
-                type="button"
-                class="dc__chip"
-                :class="{ 'is-on': split === n }"
-                :aria-pressed="split === n"
-                @click="split = n"
-              >
-                {{ n === 1 ? t.whole : n }}
-              </button>
+        <Transition name="dc-in">
+          <div v-if="view === 'pay'" class="dc__body dc__done">
+            <h2 ref="viewHead" tabindex="-1">{{ t.payTitle }}</h2>
+            <p class="dc__sim">{{ t.sim }}</p>
+            <div class="dc__row">
+              <span>{{ t.tableTotal }}</span><b class="dc__num">{{ eur(sentTotal) }}</b>
             </div>
-          </fieldset>
-          <div class="dc__row is-strong">
-            <span>{{ t.yourPart }}</span><b class="dc__num">{{ eur(myPart) }}</b>
+            <fieldset class="dc__split">
+              <legend>{{ t.split }}</legend>
+              <div class="dc__chips">
+                <button
+                  v-for="n in [1, 2, 3, 4]"
+                  :key="n"
+                  type="button"
+                  class="dc__chip"
+                  :class="{ 'is-on': split === n }"
+                  :aria-pressed="split === n"
+                  @click="split = n"
+                >
+                  {{ n === 1 ? t.whole : n }}
+                </button>
+              </div>
+            </fieldset>
+            <div class="dc__row is-strong">
+              <span>{{ t.yourPart }}</span><b class="dc__num">{{ eur(Math.round(myPartShown)) }}</b>
+            </div>
+            <button type="button" class="btn is-primary dc__wide" @click="pay">
+              {{ t.payBtn(eur(Math.round(myPartShown))) }}
+            </button>
+            <button type="button" class="dc__link" @click="goView('sent')">{{ t.close }}</button>
           </div>
-          <button type="button" class="btn is-primary dc__wide" @click="pay">
-            {{ t.payBtn(eur(myPart)) }}
-          </button>
-          <button type="button" class="dc__link" @click="goView('sent')">{{ t.close }}</button>
-        </div>
+        </Transition>
 
         <!-- ── Pagado ── -->
-        <div v-if="view === 'paid'" class="dc__body dc__done">
-          <span class="dc__ok" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M20 6 9 17l-5-5" /></svg>
-          </span>
-          <h2 ref="viewHead" tabindex="-1">{{ t.paidTitle }}</h2>
-          <p class="dc__muted">{{ t.paidText }}</p>
-          <div class="dc__final" lang="es">
-            <p>
-              <b>¿Quieres verlo con tu carta?</b> Te la montamos en una demo corta, con tus platos y
-              tus mesas.
-            </p>
-            <a :href="finalHref" class="btn is-primary dc__wide">Solicitar demo</a>
+        <Transition name="dc-in">
+          <div v-if="view === 'paid'" class="dc__body dc__done">
+            <span class="dc__ok" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22"><path d="M20 6 9 17l-5-5" /></svg>
+            </span>
+            <h2 ref="viewHead" tabindex="-1">{{ t.paidTitle }}</h2>
+            <p class="dc__muted">{{ t.paidText }}</p>
+            <div class="dc__final" lang="es">
+              <p>
+                <b>¿Quieres verlo con tu carta?</b> Te la montamos en una demo corta, con tus platos
+                y tus mesas.
+              </p>
+              <a :href="finalHref" class="btn is-primary dc__wide">Solicitar demo</a>
+            </div>
+            <button type="button" class="dc__link" @click="goView('carta')">{{ t.keep }}</button>
           </div>
-          <button type="button" class="dc__link" @click="goView('carta')">{{ t.keep }}</button>
-        </div>
+        </Transition>
 
         <!-- Banda de alaCarta (siempre en español: es nuestra voz, no la del restaurante) -->
         <aside v-if="!isEmbed" class="dc__promo" lang="es">
@@ -767,128 +817,145 @@ function toggleFilter(id: string) {
 
       <!-- Barra inferior: avisos o pedido -->
       <div v-if="ready && view === 'carta'" class="dc__bar">
-        <button v-if="cartCount > 0" type="button" class="dc__cta" @click="openCart">
-          <span>{{ t.viewOrder }} · {{ t.items(cartCount) }}</span>
-          <b class="dc__num">{{ eur(cartTotal) }}</b>
-        </button>
-        <div v-else class="dc__actions">
-          <button type="button" class="dc__ghost" @click="notify('waiter')">{{ t.waiter }}</button>
-          <button type="button" class="dc__ghost" @click="notify('bill')">{{ t.bill }}</button>
-        </div>
+        <Transition name="dc-in">
+          <button v-if="cartCount > 0" type="button" class="dc__cta" @click="openCart">
+            <span>{{ t.viewOrder }} · {{ t.items(cartCount) }}</span>
+            <b class="dc__num">{{ eur(Math.round(cartShown)) }}</b>
+          </button>
+          <div v-else class="dc__actions">
+            <button type="button" class="dc__ghost" @click="notify('waiter')">
+              {{ t.waiter }}
+            </button>
+            <button type="button" class="dc__ghost" @click="notify('bill')">{{ t.bill }}</button>
+          </div>
+        </Transition>
       </div>
       <p class="sr-only" role="status" aria-live="polite">{{ live }}</p>
-      <p v-if="live && ready && view === 'carta'" class="dc__toast" aria-hidden="true">
+      <!-- La clave hace que cada aviso nuevo vuelva a aparecer (la animación del aviso es única) -->
+      <p v-if="live && ready && view === 'carta'" :key="live" class="dc__toast" aria-hidden="true">
         {{ live }}
       </p>
 
       <!-- Hojas: plato con opciones y pedido -->
-      <div v-if="sheetOpen" class="dc__backdrop" @click="closeSheet()"></div>
-      <div
-        v-if="sheetOpen"
-        ref="sheet"
-        class="dc__sheet"
-        role="dialog"
-        aria-modal="true"
-        :aria-labelledby="`${uid}-sheet-title`"
-        @keydown="onSheetKey"
-      >
-        <template v-if="sheetDish">
-          <div class="dc__sheet-head">
-            <h2 :id="`${uid}-sheet-title`" tabindex="-1" data-autofocus>
-              {{ sheetDish.name[lang] }}
-            </h2>
-            <button type="button" class="dc__x" :aria-label="t.close" @click="closeSheet()">
-              ×
-            </button>
-          </div>
-          <p class="dc__muted">{{ sheetDish.text[lang] }}</p>
-          <fieldset
-            v-for="m in sheetDish.modifiers"
-            :key="m.id"
-            class="dc__mod"
-            :class="{ 'is-missing': triedAdd && m.required && !sheetMods[m.id] }"
-          >
-            <legend>
-              {{ m.label[lang] }}
-              <span class="dc__req">{{ m.required ? t.required : t.optional }}</span>
-            </legend>
-            <label v-for="o in m.options" :key="o.id" class="dc__opt">
-              <input
-                v-model="sheetMods[m.id]"
-                type="radio"
-                :name="`${uid}-${m.id}`"
-                :value="o.id"
-              />
-              <span>{{ o.label[lang] }}</span>
+      <Transition name="t-fade">
+        <div v-if="sheetOpen" class="dc__backdrop" @click="closeSheet()"></div>
+      </Transition>
+      <Transition name="dc-sheet">
+        <div
+          v-if="sheetOpen"
+          ref="sheet"
+          class="dc__sheet"
+          role="dialog"
+          aria-modal="true"
+          :aria-labelledby="`${uid}-sheet-title`"
+          @keydown="onSheetKey"
+        >
+          <template v-if="sheetDish">
+            <div class="dc__sheet-head">
+              <h2 :id="`${uid}-sheet-title`" tabindex="-1" data-autofocus>
+                {{ sheetDish.name[lang] }}
+              </h2>
+              <button type="button" class="dc__x" :aria-label="t.close" @click="closeSheet()">
+                ×
+              </button>
+            </div>
+            <p class="dc__muted">{{ sheetDish.text[lang] }}</p>
+            <fieldset
+              v-for="m in sheetDish.modifiers"
+              :key="m.id"
+              class="dc__mod"
+              :class="{ 'is-missing': triedAdd && m.required && !sheetMods[m.id] }"
+            >
+              <legend>
+                {{ m.label[lang] }}
+                <span class="dc__req">{{ m.required ? t.required : t.optional }}</span>
+              </legend>
+              <label v-for="o in m.options" :key="o.id" class="dc__opt">
+                <input
+                  v-model="sheetMods[m.id]"
+                  type="radio"
+                  :name="`${uid}-${m.id}`"
+                  :value="o.id"
+                />
+                <span>{{ o.label[lang] }}</span>
+              </label>
+            </fieldset>
+            <label class="dc__note">
+              <span>{{ t.note }}</span>
+              <textarea
+                v-model="sheetNote"
+                rows="2"
+                maxlength="80"
+                :placeholder="t.notePh"
+              ></textarea>
             </label>
-          </fieldset>
-          <label class="dc__note">
-            <span>{{ t.note }}</span>
-            <textarea
-              v-model="sheetNote"
-              rows="2"
-              maxlength="80"
-              :placeholder="t.notePh"
-            ></textarea>
-          </label>
-          <button type="button" class="btn is-primary dc__wide" @click="confirmDish">
-            {{ t.addFor(eur(sheetDish.price * sheetQty)) }}
-          </button>
-        </template>
-
-        <template v-else>
-          <div class="dc__sheet-head">
-            <h2 :id="`${uid}-sheet-title`" tabindex="-1" data-autofocus>
-              {{ t.order }} · {{ t.table }} {{ demoVenue.table }}
-            </h2>
-            <button type="button" class="dc__x" :aria-label="t.close" @click="closeSheet()">
-              ×
+            <button type="button" class="btn is-primary dc__wide" @click="confirmDish">
+              {{ t.addFor(eur(sheetDish.price * sheetQty)) }}
             </button>
-          </div>
-          <p v-if="!cart.length" class="dc__muted">{{ t.empty }}</p>
-          <ul class="dc__ticket" role="list">
-            <li v-for="l in cart" :key="l.key">
-              <span class="dc__stepper">
-                <button
-                  type="button"
-                  :aria-label="t.remove(dishById(l.dish).name[lang])"
-                  @click="changeQty(l, -1)"
-                >
-                  −
-                </button>
-                <span class="dc__tq">{{ l.qty }}</span>
-                <button
-                  type="button"
-                  :aria-label="t.add(dishById(l.dish).name[lang])"
-                  @click="changeQty(l, 1)"
-                >
-                  +
-                </button>
-              </span>
-              <span class="dc__tn">
-                {{ dishById(l.dish).name[lang] }}
-                <small v-if="modsText(dishById(l.dish), l.mods, lang) || l.note">
-                  {{
-                    [modsText(dishById(l.dish), l.mods, lang), l.note].filter(Boolean).join(' · ')
-                  }}
-                </small>
-              </span>
-              <span class="dc__tp">{{ eur(linePrice(l), false) }}</span>
-            </li>
-          </ul>
-          <div class="dc__row is-strong">
-            <span>{{ t.total }}</span><b class="dc__num">{{ eur(cartTotal) }}</b>
-          </div>
-          <button
-            type="button"
-            class="btn is-primary dc__wide"
-            :disabled="!cart.length"
-            @click="sendOrder"
-          >
-            {{ t.send }}
-          </button>
-        </template>
-      </div>
+          </template>
+
+          <template v-else>
+            <div class="dc__sheet-head">
+              <h2 :id="`${uid}-sheet-title`" tabindex="-1" data-autofocus>
+                {{ t.order }} · {{ t.table }} {{ demoVenue.table }}
+              </h2>
+              <button type="button" class="dc__x" :aria-label="t.close" @click="closeSheet()">
+                ×
+              </button>
+            </div>
+            <Transition name="t-fade">
+              <p v-if="!cart.length" class="dc__muted">{{ t.empty }}</p>
+            </Transition>
+            <TransitionGroup
+              tag="ul"
+              name="t-list"
+              class="dc__ticket"
+              role="list"
+              @before-leave="pinLeave"
+            >
+              <li v-for="l in cart" :key="l.key">
+                <span class="dc__stepper">
+                  <button
+                    type="button"
+                    :aria-label="t.remove(dishById(l.dish).name[lang])"
+                    @click="changeQty(l, -1)"
+                  >
+                    −
+                  </button>
+                  <span class="dc__tq">{{ l.qty }}</span>
+                  <button
+                    type="button"
+                    :aria-label="t.add(dishById(l.dish).name[lang])"
+                    @click="changeQty(l, 1)"
+                  >
+                    +
+                  </button>
+                </span>
+                <span class="dc__tn">
+                  {{ dishById(l.dish).name[lang] }}
+                  <small v-if="modsText(dishById(l.dish), l.mods, lang) || l.note">
+                    {{
+                      [modsText(dishById(l.dish), l.mods, lang), l.note].filter(Boolean).join(' · ')
+                    }}
+                  </small>
+                </span>
+                <span class="dc__tp">{{ eur(linePrice(l), false) }}</span>
+              </li>
+            </TransitionGroup>
+            <div class="dc__row is-strong">
+              <span>{{ t.total }}</span><b class="dc__num">{{ eur(Math.round(cartShown)) }}</b>
+            </div>
+            <button
+              type="button"
+              class="btn is-primary dc__wide"
+              :disabled="!cart.length"
+              @click="sendOrder"
+            >
+              {{ t.send }}
+            </button>
+          </template>
+        </div>
+      </Transition>
     </div>
   </div>
 </template>
@@ -1039,7 +1106,9 @@ function toggleFilter(id: string) {
   font-weight: var(--weight-medium);
   color: var(--color-text-strong);
   text-decoration: none;
-  transition: background var(--dur-fast) var(--ease);
+  transition:
+    background-color var(--dur) var(--ease),
+    color var(--dur) var(--ease);
 }
 .dc__cat:hover {
   text-decoration: none;
@@ -1085,7 +1154,7 @@ function toggleFilter(id: string) {
   color: var(--white);
   font-size: var(--text-xs);
 }
-.dc__filters-panel {
+.dc__filters-inner {
   display: grid;
   gap: var(--space-2);
 }
@@ -1471,9 +1540,14 @@ function toggleFilter(id: string) {
   bottom: 5.5rem;
 }
 @keyframes dc-toast {
-  0%,
+  0% {
+    opacity: 0;
+    scale: 0.94;
+  }
+  8%,
   85% {
     opacity: 1;
+    scale: 1;
   }
   100% {
     opacity: 0;
@@ -1586,5 +1660,51 @@ function toggleFilter(id: string) {
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
   resize: vertical;
+}
+
+/* ── Movimiento ── */
+/* Listas animadas: lo que sale se fija aquí (pinLeave) */
+.dc__list,
+.dc__ticket {
+  position: relative;
+}
+.dc__mod {
+  transition: border-color var(--dur) var(--ease);
+}
+.dc__req {
+  transition: color var(--dur) var(--ease);
+}
+/*
+ * Vistas y contenido que se sustituye (carta, pedido enviado, pago; barra inferior): lo nuevo
+ * entra con fundido y lo anterior desaparece al instante, sin ocupar sitio a la vez ni retrasar
+ * el foco que se le pone al título.
+ */
+.dc-in-enter-active {
+  transition:
+    opacity var(--dur) var(--ease),
+    translate var(--dur) var(--ease);
+}
+.dc-in-enter-from {
+  opacity: 0;
+  translate: 0 8px;
+}
+.dc-in-leave-active {
+  display: none;
+}
+/* Hojas (plato con opciones, pedido): suben desde abajo y bajan al cerrarse */
+.dc-sheet-enter-active {
+  transition:
+    translate var(--dur-slow) var(--ease),
+    opacity var(--dur) var(--ease);
+}
+.dc-sheet-leave-active {
+  transition:
+    translate var(--dur) var(--ease-in-out),
+    opacity var(--dur) var(--ease-in-out);
+}
+.dc-sheet-enter-from,
+.dc-sheet-leave-to {
+  translate: 0 40%;
+  opacity: 0;
 }
 </style>

@@ -32,6 +32,7 @@ Significa "elige tus módulos" y funciona a 16 px. Está en `src/components/ui/L
    Las tarjetas (`.card`) se reservan para objetos: un plan, una solución enlazable, un formulario.
 5. **Sombras casi inexistentes**: solo menús desplegables y las maquetas del producto.
 6. **Pocas bandas oscuras** (como mucho dos: "por qué" y el cierre) y como mucho una banda gris.
+   El **pie es negro** (contenido claro) y queda separado de la banda de cierre por un filete.
    La banda oscura puede llevar un halo de pimentón muy tenue y grano fino.
 7. **Iconos de línea, pequeños, monocromos**, solo donde ayudan a reconocer (soluciones, confianza).
    El acento solo les llega en confianza (sobre `--accent-soft`) y en hover.
@@ -42,7 +43,28 @@ Significa "elige tus módulos" y funciona a 16 px. Está en `src/components/ui/L
 9. **Nada de plantilla SaaS**: sin degradados, sin blobs, sin mascotas, sin ilustraciones genéricas.
    La imagen del producto son las maquetas HTML, que se ven nítidas y pesan nada.
 10. **Motivo propio: la comanda impresa.** Papel térmico, monoespaciada, filetes discontinuos,
-   borde dentado y líneas de puntos de carta para precios. Ver `HeroStage.astro`.
+   borde dentado y líneas de puntos de carta para precios. Ver el ticket de `HeroScroll.astro`.
+
+## 2 bis. Movimiento e interacción (`src/styles/motion.css`, `src/scripts/`)
+
+Todo lo que se toca responde con suavidad y con las mismas curvas (`--ease` quint de salida,
+`--ease-in-out`) y tiempos (`--dur-fast` 160, `--dur` 260, `--dur-slow` 520, `--dur-press` 90 ms).
+
+- **Interacción**: transiciones por defecto en controles (con `:where`, especificidad 0), subrayado
+  de enlaces en fundido, botones que ceden al pulsar (`scale: 0.97`), anillo de foco que se asienta.
+- **Acordeones**: cualquier `<details>` anima su altura (`smooth-details.ts`), respetando los
+  grupos exclusivos (`name`). `data-instant` lo desactiva en uno concreto.
+- **Menús**: megamenú con fundido, escala mínima y columnas escalonadas; menú móvil con apertura
+  y cierre animados.
+- **Scroll suave**: Lenis (`smooth-scroll.ts`) con rueda y trackpad; el táctil sigue nativo. Los
+  anclajes respetan `scroll-padding-top`. `data-lenis-prevent` para contenedores con scroll propio.
+- **Cursor**: círculo blanco con `mix-blend-mode: difference` pegado al puntero (`cursor.ts`), que
+  se encoge sobre lo que se puede pulsar y desaparece en campos de texto. Se mueve con la propiedad
+  `translate` (nunca `transform`, que `scale` desplazaría). Solo con ratón.
+- **Entre páginas**: View Transitions entre documentos (fundido; la cabecera no parpadea).
+- **Islas Vue**: `<Transition name="t-fade | t-rise | t-step | t-pop | t-collapse">`,
+  `<TransitionGroup name="t-list">`, `.t-flash` y `useTweened` (`src/lib/tween.ts`) para cifras.
+- **Reducir movimiento**: sin cursor, sin Lenis, sin animación de acordeones; duraciones a cero.
 
 ## 3. Tokens (`src/styles/tokens.css`)
 
@@ -110,7 +132,10 @@ container queries para reorganizarse según el ancho disponible, no el de la ven
 | `.section-header`            | Antetítulo + titular + entradilla                        |
 | `.field`, `.input`, `.select`, `.textarea`, `.notice` | Formularios                     |
 
-Home (`src/components/home`): `HeroStage` (TPV + comandero + comanda impresa animada). El
+Home (`src/components/home`): `HeroScroll`, hero con historia ligada al scroll: el texto se va,
+el mostrador (TPV, cajón, impresora y comandero, dibujados en CSS y sustituibles por imágenes
+reales en la capa `.hs-hw`) queda fijo y una cámara recorre comanda → ticket en cocina → cobro →
+cajón → cierre del día. En móvil la cámara se acerca a cada aparato. Sustituye a `HeroStage`. El
 ecosistema por familias de la home sustituye al antiguo bento de 9 módulos. `SectionHeader` admite el título en
 el slot `title` para poder usar `<em>`. Utilidad `.reveal` para aparición al hacer scroll.
 

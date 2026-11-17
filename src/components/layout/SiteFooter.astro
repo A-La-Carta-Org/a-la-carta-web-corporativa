@@ -18,7 +18,7 @@ const year = new Date().getFullYear();
     <div class="site-footer__top">
       <div class="site-footer__brand">
         <a href="/" aria-label="alaCarta, inicio">
-          <Logo size={26} />
+          <Logo size={26} inverse />
         </a>
         <p class="muted">{SITE_TAGLINE}.</p>
       </div>
@@ -31,11 +31,11 @@ const year = new Date().getFullYear();
           </p>
         </div>
         <div class="site-footer__talk-actions">
-          <a href={ctaHref({ to: 'llamada', origen: 'pie' })} class="btn is-secondary">
+          <a href={ctaHref({ to: 'llamada', origen: 'pie' })} class="btn is-inverse-outline">
             <Icon name="ai-call" size={16} />
             Te llamamos
           </a>
-          <a href={ctaHref({ to: 'demo', origen: 'pie' })} class="btn is-primary">
+          <a href={ctaHref({ to: 'demo', origen: 'pie' })} class="btn is-inverse">
             Solicitar demo
           </a>
         </div>
@@ -84,10 +84,28 @@ const year = new Date().getFullYear();
 </footer>
 
 <style>
+  /* Pie en negativo: fondo negro y contenido claro. Se redefinen los colores semánticos solo
+     aquí, así el resto de reglas del pie (y .muted, enlaces, foco) se adaptan sin tocarlas. */
   .site-footer {
+    --color-text: var(--gray-200);
+    --color-text-strong: var(--white);
+    --color-text-muted: var(--gray-400);
+    --color-border: rgb(255 255 255 / 0.12);
+    --color-bg-soft: var(--gray-900);
+    --color-focus: var(--white);
+    background: var(--color-bg-inverse);
+    color: var(--color-text);
+    /* Separación sutil de la banda de cierre, que también es negra */
     border-top: 1px solid var(--color-border);
     padding-block: var(--space-12) var(--space-10);
     font-size: var(--text-sm);
+  }
+  .site-footer ::selection {
+    background: var(--white);
+    color: var(--black);
+  }
+  .site-footer__talk {
+    border: 1px solid var(--color-border);
   }
   .site-footer__top {
     display: grid;

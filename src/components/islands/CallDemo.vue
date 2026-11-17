@@ -151,6 +151,24 @@ function accept() {
       : 'Pedido aceptado: pasa a cocina para las 21:30.';
 }
 
+/**
+ * Movimiento: al salir de la transcripción (cambio de llamada, pausa), la frase se queda fija
+ * donde estaba mientras se desvanece, para que el resto no salte.
+ */
+function pinLeave(el: Element) {
+  const e = el as HTMLElement;
+  const { offsetTop, offsetLeft, offsetWidth, offsetHeight } = e;
+  Object.assign(e.style, {
+    position: 'absolute',
+    top: `${offsetTop}px`,
+    left: `${offsetLeft}px`,
+    width: `${offsetWidth}px`,
+    height: `${offsetHeight}px`,
+    margin: '0',
+    boxSizing: 'border-box',
+  });
+}
+
 onMounted(() => {
   reduced = prefersReducedMotion();
   ready.value = true;
@@ -194,13 +212,22 @@ onBeforeUnmount(() => cancelAnimationFrame(raf));
           <span class="mk-muted">{{ scenario.at }} · {{ scenario.caller }}</span>
           <span class="mk-right num mk-muted">{{ duration }}</span>
         </div>
-        <ol class="call__talk" role="list" aria-label="Transcripción">
-          <li v-for="(l, i) in visible" :key="i" class="call__msg" :class="`is-${l.who}`">
+        <!-- La frase que se escribe y la ya completa comparten clave: no parpadea al terminarse -->
+        <TransitionGroup
+          tag="ol"
+          name="t-list"
+          class="call__talk"
+          role="list"
+          aria-label="Transcripción"
+          @before-leave="pinLeave"
+        >
+          <li v-for="(l, i) in visible" :key="`f${i}`" class="call__msg" :class="`is-${l.who}`">
             <span class="call__who">{{ l.who === 'ia' ? 'Asistente' : 'Cliente' }}</span>
             {{ l.text }}
           </li>
           <li
             v-if="ready && playing && current"
+            :key="`f${shown}`"
             class="call__msg is-typing"
             :class="`is-${current.who}`"
             aria-hidden="true"
@@ -208,10 +235,10 @@ onBeforeUnmount(() => cancelAnimationFrame(raf));
             <span class="call__who">{{ current.who === 'ia' ? 'Asistente' : 'Cliente' }}</span>
             {{ current.text.slice(0, Math.floor(typed)) }}<span class="call__caret"></span>
           </li>
-          <li v-if="ready && !playing && shown === 0" class="call__idle mk-muted">
+          <li v-if="ready && !playing && shown === 0" key="idle" class="call__idle mk-muted">
             Pulsa «Reproducir» y mira cómo atiende el asistente. Sin audio: es una simulación.
           </li>
-        </ol>
+        </TransitionGroup>
         <div v-if="ready" class="call__controls">
           <button v-if="!playing" type="button" class="mk-btn is-dark" @click="play">
             <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
@@ -233,120 +260,136 @@ onBeforeUnmount(() => cancelAnimationFrame(raf));
       <!-- Lo que deja en el sistema -->
       <div class="call__result" aria-label="Lo que queda en el sistema">
         <p class="call__label">Lo que queda en tu sistema</p>
-        <div v-if="!showResult" class="call__wait mk">
-          <p class="mk-muted">
-            Al colgar, aquí verás lo que el asistente deja en el sistema. Nada se confirma sin ti.
-          </p>
-        </div>
-
-        <!-- Reserva por confirmar -->
-        <div v-else-if="sel === 'reserva'" class="mk call__panel">
-          <div class="mk-topbar">
-            <span class="mk-strong">Reservas</span><span class="mk-right mk-muted">Sáb 22</span>
+        <Transition name="call-in">
+          <div v-if="!showResult" key="espera" class="call__wait mk">
+            <p class="mk-muted">
+              Al colgar, aquí verás lo que el asistente deja en el sistema. Nada se confirma sin ti.
+            </p>
           </div>
-          <div class="call__body">
-            <div class="mk-row">
-              <span class="num mk-muted">20:30</span>
-              <span class="grow">Marta G.<span class="sub">2 pax · interior</span></span>
-              <span class="mk-pill is-ok">Confirmada</span>
+
+          <!-- Reserva por confirmar -->
+          <div v-else-if="sel === 'reserva'" key="reserva" class="mk call__panel">
+            <div class="mk-topbar">
+              <span class="mk-strong">Reservas</span><span class="mk-right mk-muted">Sáb 22</span>
             </div>
-            <div class="mk-row call__new">
-              <span class="num mk-muted">21:00</span>
-              <span class="grow"
-                >Pablo M.<span class="sub">4 pax · terraza · 1 celíaco · por teléfono</span></span
-              >
-              <span class="mk-pill" :class="accepted ? 'is-ok' : 'is-warn'">{{
-                accepted ? 'Confirmada' : 'Por confirmar'
-              }}</span>
+            <div class="call__body">
+              <div class="mk-row">
+                <span class="num mk-muted">20:30</span>
+                <span class="grow">Marta G.<span class="sub">2 pax · interior</span></span>
+                <span class="mk-pill is-ok">Confirmada</span>
+              </div>
+              <div class="mk-row call__new">
+                <span class="num mk-muted">21:00</span>
+                <span class="grow"
+                  >Pablo M.<span class="sub">4 pax · terraza · 1 celíaco · por teléfono</span></span
+                >
+                <Transition name="t-pop" mode="out-in">
+                  <span
+                    :key="String(accepted)"
+                    class="mk-pill"
+                    :class="accepted ? 'is-ok' : 'is-warn'"
+                    >{{ accepted ? 'Confirmada' : 'Por confirmar' }}</span
+                  >
+                </Transition>
+              </div>
+              <div class="mk-row">
+                <span class="num mk-muted">21:30</span>
+                <span class="grow">Grupo Ruiz<span class="sub">6 pax · interior</span></span>
+                <span class="mk-pill is-ok">Confirmada</span>
+              </div>
+              <Transition name="call-in">
+                <div v-if="!accepted" class="call__btns">
+                  <button type="button" class="mk-btn is-dark" :disabled="!ready" @click="accept">
+                    Confirmar la de las 21:00
+                  </button>
+                </div>
+                <div v-else class="call__sms">
+                  <span class="mk-muted">SMS que recibe Pablo</span>
+                  <p>
+                    La Plaza: reserva confirmada para 4 personas el sábado 22 a las 21:00, en
+                    terraza. Si no podéis venir, anúlala con un toque desde este mensaje.
+                  </p>
+                </div>
+              </Transition>
             </div>
-            <div class="mk-row">
-              <span class="num mk-muted">21:30</span>
-              <span class="grow">Grupo Ruiz<span class="sub">6 pax · interior</span></span>
-              <span class="mk-pill is-ok">Confirmada</span>
+          </div>
+
+          <!-- Pedido para recoger por aceptar -->
+          <div v-else-if="sel === 'recoger'" key="recoger" class="mk call__panel">
+            <div class="mk-topbar">
+              <span class="mk-strong">TPV · Pedidos</span
+              ><span class="mk-right mk-muted">por aceptar</span>
             </div>
-            <div v-if="!accepted" class="call__btns">
-              <button type="button" class="mk-btn is-dark" :disabled="!ready" @click="accept">
-                Confirmar la de las 21:00
-              </button>
+            <div class="call__body">
+              <div class="mk-row">
+                <span class="grow mk-strong"
+                  >Recogida · Lucía<span class="sub">por teléfono · para las 21:30</span></span
+                >
+                <Transition name="t-pop" mode="out-in">
+                  <span
+                    :key="String(accepted)"
+                    class="mk-pill"
+                    :class="accepted ? 'is-ok' : 'is-warn'"
+                    >{{ accepted ? 'Aceptado' : 'Pendiente' }}</span
+                  >
+                </Transition>
+              </div>
+              <div class="mk-row">
+                <span class="num mk-muted">2</span><span class="grow">Croquetas de jamón</span
+                ><span class="num">18,00</span>
+              </div>
+              <div class="mk-row">
+                <span class="num mk-muted">1</span><span class="grow">Bravas de la casa</span
+                ><span class="num">7,50</span>
+              </div>
+              <div class="mk-row">
+                <span class="grow mk-strong">Total</span><span class="num mk-strong">25,50 €</span>
+              </div>
+              <Transition name="call-in">
+                <div v-if="!accepted" class="call__btns">
+                  <button type="button" class="mk-btn is-dark" :disabled="!ready" @click="accept">
+                    Aceptar el pedido
+                  </button>
+                  <span class="mk-muted">Si nadie lo acepta, caduca y no llega a cocina.</span>
+                </div>
+                <p v-else class="call__done">
+                  Aceptado: entra en la pantalla de cocina con su hora de recogida.
+                </p>
+              </Transition>
             </div>
-            <div v-else class="call__sms">
-              <span class="mk-muted">SMS que recibe Pablo</span>
-              <p>
-                La Plaza: reserva confirmada para 4 personas el sábado 22 a las 21:00, en terraza.
-                Si no podéis venir, anúlala con un toque desde este mensaje.
+          </div>
+
+          <!-- Pregunta: pasada al local -->
+          <div v-else key="pregunta" class="mk call__panel">
+            <div class="mk-topbar">
+              <span class="mk-strong">Llamadas de hoy</span>
+            </div>
+            <div class="call__body">
+              <div class="mk-row call__new">
+                <span class="num mk-muted">19:58</span>
+                <span class="grow"
+                  >Horario del domingo y alergia al gluten<span class="sub"
+                    >Horario respondido con tus datos. Alergia grave: pasada a una persona.</span
+                  ></span
+                >
+                <span class="mk-pill">Pasada al local</span>
+              </div>
+              <div class="mk-row">
+                <span class="num mk-muted">19:40</span>
+                <span class="grow"
+                  >Grupo de 14 personas<span class="sub"
+                    >Grupo grande: pasada a una persona.</span
+                  ></span
+                >
+                <span class="mk-pill">Pasada al local</span>
+              </div>
+              <p class="call__done is-soft">
+                Responde con la carta y el horario del sistema; ante una alergia grave, una queja o
+                un grupo grande, pasa la llamada al local.
               </p>
             </div>
           </div>
-        </div>
-
-        <!-- Pedido para recoger por aceptar -->
-        <div v-else-if="sel === 'recoger'" class="mk call__panel">
-          <div class="mk-topbar">
-            <span class="mk-strong">TPV · Pedidos</span
-            ><span class="mk-right mk-muted">por aceptar</span>
-          </div>
-          <div class="call__body">
-            <div class="mk-row">
-              <span class="grow mk-strong"
-                >Recogida · Lucía<span class="sub">por teléfono · para las 21:30</span></span
-              >
-              <span class="mk-pill" :class="accepted ? 'is-ok' : 'is-warn'">{{
-                accepted ? 'Aceptado' : 'Pendiente'
-              }}</span>
-            </div>
-            <div class="mk-row">
-              <span class="num mk-muted">2</span><span class="grow">Croquetas de jamón</span
-              ><span class="num">18,00</span>
-            </div>
-            <div class="mk-row">
-              <span class="num mk-muted">1</span><span class="grow">Bravas de la casa</span
-              ><span class="num">7,50</span>
-            </div>
-            <div class="mk-row">
-              <span class="grow mk-strong">Total</span><span class="num mk-strong">25,50 €</span>
-            </div>
-            <div v-if="!accepted" class="call__btns">
-              <button type="button" class="mk-btn is-dark" :disabled="!ready" @click="accept">
-                Aceptar el pedido
-              </button>
-              <span class="mk-muted">Si nadie lo acepta, caduca y no llega a cocina.</span>
-            </div>
-            <p v-else class="call__done">
-              Aceptado: entra en la pantalla de cocina con su hora de recogida.
-            </p>
-          </div>
-        </div>
-
-        <!-- Pregunta: pasada al local -->
-        <div v-else class="mk call__panel">
-          <div class="mk-topbar">
-            <span class="mk-strong">Llamadas de hoy</span>
-          </div>
-          <div class="call__body">
-            <div class="mk-row call__new">
-              <span class="num mk-muted">19:58</span>
-              <span class="grow"
-                >Horario del domingo y alergia al gluten<span class="sub"
-                  >Horario respondido con tus datos. Alergia grave: pasada a una persona.</span
-                ></span
-              >
-              <span class="mk-pill">Pasada al local</span>
-            </div>
-            <div class="mk-row">
-              <span class="num mk-muted">19:40</span>
-              <span class="grow"
-                >Grupo de 14 personas<span class="sub"
-                  >Grupo grande: pasada a una persona.</span
-                ></span
-              >
-              <span class="mk-pill">Pasada al local</span>
-            </div>
-            <p class="call__done is-soft">
-              Responde con la carta y el horario del sistema; ante una alergia grave, una queja o un
-              grupo grande, pasa la llamada al local.
-            </p>
-          </div>
-        </div>
+        </Transition>
       </div>
     </div>
 
@@ -433,6 +476,9 @@ onBeforeUnmount(() => cancelAnimationFrame(raf));
   height: 8px;
   border-radius: 999px;
   background: var(--gray-300);
+}
+.call__live {
+  transition: background-color var(--dur) var(--ease);
 }
 .call__live.is-on {
   background: var(--color-ok);
@@ -542,5 +588,29 @@ onBeforeUnmount(() => cancelAnimationFrame(raf));
   .call__talk {
     min-height: 0;
   }
+}
+
+/* ── Movimiento ── */
+/* Transcripción: lo que sale se fija aquí (pinLeave) */
+.call__talk {
+  position: relative;
+}
+.call .mk-pill {
+  transition:
+    background-color var(--dur) var(--ease),
+    color var(--dur) var(--ease);
+}
+/* Resultado y confirmación: lo nuevo entra con fundido; lo anterior se va al instante, sin solaparse */
+.call-in-enter-active {
+  transition:
+    opacity var(--dur) var(--ease),
+    translate var(--dur) var(--ease);
+}
+.call-in-enter-from {
+  opacity: 0;
+  translate: 0 8px;
+}
+.call-in-leave-active {
+  display: none;
 }
 </style>

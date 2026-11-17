@@ -1,0 +1,256 @@
+/*
+ * Movimiento global: que todo lo que se toca responda con suavidad.
+ *
+ * - Transiciones por defecto en elementos interactivos (especificidad 0 con :where, así que
+ *   cualquier regla de un componente manda sobre estas).
+ * - Foco que se asienta, acordeones con altura animada (ver src/scripts/smooth-details.ts).
+ * - Cursor circular en modo diferencia (src/scripts/cursor.ts) y scroll suave con Lenis
+ *   (src/scripts/smooth-scroll.ts).
+ * - Transición entre páginas con View Transitions (sin JavaScript).
+ * - Clases comunes para <Transition> y <TransitionGroup> de las islas Vue.
+ *
+ * Con «reducir movimiento», base.css anula duraciones y los scripts no se activan.
+ */
+
+/* ── 1. Transiciones por defecto ─────────────────────────────────── */
+:where(button, summary, label, input, select, textarea, [role='button'], [role='tab'], .card, .chip) {
+  transition-property: color, background-color, border-color, box-shadow, opacity;
+  transition-duration: var(--dur);
+  transition-timing-function: var(--ease);
+}
+
+/* ── 2. Foco: el anillo llega desde fuera y se asienta ───────────── */
+@media (prefers-reduced-motion: no-preference) {
+  :focus-visible {
+    animation: focus-settle var(--dur) var(--ease);
+  }
+}
+@keyframes focus-settle {
+  from {
+    outline-offset: 7px;
+    outline-color: transparent;
+  }
+}
+
+/* ── 3. Acordeones (<details>) ───────────────────────────────────── */
+/* La altura la anima smooth-details.ts; aquí solo el contenido y el chevron */
+details > summary svg,
+details > summary :is(.chevron, [data-chevron]) {
+  transition: rotate var(--dur) var(--ease);
+}
+details.is-animating {
+  overflow: hidden;
+}
+
+/* ── 4. Scroll suave (Lenis) ─────────────────────────────────────── */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+html.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+.lenis [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+/* Mientras la rueda desplaza la página, los iframes no se quedan con ella */
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
+/* ── 5. Cursor circular en negativo ──────────────────────────────── */
+/* Solo con ratón (hover + puntero fino) y sin «reducir movimiento»: lo activa cursor.ts */
+html.has-cursor,
+html.has-cursor * {
+  cursor: none !important;
+}
+html.has-cursor
+  :is(
+    input:not([type='checkbox'], [type='radio'], [type='range'], [type='submit'], [type='button'], [type='color'], [type='file']),
+    textarea,
+    [contenteditable='true']
+  ) {
+  cursor: text !important;
+}
+.cursor {
+  --size: 1.25rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2147483000;
+  width: var(--size);
+  height: var(--size);
+  margin: calc(var(--size) / -2) 0 0 calc(var(--size) / -2);
+  border-radius: 50%;
+  background: #fff;
+  mix-blend-mode: difference;
+  pointer-events: none;
+  opacity: 0;
+  scale: 1;
+  will-change: translate, scale;
+  transition:
+    scale var(--dur) var(--ease),
+    opacity var(--dur) var(--ease);
+}
+.cursor.is-visible {
+  opacity: 1;
+}
+/* Sobre lo que se puede pulsar se encoge: el círculo apunta, no tapa */
+.cursor.is-hover {
+  scale: 0.4;
+}
+/* Al pulsar cede un poco más */
+.cursor.is-down {
+  scale: 0.8;
+  transition-duration: var(--dur-press);
+}
+.cursor.is-hover.is-down {
+  scale: 0.3;
+}
+.cursor.is-text,
+.cursor.is-hidden {
+  opacity: 0;
+}
+
+/* ── 6. Transición entre páginas (View Transitions entre documentos) ─ */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+  ::view-transition-old(root) {
+    animation: page-out 180ms var(--ease-in-out) both;
+  }
+  ::view-transition-new(root) {
+    animation: page-in var(--dur-slow) var(--ease) both;
+  }
+  /* La cabecera no parpadea: es la misma en las dos páginas */
+  .site-header {
+    view-transition-name: site-header;
+  }
+}
+@keyframes page-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+}
+
+/* ── 7. Islas Vue: <Transition name="t-…"> y <TransitionGroup name="t-list"> ─ */
+/* Fundido simple: avisos, estados, contenido que se sustituye */
+.t-fade-enter-active,
+.t-fade-leave-active {
+  transition: opacity var(--dur) var(--ease);
+}
+.t-fade-enter-from,
+.t-fade-leave-to {
+  opacity: 0;
+}
+
+/* Sube y aparece: resultados, tarjetas, pasos de un formulario (con mode="out-in") */
+.t-rise-enter-active,
+.t-rise-leave-active {
+  transition:
+    opacity var(--dur) var(--ease),
+    translate var(--dur) var(--ease);
+}
+.t-rise-enter-from {
+  opacity: 0;
+  translate: 0 10px;
+}
+.t-rise-leave-to {
+  opacity: 0;
+  translate: 0 -6px;
+}
+
+/* Paso adelante/atrás horizontal (asistentes de varios pasos) */
+.t-step-enter-active,
+.t-step-leave-active {
+  transition:
+    opacity var(--dur) var(--ease),
+    translate var(--dur) var(--ease);
+}
+.t-step-enter-from {
+  opacity: 0;
+  translate: var(--step-dir, 16px) 0;
+}
+.t-step-leave-to {
+  opacity: 0;
+  translate: calc(var(--step-dir, 16px) * -1) 0;
+}
+
+/* Aparece con un pequeño rebote de escala: chips, insignias, confirmaciones */
+.t-pop-enter-active {
+  transition:
+    opacity var(--dur) var(--ease),
+    scale var(--dur) cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.t-pop-leave-active {
+  transition:
+    opacity var(--dur-fast) var(--ease),
+    scale var(--dur-fast) var(--ease);
+}
+.t-pop-enter-from,
+.t-pop-leave-to {
+  opacity: 0;
+  scale: 0.94;
+}
+
+/* Paneles que se despliegan (altura con grid 0fr → 1fr, sin medir en JS) */
+.t-collapse-enter-active,
+.t-collapse-leave-active {
+  display: grid;
+  transition:
+    grid-template-rows var(--dur) var(--ease),
+    opacity var(--dur) var(--ease);
+}
+.t-collapse-enter-from,
+.t-collapse-leave-to {
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+.t-collapse-enter-to,
+.t-collapse-leave-from {
+  grid-template-rows: 1fr;
+}
+.t-collapse-enter-active > *,
+.t-collapse-leave-active > * {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Listas: líneas de ticket, comandas, transcripciones */
+.t-list-move,
+.t-list-enter-active,
+.t-list-leave-active {
+  transition:
+    opacity var(--dur) var(--ease),
+    translate var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+.t-list-enter-from {
+  opacity: 0;
+  translate: 0 8px;
+}
+.t-list-leave-to {
+  opacity: 0;
+  translate: 0 -4px;
+}
+
+/* Destello sutil cuando cambia una cifra (añadir la clase con una key nueva) */
+@keyframes value-flash {
+  from {
+    background-color: var(--accent-soft);
+  }
+}
+.t-flash {
+  animation: value-flash var(--dur-slow) var(--ease);
+  border-radius: var(--radius-xs);
+}

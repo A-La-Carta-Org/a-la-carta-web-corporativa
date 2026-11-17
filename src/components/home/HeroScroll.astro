@@ -1,0 +1,1248 @@
+---
+/**
+ * Hero con historia al hacer scroll (docs/auditoria/14). Empieza como un hero normal: texto
+ * centrado y, debajo, un mostrador con el TPV, el cajón, la impresora de cocina y el
+ * comandero. Al hacer scroll el texto se va, el mostrador queda fijo y una «cámara» recorre
+ * un servicio sencillo:
+ *
+ *   1 · comanda en el móvil → 2 · el ticket sale en cocina → 3 · cobro en el TPV →
+ *   4 · se abre el cajón → 5 · el día se cierra con los números.
+ *
+ * - Escritorio: se ve todo el mostrador con un zoom suave hacia lo que actúa.
+ * - Móvil: la cámara se acerca del todo a cada aparato para que se lea.
+ * - Sin JavaScript o con «reducir movimiento»: hero normal con el mostrador en un estado fijo
+ *   (comanda impresa) y los cinco pasos como lista. El mostrador escala solo (unidades `cqw`).
+ *
+ * El hardware está dibujado en CSS para poder sustituirlo por imágenes reales sin tocar la
+ * animación: solo cambia la capa `.hs-hw`.
+ */
+import Icon from '@/components/ui/Icon.astro';
+import { hero } from '@/data/home';
+
+const order = [
+  { qty: 2, name: 'Croquetas de jamón', note: '', price: 18 },
+  { qty: 1, name: 'Ensalada de burrata', note: 'sin cebolla', price: 12.5 },
+  { qty: 1, name: 'Entrecot de vaca', note: 'al punto', price: 24 },
+  { qty: 2, name: 'Copa de vino tinto', note: '', price: 7.6 },
+];
+const total = order.reduce((s, l) => s + l.price, 0);
+const eur = (n: number) =>
+  n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const steps = [
+  {
+    title: 'Toma la comanda en la mesa',
+    text: 'El camarero pide desde el móvil y la mesa 4 se abre sola en el TPV.',
+  },
+  {
+    title: 'La cocina la recibe impresa',
+    text: 'Cada plato sale en su partida y con sus notas: «al punto», «sin cebolla».',
+  },
+  {
+    title: 'Cobra como quiera el cliente',
+    text: 'Tarjeta, efectivo o a medias. El TPV calcula el cambio.',
+  },
+  {
+    title: 'El cajón se abre al cobrar',
+    text: 'Solo con efectivo, y queda registrado quién lo abrió y cuándo.',
+  },
+  {
+    title: 'Y el día se cierra cuadrado',
+    text: 'Cada ticket suma en los informes. El cierre llega al móvil del responsable.',
+  },
+];
+const tables = [1, 2, 3, 4, 5, 6, 7, 8];
+---
+
+<section
+  class="hs"
+  data-hero-scroll
+  data-step="2"
+  data-items="4"
+  data-sent="1"
+  data-screen="pedido"
+  data-pay="0"
+  style="--print: 1; --drawer: 0"
+  aria-labelledby="hs-title"
+>
+  <div class="hs__sticky">
+    <!-- Texto del hero: se va al empezar el scroll -->
+    <div class="container hs__copy" data-hs-copy>
+      <span class="eyebrow is-live fade-up">{hero.eyebrow}</span>
+      <h1 id="hs-title" class="fade-up" style="--delay: 60ms">
+        {hero.titleLead} <em>{hero.titleAccent}</em>
+      </h1>
+      <p class="lead fade-up" style="--delay: 120ms">{hero.text}</p>
+      <div class="hs__actions fade-up" style="--delay: 180ms">
+        <a href={hero.primary.href} class="btn is-primary is-lg">
+          {hero.primary.label}
+          <Icon name="arrow-right" size={16} class="btn-arrow" />
+        </a>
+        <a href={hero.secondary.href} class="btn is-secondary is-lg">
+          <Icon name="play" size={16} />
+          {hero.secondary.label}
+        </a>
+      </div>
+      <p class="hs__note muted fade-up" style="--delay: 240ms">{hero.note}</p>
+    </div>
+
+    <!-- El mostrador -->
+    <div class="hs__box fade-up" style="--delay: 200ms" data-hs-box aria-hidden="true">
+      <div class="hs-stage" data-hs-stage>
+        <div class="hs-counter"></div>
+
+        <!-- Cajón portamonedas -->
+        <div class="hs-hw hs-drawer">
+          <div class="hs-drawer__tray">
+            <span class="hs-bill is-a"></span><span class="hs-bill is-b"></span><span
+              class="hs-bill is-c"></span>
+            <span class="hs-coins"><i></i><i></i><i></i><i></i><i></i></span>
+          </div>
+          <div class="hs-drawer__front">
+            <span class="hs-drawer__slot"></span>
+            <span class="hs-drawer__lock"></span>
+            <span class="hs-drawer__slot"></span>
+          </div>
+        </div>
+
+        <!-- Terminal TPV -->
+        <div class="hs-hw hs-foot"></div>
+        <div class="hs-hw hs-neck"></div>
+        <div class="hs-hw hs-terminal">
+          <div class="hs-screen">
+            <div class="hs-app__bar">
+              <span class="hs-app__logo"><i></i><i></i><i></i><i></i></span>
+              <span class="hs-app__tab is-on">Sala</span>
+              <span class="hs-app__tab">Barra</span>
+              <span class="hs-app__tab">Pedidos</span>
+              <span class="hs-app__user">Marcos</span>
+            </div>
+
+            <!-- Vista: sala -->
+            <div class="hs-view is-sala">
+              <p class="hs-view__title">Sala · Terraza</p>
+              <div class="hs-tables">
+                {
+                  tables.map((t) => (
+                    <span class:list={['hs-table', { 'is-busy': [2, 6].includes(t), 'is-new': t === 4 }]}>
+                      Mesa {t}
+                    </span>
+                  ))
+                }
+              </div>
+            </div>
+
+            <!-- Vista: pedido de la mesa 4 -->
+            <div class="hs-view is-pedido">
+              <div class="hs-view__head">
+                <p class="hs-view__title">Mesa 4 · 3 pax</p>
+                <span class="hs-chip is-kitchen">En cocina</span>
+              </div>
+              <ul role="list" class="hs-lines">
+                {
+                  order.map((l) => (
+                    <li>
+                      <span class="hs-lines__qty">{l.qty}</span>
+                      <span class="hs-lines__name">
+                        {l.name}
+                        {l.note && <small>{l.note}</small>}
+                      </span>
+                      <span class="hs-lines__price">{eur(l.price)}</span>
+                    </li>
+                  ))
+                }
+              </ul>
+              <div class="hs-total">
+                <span>Total</span>
+                <strong>{eur(total)} €</strong>
+              </div>
+            </div>
+
+            <!-- Vista: cobro -->
+            <div class="hs-view is-cobro">
+              <div class="hs-view__head">
+                <p class="hs-view__title">Cobrar · Mesa 4</p>
+                <span class="hs-chip is-paid">Cobrado</span>
+              </div>
+              <p class="hs-pay__amount">{eur(total)} €</p>
+              <div class="hs-pay__methods">
+                <span class="hs-pay__m">Tarjeta</span>
+                <span class="hs-pay__m is-cash">Efectivo</span>
+                <span class="hs-pay__m">Dividir</span>
+              </div>
+              <div class="hs-pay__cash">
+                <span>Entregado <b>70,00 €</b></span>
+                <span>Cambio <b>{eur(70 - total)} €</b></span>
+              </div>
+            </div>
+
+            <!-- Vista: cierre del día -->
+            <div class="hs-view is-cierre">
+              <p class="hs-view__title">Hoy · cierre en directo</p>
+              <div class="hs-kpis">
+                <span><small>Ventas</small><b>1.284,60 €</b></span>
+                <span><small>Tickets</small><b>38</b></span>
+                <span><small>Ticket medio</small><b>33,80 €</b></span>
+              </div>
+              <div class="hs-bars">
+                <i style="--h: 30%"></i><i style="--h: 52%"></i><i style="--h: 88%"></i><i
+                  style="--h: 64%"></i><i style="--h: 40%"></i><i style="--h: 72%"></i><i
+                  class="is-now"
+                  style="--h: 96%"></i>
+              </div>
+              <p class="hs-last">Mesa 4 · cobrada · <b>{eur(total)} €</b></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Impresora de cocina con su ticket -->
+        <div class="hs-paper-clip">
+          <div class="hs-paper">
+            <p class="hs-paper__head">COCINA</p>
+            <p class="hs-paper__meta">Mesa 4 · 3 pax<br />Marcos · 21:38</p>
+            <ul role="list">
+              {
+                order
+                  .filter((l) => !l.name.startsWith('Copa'))
+                  .map((l) => (
+                    <li>
+                      <b>{l.qty}</b> {l.name}
+                      {l.note && <small>&gt; {l.note}</small>}
+                    </li>
+                  ))
+              }
+            </ul>
+            <p class="hs-paper__foot">— alaCarta —</p>
+          </div>
+        </div>
+        <div class="hs-hw hs-printer">
+          <span class="hs-printer__slot"></span>
+          <span class="hs-printer__led"></span>
+          <span class="hs-printer__window"><i></i><i></i></span>
+        </div>
+
+        <!-- Comandero (móvil) -->
+        <div class="hs-hw hs-phone">
+          <div class="hs-phone__screen">
+            <p class="hs-phone__title">Mesa 4 <small>3 pax</small></p>
+            <ul role="list" class="hs-menu">
+              {
+                order.map((l) => (
+                  <li>
+                    <span>{l.name}</span>
+                    <b class="hs-menu__qty">{l.qty}</b>
+                  </li>
+                ))
+              }
+            </ul>
+            <span class="hs-send">
+              <span class="hs-send__a">Enviar a cocina</span>
+              <span class="hs-send__b">Enviado ✓</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Los pasos: uno a uno al hacer scroll; lista normal sin JS -->
+    <ol class="hs-steps" role="list">
+      {
+        steps.map((s, i) => (
+          <li class="hs-step" data-n={i + 1}>
+            <span class="hs-step__n">{i + 1}/5</span>
+            <span class="hs-step__body">
+              <strong>{s.title}</strong>
+              <span>{s.text}</span>
+            </span>
+          </li>
+        ))
+      }
+    </ol>
+    <div class="hs-progress" aria-hidden="true"><i></i></div>
+  </div>
+</section>
+
+<script>
+  /**
+   * Coreografía ligada al scroll. Un solo número `p` (0 → 1) de lo recorrido en la sección
+   * decide la cámara (encuadre del mostrador) y el estado de cada aparato. Funciona con el
+   * scroll nativo y con Lenis (que mueve el scroll nativo).
+   */
+  const root = document.querySelector<HTMLElement>('[data-hero-scroll]');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  type Rect = [number, number, number, number]; // x, y, ancho, alto en unidades del mostrador
+  const W = 1200;
+  const FOCUS: Record<string, Rect> = {
+    overview: [0, 40, W, 660],
+    phone: [50, 322, 210, 370],
+    printer: [970, 110, 230, 510],
+    screen: [296, 52, 608, 394],
+    drawer: [236, 440, 728, 210],
+  };
+  // [p, encuadre]: la cámara viaja entre estos puntos
+  const KEYS: [number, string][] = [
+    [0, 'hero'],
+    [0.1, 'overview'],
+    [0.16, 'phone'],
+    [0.3, 'phone'],
+    [0.34, 'printer'],
+    [0.47, 'printer'],
+    [0.51, 'screen'],
+    [0.63, 'screen'],
+    [0.67, 'drawer'],
+    [0.79, 'drawer'],
+    [0.85, 'overview'],
+    [1, 'overview'],
+  ];
+
+  const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+  const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  const span = (p: number, a: number, b: number) => clamp((p - a) / (b - a));
+
+  if (root && !reduce.matches) {
+    const sticky = root.querySelector<HTMLElement>('.hs__sticky')!;
+    const box = root.querySelector<HTMLElement>('[data-hs-box]')!;
+    const stage = root.querySelector<HTMLElement>('[data-hs-stage]')!;
+    const copy = root.querySelector<HTMLElement>('[data-hs-copy]')!;
+    root.classList.add('is-live');
+
+    const stepsEl = root.querySelector<HTMLElement>('.hs-steps')!;
+    let boxW = 0;
+    let boxH = 0; // alto útil: sin la zona de los pasos
+    let copyBottom = 0;
+    let mobile = false;
+
+    const measure = () => {
+      const b = box.getBoundingClientRect();
+      const st = stepsEl.getBoundingClientRect();
+      boxW = b.width;
+      boxH = Math.max(200, st.top - b.top - 12);
+      mobile = boxW < 760;
+      const c = copy.getBoundingClientRect();
+      // Dónde acaba el texto, en coordenadas de la caja de la cámara
+      copyBottom = c.bottom - b.top + (mobile ? 16 : 28);
+    };
+
+    type Cam = { cx: number; cy: number; s: number };
+    const fit = (r: Rect, pad: number) => Math.min(boxW / (r[2] * pad), boxH / (r[3] * pad));
+    const camOf = (name: string): Cam => {
+      const o = FOCUS.overview;
+      const so = fit(o, 1.04);
+      const over = { cx: o[0] + o[2] / 2, cy: o[1] + o[3] / 2, s: so };
+      if (name === 'overview') return over;
+      if (name === 'hero') {
+        // El mostrador asoma bajo el texto, como un hero normal
+        // En móvil, terminal y cajón a lo ancho aunque asomen poco bajo el texto
+        const s = mobile ? fit([220, 40, 760, 600], 1.02) : so * 0.8;
+        return { cx: W / 2, cy: (boxH / 2 - copyBottom) / s, s };
+      }
+      const r = FOCUS[name];
+      const focus = { cx: r[0] + r[2] / 2, cy: r[1] + r[3] / 2, s: fit(r, 1.08) };
+      // Móvil: encuadre completo del aparato. Escritorio: solo un acercamiento suave, se
+      // sigue viendo todo el mostrador
+      if (mobile) return focus;
+      const k = 0.18;
+      return {
+        cx: lerp(over.cx, focus.cx, k),
+        cy: over.cy,
+        s: lerp(over.s, Math.min(focus.s, over.s * 1.5), k * 0.6),
+      };
+    };
+    const camera = (p: number): Cam => {
+      let i = 0;
+      while (i < KEYS.length - 2 && p > KEYS[i + 1][0]) i++;
+      const [p0, a] = KEYS[i];
+      const [p1, b] = KEYS[i + 1];
+      const t = ease(span(p, p0, p1));
+      const A = camOf(a);
+      const B = camOf(b);
+      return { cx: lerp(A.cx, B.cx, t), cy: lerp(A.cy, B.cy, t), s: lerp(A.s, B.s, t) };
+    };
+
+    let last = -1;
+    const render = () => {
+      const rect = root.getBoundingClientRect();
+      const total = rect.height - sticky.offsetHeight;
+      const p = clamp(-rect.top / Math.max(1, total));
+      if (Math.abs(p - last) < 0.0005 && last !== -1) return;
+      last = p;
+
+      // 1 · El texto se va
+      const intro = ease(span(p, 0, 0.09));
+      copy.style.opacity = String(1 - intro);
+      copy.style.translate = `0 ${-56 * intro}px`;
+      copy.style.visibility = intro > 0.98 ? 'hidden' : '';
+      copy.style.pointerEvents = intro > 0.4 ? 'none' : '';
+
+      // 2 · Cámara
+      const c = camera(p);
+      stage.style.transform = `translate(${boxW / 2 - c.cx * c.s}px, ${boxH / 2 - c.cy * c.s}px) scale(${c.s})`;
+
+      // 3 · Estado de los aparatos
+      const items = Math.floor(span(p, 0.17, 0.27) * 4.999);
+      root.dataset.items = String(items);
+      root.dataset.sent = p >= 0.285 ? '1' : '0';
+      root.style.setProperty('--print', ease(span(p, 0.33, 0.46)).toFixed(3));
+      const open = p < 0.73 ? ease(span(p, 0.665, 0.7)) : 1 - ease(span(p, 0.76, 0.79));
+      root.style.setProperty('--drawer', open.toFixed(3));
+      root.dataset.screen = p < 0.15 ? 'sala' : p < 0.49 ? 'pedido' : p < 0.82 ? 'cobro' : 'cierre';
+      root.dataset.pay = p < 0.53 ? '0' : p < 0.58 ? '1' : p < 0.62 ? '2' : '3';
+      const step = p < 0.12 ? 0 : p < 0.31 ? 1 : p < 0.49 ? 2 : p < 0.65 ? 3 : p < 0.81 ? 4 : 5;
+      root.dataset.step = String(step);
+      root.style.setProperty('--progress', span(p, 0.12, 0.97).toFixed(3));
+    };
+
+    let queued = false;
+    const onScroll = () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        queued = false;
+        render();
+      });
+    };
+    const onResize = () => {
+      measure();
+      last = -1;
+      render();
+    };
+
+    measure();
+    render();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onResize);
+    // Las fuentes cambian la altura del texto: se vuelve a medir cuando cargan
+    document.fonts?.ready.then(onResize);
+
+    // Si alguien llega con el teclado a los botones del hero ya escondidos, se vuelve arriba
+    copy.addEventListener('focusin', () => {
+      const top = root.getBoundingClientRect().top + window.scrollY;
+      if (window.scrollY > top + 10) {
+        if (window.__lenis) window.__lenis.scrollTo(top, { immediate: true });
+        else window.scrollTo(0, top);
+      }
+    });
+  }
+</script>
+
+<style>
+  /* ── Sección y modo estático (sin JS o con «reducir movimiento») ──────── */
+  .hs {
+    position: relative;
+    padding-top: clamp(3rem, 2rem + 4vw, 6rem);
+  }
+  .hs__copy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--space-5);
+    max-width: 54rem;
+  }
+  .hs__copy h1 {
+    max-width: 16ch;
+  }
+  .hs__copy h1 em {
+    display: block;
+    color: var(--accent);
+  }
+  .hs__copy .lead {
+    max-width: 40rem;
+  }
+  .hs__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+  }
+  .hs__note {
+    font-size: var(--text-sm);
+  }
+
+  /* El mostrador escala solo con el ancho (1 unidad = 1/1200 del ancho de la caja) */
+  .hs__box {
+    container-type: inline-size;
+    position: relative;
+    width: min(100% - 2 * var(--gutter), 72rem);
+    margin: clamp(2rem, 1.5rem + 3vw, 4rem) auto 0;
+    aspect-ratio: 1200 / 700;
+    overflow: hidden;
+  }
+  .hs-stage {
+    --u: calc(100cqw / 1200);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: calc(1200 * var(--u));
+    height: calc(720 * var(--u));
+    transform-origin: 0 0;
+  }
+
+  .hs-steps {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--space-6);
+    width: min(100% - 2 * var(--gutter), 72rem);
+    margin: var(--space-10) auto 0;
+    padding: 0;
+  }
+  .hs-step {
+    display: grid;
+    gap: var(--space-2);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .hs-step strong {
+    display: block;
+    color: var(--color-text-strong);
+    font-family: var(--font-display);
+    font-size: var(--text-base);
+    margin-bottom: var(--space-1);
+  }
+  .hs-step__n {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--accent);
+  }
+  .hs-progress {
+    display: none;
+  }
+
+  /* ── Modo en directo: sección alta y escena fija ─────────────────────── */
+  .hs.is-live {
+    height: 560vh;
+    padding-top: 0;
+  }
+  .hs.is-live .hs__sticky {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100svh;
+    overflow: hidden;
+  }
+  .hs.is-live .hs__copy {
+    position: absolute;
+    inset: calc(var(--header-h) + clamp(2rem, 1rem + 4vw, 4.5rem)) 0 auto;
+    z-index: 2;
+    will-change: opacity, translate;
+  }
+  .hs.is-live .hs__box {
+    position: absolute;
+    inset: var(--header-h) 0 0;
+    width: auto;
+    margin: 0;
+    aspect-ratio: auto;
+  }
+  .hs.is-live .hs-stage {
+    --u: 1px;
+    will-change: transform;
+  }
+  .hs.is-live .hs-steps {
+    position: absolute;
+    left: 50%;
+    bottom: var(--space-6);
+    translate: -50% 0;
+    width: min(100% - 2 * var(--gutter), 34rem);
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    z-index: 3;
+  }
+  .hs.is-live .hs-step {
+    grid-area: 1 / 1;
+    grid-template-columns: auto 1fr;
+    align-items: start;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-5);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: rgb(255 255 255 / 0.86);
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    translate: 0 10px;
+    transition:
+      opacity var(--dur) var(--ease),
+      translate var(--dur) var(--ease);
+  }
+  .hs.is-live .hs-step__n {
+    padding-top: 0.2rem;
+  }
+  .hs.is-live[data-step='1'] .hs-step[data-n='1'],
+  .hs.is-live[data-step='2'] .hs-step[data-n='2'],
+  .hs.is-live[data-step='3'] .hs-step[data-n='3'],
+  .hs.is-live[data-step='4'] .hs-step[data-n='4'],
+  .hs.is-live[data-step='5'] .hs-step[data-n='5'] {
+    opacity: 1;
+    translate: 0 0;
+  }
+  .hs.is-live .hs-progress {
+    display: block;
+    position: absolute;
+    left: 50%;
+    bottom: var(--space-3);
+    translate: -50% 0;
+    width: min(100% - 2 * var(--gutter), 34rem);
+    height: 2px;
+    background: var(--color-border);
+    border-radius: 2px;
+    opacity: 0;
+    transition: opacity var(--dur) var(--ease);
+  }
+  .hs.is-live:not([data-step='0']) .hs-progress {
+    opacity: 1;
+  }
+  .hs-progress i {
+    display: block;
+    height: 100%;
+    width: 100%;
+    background: var(--accent);
+    transform-origin: 0 50%;
+    scale: var(--progress, 0) 1;
+  }
+
+  /* ── El mostrador (todo en unidades --u) ─────────────────────────────── */
+  .hs-stage > * {
+    position: absolute;
+  }
+  .hs-counter {
+    left: calc(-1200 * var(--u));
+    right: calc(-1200 * var(--u));
+    top: calc(606 * var(--u));
+    height: calc(1400 * var(--u));
+    background: linear-gradient(to bottom, var(--gray-150), var(--gray-100) 30%);
+    border-top: calc(1 * var(--u)) solid var(--gray-200);
+  }
+  .hs-hw {
+    --dark: #1a1a19;
+  }
+
+  /* Terminal */
+  .hs-terminal {
+    left: calc(300 * var(--u));
+    top: calc(56 * var(--u));
+    width: calc(600 * var(--u));
+    height: calc(386 * var(--u));
+    padding: calc(14 * var(--u));
+    border-radius: calc(24 * var(--u));
+    background: linear-gradient(160deg, #2a2a28, #0e0e0d 60%);
+    box-shadow:
+      inset 0 0 0 calc(1 * var(--u)) rgb(255 255 255 / 0.08),
+      0 calc(30 * var(--u)) calc(60 * var(--u)) calc(-20 * var(--u)) rgb(0 0 0 / 0.35);
+  }
+  .hs-neck {
+    left: calc(560 * var(--u));
+    top: calc(436 * var(--u));
+    width: calc(80 * var(--u));
+    height: calc(44 * var(--u));
+    background: linear-gradient(90deg, #1c1c1b, #2e2e2c 50%, #1c1c1b);
+  }
+  .hs-foot {
+    left: calc(470 * var(--u));
+    top: calc(470 * var(--u));
+    width: calc(260 * var(--u));
+    height: calc(22 * var(--u));
+    border-radius: calc(12 * var(--u)) calc(12 * var(--u)) calc(4 * var(--u)) calc(4 * var(--u));
+    background: linear-gradient(to bottom, #3a3a37, #1d1d1c);
+    z-index: 1;
+  }
+  .hs-screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: calc(10 * var(--u));
+    background: var(--white);
+    overflow: hidden;
+    font-size: calc(15 * var(--u));
+    color: var(--gray-900);
+  }
+  .hs-app__bar {
+    display: flex;
+    align-items: center;
+    gap: calc(8 * var(--u));
+    height: calc(44 * var(--u));
+    padding: 0 calc(14 * var(--u));
+    border-bottom: calc(1 * var(--u)) solid var(--gray-200);
+    font-size: calc(13 * var(--u));
+  }
+  .hs-app__logo {
+    display: grid;
+    grid-template-columns: repeat(2, calc(7 * var(--u)));
+    gap: calc(2 * var(--u));
+    margin-right: calc(6 * var(--u));
+  }
+  .hs-app__logo i {
+    height: calc(7 * var(--u));
+    border-radius: calc(2 * var(--u));
+    border: calc(1.4 * var(--u)) solid var(--black);
+  }
+  .hs-app__logo i:first-child {
+    background: var(--black);
+  }
+  .hs-app__tab {
+    padding: calc(5 * var(--u)) calc(10 * var(--u));
+    border-radius: calc(6 * var(--u));
+    color: var(--gray-500);
+  }
+  .hs-app__tab.is-on {
+    background: var(--gray-100);
+    color: var(--gray-900);
+  }
+  .hs-app__user {
+    margin-left: auto;
+    color: var(--gray-500);
+  }
+
+  .hs-view {
+    position: absolute;
+    inset: calc(44 * var(--u)) 0 0;
+    padding: calc(16 * var(--u)) calc(20 * var(--u));
+    opacity: 0;
+    translate: 0 calc(6 * var(--u));
+    transition:
+      opacity var(--dur) var(--ease),
+      translate var(--dur) var(--ease);
+  }
+  .hs[data-screen='sala'] .hs-view.is-sala,
+  .hs[data-screen='pedido'] .hs-view.is-pedido,
+  .hs[data-screen='cobro'] .hs-view.is-cobro,
+  .hs[data-screen='cierre'] .hs-view.is-cierre {
+    opacity: 1;
+    translate: 0 0;
+  }
+  .hs-view__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .hs-view__title {
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    font-size: calc(18 * var(--u));
+    margin-bottom: calc(12 * var(--u));
+  }
+  .hs-chip {
+    font-size: calc(12 * var(--u));
+    padding: calc(3 * var(--u)) calc(9 * var(--u));
+    border-radius: 999px;
+    margin-bottom: calc(12 * var(--u));
+    opacity: 0;
+    transition: opacity var(--dur) var(--ease);
+  }
+  .hs-chip.is-kitchen {
+    background: var(--color-warn-soft);
+    color: var(--color-warn);
+  }
+  .hs[data-sent='1'] .hs-chip.is-kitchen {
+    opacity: 1;
+  }
+  .hs-chip.is-paid {
+    background: var(--color-ok-soft);
+    color: var(--color-ok);
+  }
+  .hs[data-pay='3'] .hs-chip.is-paid {
+    opacity: 1;
+  }
+
+  /* Sala */
+  .hs-tables {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: calc(12 * var(--u));
+  }
+  .hs-table {
+    display: grid;
+    place-items: center;
+    height: calc(92 * var(--u));
+    border-radius: calc(10 * var(--u));
+    border: calc(1 * var(--u)) solid var(--gray-200);
+    font-size: calc(13 * var(--u));
+    color: var(--gray-500);
+  }
+  .hs-table.is-busy {
+    background: var(--gray-100);
+    color: var(--gray-900);
+  }
+  .hs-table.is-new {
+    border-color: var(--accent);
+    color: var(--accent);
+    animation: hs-ping 1.6s var(--ease) infinite;
+  }
+  @keyframes hs-ping {
+    50% {
+      box-shadow: 0 0 0 calc(5 * var(--u)) var(--accent-soft);
+    }
+  }
+
+  /* Pedido */
+  .hs-lines li {
+    display: grid;
+    grid-template-columns: calc(28 * var(--u)) 1fr auto;
+    gap: calc(8 * var(--u));
+    padding: calc(7 * var(--u)) 0;
+    border-bottom: calc(1 * var(--u)) solid var(--gray-150);
+    opacity: 0;
+    translate: calc(-8 * var(--u)) 0;
+    transition:
+      opacity var(--dur) var(--ease),
+      translate var(--dur) var(--ease);
+  }
+  .hs[data-items='1'] .hs-lines li:nth-child(-n + 1),
+  .hs[data-items='2'] .hs-lines li:nth-child(-n + 2),
+  .hs[data-items='3'] .hs-lines li:nth-child(-n + 3),
+  .hs[data-items='4'] .hs-lines li {
+    opacity: 1;
+    translate: 0 0;
+  }
+  .hs-lines small {
+    display: block;
+    font-size: calc(12 * var(--u));
+    color: var(--gray-500);
+  }
+  .hs-lines__qty,
+  .hs-lines__price,
+  .hs-total strong,
+  .hs-pay__amount,
+  .hs-kpis b {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .hs-total {
+    display: flex;
+    justify-content: space-between;
+    margin-top: calc(10 * var(--u));
+    font-size: calc(17 * var(--u));
+    opacity: 0;
+    transition: opacity var(--dur) var(--ease);
+  }
+  .hs[data-items='4'] .hs-total {
+    opacity: 1;
+  }
+
+  /* Cobro */
+  .hs-pay__amount {
+    font-size: calc(46 * var(--u));
+    letter-spacing: -0.02em;
+    margin: calc(4 * var(--u)) 0 calc(18 * var(--u));
+  }
+  .hs-pay__methods {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: calc(10 * var(--u));
+  }
+  .hs-pay__m {
+    display: grid;
+    place-items: center;
+    height: calc(56 * var(--u));
+    border-radius: calc(10 * var(--u));
+    border: calc(1 * var(--u)) solid var(--gray-200);
+    transition:
+      background-color var(--dur) var(--ease),
+      color var(--dur) var(--ease),
+      scale var(--dur-press) var(--ease);
+  }
+  .hs:is([data-pay='1'], [data-pay='2'], [data-pay='3']) .hs-pay__m.is-cash {
+    background: var(--black);
+    color: var(--white);
+    border-color: var(--black);
+  }
+  .hs[data-pay='1'] .hs-pay__m.is-cash {
+    scale: 0.96;
+  }
+  .hs-pay__cash {
+    display: flex;
+    justify-content: space-between;
+    margin-top: calc(18 * var(--u));
+    color: var(--gray-500);
+    opacity: 0;
+    transition: opacity var(--dur) var(--ease);
+  }
+  .hs-pay__cash b {
+    color: var(--gray-900);
+    font-family: var(--font-mono);
+  }
+  .hs:is([data-pay='2'], [data-pay='3']) .hs-pay__cash {
+    opacity: 1;
+  }
+
+  /* Cierre */
+  .hs-kpis {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: calc(10 * var(--u));
+  }
+  .hs-kpis span {
+    display: grid;
+    gap: calc(4 * var(--u));
+    padding: calc(10 * var(--u)) calc(12 * var(--u));
+    border: calc(1 * var(--u)) solid var(--gray-200);
+    border-radius: calc(10 * var(--u));
+  }
+  .hs-kpis small {
+    font-size: calc(12 * var(--u));
+    color: var(--gray-500);
+  }
+  .hs-kpis b {
+    font-size: calc(20 * var(--u));
+    font-weight: var(--weight-medium);
+  }
+  .hs-bars {
+    display: flex;
+    align-items: end;
+    gap: calc(10 * var(--u));
+    height: calc(90 * var(--u));
+    margin-top: calc(16 * var(--u));
+  }
+  .hs-bars i {
+    flex: 1;
+    height: var(--h);
+    border-radius: calc(4 * var(--u)) calc(4 * var(--u)) 0 0;
+    background: var(--gray-200);
+    transform-origin: bottom;
+    scale: 1 0;
+    transition: scale var(--dur-slow) var(--ease);
+  }
+  .hs-bars i.is-now {
+    background: var(--accent);
+  }
+  .hs[data-screen='cierre'] .hs-bars i {
+    scale: 1 1;
+  }
+  .hs-last {
+    margin-top: calc(10 * var(--u));
+    font-size: calc(13 * var(--u));
+    color: var(--gray-500);
+  }
+  .hs-last b {
+    color: var(--gray-900);
+    font-family: var(--font-mono);
+  }
+
+  /* Cajón */
+  .hs-drawer {
+    left: calc(240 * var(--u));
+    top: calc(486 * var(--u));
+    width: calc(720 * var(--u));
+    height: calc(122 * var(--u));
+    border-radius: calc(10 * var(--u)) calc(10 * var(--u)) calc(4 * var(--u)) calc(4 * var(--u));
+    background: linear-gradient(to bottom, #2b2b29, #121211 25%);
+    box-shadow: 0 calc(18 * var(--u)) calc(30 * var(--u)) calc(-16 * var(--u)) rgb(0 0 0 / 0.45);
+  }
+  .hs-drawer__tray {
+    position: absolute;
+    left: calc(14 * var(--u));
+    right: calc(14 * var(--u));
+    top: calc(20 * var(--u));
+    height: calc(var(--drawer) * 58 * var(--u));
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: calc(10 * var(--u));
+    padding: 0 calc(18 * var(--u));
+    background: #2c2c2a;
+    border-radius: calc(4 * var(--u));
+  }
+  .hs-bill {
+    width: calc(118 * var(--u));
+    height: calc(40 * var(--u));
+    border-radius: calc(3 * var(--u));
+    flex: 0 0 auto;
+  }
+  .hs-bill.is-a {
+    background: #b9c9b5;
+  }
+  .hs-bill.is-b {
+    background: #c7b9a2;
+  }
+  .hs-bill.is-c {
+    background: #a9bdc9;
+  }
+  .hs-coins {
+    display: flex;
+    gap: calc(6 * var(--u));
+    margin-left: auto;
+  }
+  .hs-coins i {
+    width: calc(26 * var(--u));
+    height: calc(26 * var(--u));
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #e8d9a8, #a8935a);
+  }
+  .hs-coins i:nth-child(even) {
+    background: radial-gradient(circle at 35% 35%, #e2e2de, #8f8f89);
+  }
+  .hs-drawer__front {
+    position: absolute;
+    left: calc(-4 * var(--u));
+    right: calc(-4 * var(--u));
+    bottom: 0;
+    height: calc(92 * var(--u));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: calc(60 * var(--u));
+    border-radius: calc(6 * var(--u));
+    background: linear-gradient(to bottom, #232322, #141413);
+    border-top: calc(1 * var(--u)) solid rgb(255 255 255 / 0.08);
+    translate: 0 calc(var(--drawer) * 58 * var(--u));
+    scale: calc(1 + var(--drawer) * 0.04);
+  }
+  .hs-drawer__slot {
+    width: calc(190 * var(--u));
+    height: calc(3 * var(--u));
+    border-radius: 2px;
+    background: #0a0a0a;
+    box-shadow: 0 calc(1 * var(--u)) 0 rgb(255 255 255 / 0.06);
+  }
+  .hs-drawer__lock {
+    width: calc(22 * var(--u));
+    height: calc(22 * var(--u));
+    border-radius: 50%;
+    background: radial-gradient(circle, #8a8a85 30%, #4a4a47 32%, #6b6b66);
+  }
+
+  /* Impresora */
+  .hs-printer {
+    left: calc(990 * var(--u));
+    top: calc(440 * var(--u));
+    width: calc(184 * var(--u));
+    height: calc(168 * var(--u));
+    border-radius: calc(30 * var(--u)) calc(30 * var(--u)) calc(14 * var(--u)) calc(14 * var(--u));
+    background: linear-gradient(170deg, #4a4a47, #2a2a28 55%);
+    box-shadow:
+      inset 0 calc(-30 * var(--u)) 0 rgb(0 0 0 / 0.12),
+      0 calc(18 * var(--u)) calc(30 * var(--u)) calc(-16 * var(--u)) rgb(0 0 0 / 0.45);
+    z-index: 2;
+  }
+  .hs-printer__slot {
+    position: absolute;
+    left: calc(26 * var(--u));
+    right: calc(26 * var(--u));
+    top: calc(14 * var(--u));
+    height: calc(10 * var(--u));
+    border-radius: calc(6 * var(--u));
+    background: #0d0d0c;
+  }
+  .hs-printer__led {
+    position: absolute;
+    right: calc(22 * var(--u));
+    top: calc(46 * var(--u));
+    width: calc(7 * var(--u));
+    height: calc(7 * var(--u));
+    border-radius: 50%;
+    background: #3c3c39;
+    transition: background-color var(--dur) var(--ease);
+  }
+  .hs[data-sent='1'] .hs-printer__led {
+    background: #6bd69d;
+    box-shadow: 0 0 calc(8 * var(--u)) #6bd69d;
+  }
+  .hs-printer__window {
+    position: absolute;
+    left: calc(44 * var(--u));
+    right: calc(44 * var(--u));
+    bottom: calc(22 * var(--u));
+    height: calc(62 * var(--u));
+    border-radius: calc(12 * var(--u));
+    background: #1a1a19;
+    display: flex;
+    align-items: end;
+    justify-content: center;
+    gap: calc(10 * var(--u));
+    padding-bottom: calc(10 * var(--u));
+  }
+  .hs-printer__window i {
+    width: calc(18 * var(--u));
+    height: calc(9 * var(--u));
+    border-radius: 50%;
+    background: #e9e9e5;
+  }
+  .hs-paper-clip {
+    left: calc(1014 * var(--u));
+    top: calc(118 * var(--u));
+    width: calc(136 * var(--u));
+    height: calc(336 * var(--u));
+    overflow: hidden;
+    z-index: 3;
+  }
+  .hs-paper {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: calc(16 * var(--u)) calc(12 * var(--u)) calc(14 * var(--u));
+    background: #fffdf8;
+    color: #1c1c1a;
+    font-family: var(--font-mono);
+    font-size: calc(11 * var(--u));
+    line-height: 1.45;
+    box-shadow: 0 0 calc(10 * var(--u)) rgb(0 0 0 / 0.08);
+    translate: 0 calc((1 - var(--print)) * 100%);
+    mask: conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) 50% /
+      calc(10 * var(--u)) 100%;
+  }
+  .hs-paper__head {
+    text-align: center;
+    font-weight: 700;
+    font-size: calc(17 * var(--u));
+    letter-spacing: 0.08em;
+  }
+  .hs-paper__meta {
+    text-align: center;
+    color: #6a6a64;
+    padding-bottom: calc(8 * var(--u));
+    margin-bottom: calc(8 * var(--u));
+    border-bottom: calc(1 * var(--u)) dashed #8a8a84;
+  }
+  .hs-paper li {
+    margin-bottom: calc(5 * var(--u));
+  }
+  .hs-paper li small {
+    display: block;
+    padding-left: calc(14 * var(--u));
+    color: #6a6a64;
+    font-size: calc(10 * var(--u));
+  }
+  .hs-paper__foot {
+    margin-top: calc(8 * var(--u));
+    padding-top: calc(6 * var(--u));
+    border-top: calc(1 * var(--u)) dashed #8a8a84;
+    text-align: center;
+    color: #8a8a84;
+  }
+
+  /* Comandero */
+  .hs-phone {
+    left: calc(66 * var(--u));
+    top: calc(330 * var(--u));
+    width: calc(176 * var(--u));
+    height: calc(352 * var(--u));
+    padding: calc(8 * var(--u));
+    border-radius: calc(30 * var(--u));
+    background: linear-gradient(160deg, #2a2a28, #0e0e0d 60%);
+    box-shadow:
+      inset 0 0 0 calc(1 * var(--u)) rgb(255 255 255 / 0.1),
+      0 calc(24 * var(--u)) calc(40 * var(--u)) calc(-16 * var(--u)) rgb(0 0 0 / 0.45);
+    rotate: -4deg;
+    z-index: 4;
+  }
+  .hs-phone__screen {
+    position: relative;
+    height: 100%;
+    border-radius: calc(23 * var(--u));
+    background: var(--white);
+    overflow: hidden;
+    padding: calc(26 * var(--u)) calc(12 * var(--u)) calc(12 * var(--u));
+    font-size: calc(11.5 * var(--u));
+    color: var(--gray-900);
+  }
+  .hs-phone__title {
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    font-size: calc(15 * var(--u));
+    margin-bottom: calc(10 * var(--u));
+  }
+  .hs-phone__title small {
+    font-weight: 400;
+    color: var(--gray-500);
+    font-size: calc(11 * var(--u));
+  }
+  .hs-menu li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: calc(6 * var(--u));
+    padding: calc(8 * var(--u)) 0;
+    border-bottom: calc(1 * var(--u)) solid var(--gray-150);
+  }
+  .hs-menu__qty {
+    display: grid;
+    place-items: center;
+    min-width: calc(20 * var(--u));
+    height: calc(20 * var(--u));
+    border-radius: calc(6 * var(--u));
+    background: var(--gray-100);
+    color: var(--gray-400);
+    font-family: var(--font-mono);
+    font-size: calc(11 * var(--u));
+    transition:
+      background-color var(--dur) var(--ease),
+      color var(--dur) var(--ease),
+      scale var(--dur) cubic-bezier(0.34, 1.4, 0.64, 1);
+  }
+  .hs[data-items='1'] .hs-menu li:nth-child(-n + 1) .hs-menu__qty,
+  .hs[data-items='2'] .hs-menu li:nth-child(-n + 2) .hs-menu__qty,
+  .hs[data-items='3'] .hs-menu li:nth-child(-n + 3) .hs-menu__qty,
+  .hs[data-items='4'] .hs-menu li .hs-menu__qty {
+    background: var(--black);
+    color: var(--white);
+    scale: 1.08;
+  }
+  .hs-send {
+    position: absolute;
+    left: calc(12 * var(--u));
+    right: calc(12 * var(--u));
+    bottom: calc(14 * var(--u));
+    height: calc(38 * var(--u));
+    display: grid;
+    place-items: center;
+    border-radius: calc(10 * var(--u));
+    background: var(--gray-200);
+    color: var(--gray-500);
+    font-weight: var(--weight-medium);
+    transition:
+      background-color var(--dur) var(--ease),
+      color var(--dur) var(--ease);
+  }
+  .hs-send > span {
+    grid-area: 1 / 1;
+    transition: opacity var(--dur) var(--ease);
+  }
+  .hs-send__b {
+    opacity: 0;
+  }
+  .hs[data-items='4'] .hs-send {
+    background: var(--black);
+    color: var(--white);
+  }
+  .hs[data-sent='1'] .hs-send {
+    background: var(--color-ok);
+    color: var(--white);
+  }
+  .hs[data-sent='1'] .hs-send__a {
+    opacity: 0;
+  }
+  .hs[data-sent='1'] .hs-send__b {
+    opacity: 1;
+  }
+
+  /* ── Pequeños ajustes ────────────────────────────────────────────────── */
+  @media (max-width: 1024px) {
+    .hs-steps {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 720px) {
+    .hs-steps {
+      grid-template-columns: 1fr;
+    }
+    .hs.is-live {
+      height: 520vh;
+    }
+    .hs.is-live .hs-steps {
+      bottom: var(--space-5);
+    }
+    .hs.is-live .hs-step {
+      padding: var(--space-3) var(--space-4);
+      gap: var(--space-3);
+    }
+    .hs__actions .btn {
+      width: 100%;
+    }
+  }
+</style>

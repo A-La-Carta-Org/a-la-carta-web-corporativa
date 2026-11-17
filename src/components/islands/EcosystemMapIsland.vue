@@ -177,9 +177,10 @@ onMounted(() => {
         />
       </g>
 
-      <g class="eco__edges" aria-hidden="true">
+      <!-- Las conexiones de la pieza enfocada aparecen y se apagan con fundido -->
+      <TransitionGroup tag="g" name="eco-edge" class="eco__edges" aria-hidden="true">
         <path v-for="e in edgesDrawn" :key="e.key" :d="e.d" :class="{ 'is-pending': e.pending }" />
-      </g>
+      </TransitionGroup>
 
       <g class="eco__families" aria-hidden="true">
         <text v-for="f in families" :key="f.id" :x="f.lx" :y="f.ly" text-anchor="middle">
@@ -195,22 +196,33 @@ onMounted(() => {
           <rect x="0" y="12" width="10" height="10" rx="2.5" />
           <rect x="12" y="12" width="10" height="10" rx="2.5" />
         </g>
-        <text
-          :x="cx"
-          :y="cy + 12"
-          text-anchor="middle"
-          class="eco__core-title"
-          :class="{ 'is-long': (focusNode?.navLabel.length ?? 0) > 16 }"
-        >
-          {{ focusNode ? focusNode.navLabel : 'Un solo sistema' }}
-        </text>
-        <text :x="cx" :y="cy + 36" text-anchor="middle" class="eco__core-text">
-          {{
-            focusNode
-              ? `se conecta con ${focusNode.edges.length} piezas`
-              : 'carta · mesas · clientes · ventas · equipo'
-          }}
-        </text>
+        <Transition name="eco-text" mode="out-in">
+          <text
+            :key="focusSlug ?? 'core'"
+            :x="cx"
+            :y="cy + 12"
+            text-anchor="middle"
+            class="eco__core-title"
+            :class="{ 'is-long': (focusNode?.navLabel.length ?? 0) > 16 }"
+          >
+            {{ focusNode ? focusNode.navLabel : 'Un solo sistema' }}
+          </text>
+        </Transition>
+        <Transition name="eco-text" mode="out-in">
+          <text
+            :key="focusSlug ?? 'core'"
+            :x="cx"
+            :y="cy + 36"
+            text-anchor="middle"
+            class="eco__core-text"
+          >
+            {{
+              focusNode
+                ? `se conecta con ${focusNode.edges.length} piezas`
+                : 'carta · mesas · clientes · ventas · equipo'
+            }}
+          </text>
+        </Transition>
       </g>
 
       <!-- Piezas: enlaces sin JS; botones al hidratar -->
@@ -324,79 +336,92 @@ onMounted(() => {
             }}</span>
           </li>
         </ul>
-        <div
-          v-if="ready && selNode && familyOfSel === f.id"
-          :id="`eco-card-${f.id}`"
-          class="eco__card is-inline"
-        >
-          <div>
-            <p class="eco__card-title">
-              <span>{{ selNode.name }}</span>
-              <span v-if="selNode.pending" class="chip is-status" :title="selNode.statusNote">{{
-                selNode.statusLabel
-              }}</span>
-            </p>
-            <p class="eco__card-tag">{{ selNode.tagline }}</p>
+        <!-- La ficha se despliega (t-collapse: envoltorio con un solo hijo, sin relleno) -->
+        <Transition name="t-collapse">
+          <div v-if="ready && selNode && familyOfSel === f.id" class="eco__slot">
+            <div>
+              <div :id="`eco-card-${f.id}`" class="eco__card is-inline">
+                <div>
+                  <p class="eco__card-title">
+                    <span>{{ selNode.name }}</span>
+                    <span
+                      v-if="selNode.pending"
+                      class="chip is-status"
+                      :title="selNode.statusNote"
+                      >{{ selNode.statusLabel }}</span
+                    >
+                  </p>
+                  <p class="eco__card-tag">{{ selNode.tagline }}</p>
+                </div>
+                <p class="eco__card-sub">Se conecta con</p>
+                <ul class="eco__conns" role="list">
+                  <li v-for="e in selNode.edges" :key="e.to" :class="{ 'is-pending': e.pending }">
+                    <a :href="edgePath(e)" class="eco__conn-name">{{ edgeLabel(e) }}</a>
+                    <span v-if="e.pending" class="chip is-status">En camino</span>
+                    <span class="eco__conn-text">{{ e.text }}</span>
+                  </li>
+                </ul>
+                <a :href="selNode.path" class="link-arrow"
+                  >Ver {{ selNode.navLabel }} <span aria-hidden="true">→</span></a
+                >
+              </div>
+            </div>
           </div>
-          <p class="eco__card-sub">Se conecta con</p>
-          <ul class="eco__conns" role="list">
-            <li v-for="e in selNode.edges" :key="e.to" :class="{ 'is-pending': e.pending }">
-              <a :href="edgePath(e)" class="eco__conn-name">{{ edgeLabel(e) }}</a>
-              <span v-if="e.pending" class="chip is-status">En camino</span>
-              <span class="eco__conn-text">{{ e.text }}</span>
-            </li>
-          </ul>
-          <a :href="selNode.path" class="link-arrow"
-            >Ver {{ selNode.navLabel }} <span aria-hidden="true">→</span></a
-          >
-        </div>
+        </Transition>
       </div>
     </div>
 
     <!-- Escritorio: ficha bajo el mapa -->
     <div v-if="ready" class="eco__panel">
-      <div v-if="selNode" class="eco__card">
-        <div class="eco__card-head">
-          <span class="eco__card-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="22" height="22" v-html="selNode.icon"></svg>
-          </span>
-          <div>
-            <h3 class="eco__card-title">
-              <span>{{ selNode.name }}</span>
-              <span v-if="selNode.pending" class="chip is-status" :title="selNode.statusNote">{{
-                selNode.statusLabel
-              }}</span>
-            </h3>
-            <p class="eco__card-tag">{{ selNode.tagline }}</p>
-            <a :href="selNode.path" class="link-arrow"
-              >Ver {{ selNode.navLabel }} <span aria-hidden="true">→</span></a
+      <Transition name="eco-in">
+        <div v-if="selNode" :key="selNode.slug" class="eco__card">
+          <div class="eco__card-head">
+            <span class="eco__card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22" v-html="selNode.icon"></svg>
+            </span>
+            <div>
+              <h3 class="eco__card-title">
+                <span>{{ selNode.name }}</span>
+                <span v-if="selNode.pending" class="chip is-status" :title="selNode.statusNote">{{
+                  selNode.statusLabel
+                }}</span>
+              </h3>
+              <p class="eco__card-tag">{{ selNode.tagline }}</p>
+              <a :href="selNode.path" class="link-arrow"
+                >Ver {{ selNode.navLabel }} <span aria-hidden="true">→</span></a
+              >
+            </div>
+            <button
+              type="button"
+              class="eco__close"
+              aria-label="Cerrar la ficha"
+              @click="closeCard"
             >
+              ×
+            </button>
           </div>
-          <button type="button" class="eco__close" aria-label="Cerrar la ficha" @click="closeCard">
-            ×
-          </button>
+          <ul
+            class="eco__conns is-grid"
+            role="list"
+            :aria-label="`${selNode.navLabel} se conecta con`"
+          >
+            <li v-for="e in selNode.edges" :key="e.to" :class="{ 'is-pending': e.pending }">
+              <span class="eco__conn-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" v-html="edgeIcon(e)"></svg>
+              </span>
+              <span>
+                <a :href="edgePath(e)" class="eco__conn-name">{{ edgeLabel(e) }}</a>
+                <span v-if="e.pending" class="chip is-status">En camino</span>
+                <span class="eco__conn-text">{{ e.text }}</span>
+              </span>
+            </li>
+          </ul>
         </div>
-        <ul
-          class="eco__conns is-grid"
-          role="list"
-          :aria-label="`${selNode.navLabel} se conecta con`"
-        >
-          <li v-for="e in selNode.edges" :key="e.to" :class="{ 'is-pending': e.pending }">
-            <span class="eco__conn-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="16" height="16" v-html="edgeIcon(e)"></svg>
-            </span>
-            <span>
-              <a :href="edgePath(e)" class="eco__conn-name">{{ edgeLabel(e) }}</a>
-              <span v-if="e.pending" class="chip is-status">En camino</span>
-              <span class="eco__conn-text">{{ e.text }}</span>
-            </span>
-          </li>
-        </ul>
-      </div>
-      <p v-else class="eco__empty">
-        Toca un producto del mapa para ver qué hace y con qué se conecta. Con el teclado: tabulador
-        o flechas, e Intro.
-      </p>
+        <p v-else key="vacia" class="eco__empty">
+          Toca un producto del mapa para ver qué hace y con qué se conecta. Con el teclado:
+          tabulador o flechas, e Intro.
+        </p>
+      </Transition>
     </div>
 
     <figcaption class="eco__legend">
@@ -493,8 +518,9 @@ onMounted(() => {
   stroke: var(--gray-300);
   stroke-width: 1.25;
   transition:
-    stroke var(--dur-fast) var(--ease),
-    fill var(--dur-fast) var(--ease);
+    stroke var(--dur) var(--ease),
+    stroke-width var(--dur) var(--ease),
+    fill var(--dur) var(--ease);
 }
 .eco__hit {
   fill: transparent;
@@ -506,6 +532,7 @@ onMounted(() => {
 }
 .eco__icon {
   fill: none;
+  transition: stroke var(--dur) var(--ease);
   stroke: var(--black);
   stroke-width: 1.75;
   stroke-linecap: round;
@@ -813,6 +840,52 @@ a.eco__node:hover .eco__label {
     display: grid;
     gap: 2px;
     justify-items: start;
+  }
+}
+
+/* ── Movimiento ── */
+.eco__families text,
+.eco__spokes line {
+  transition-duration: var(--dur-slow);
+}
+/* Conexiones: se encienden con fundido y se apagan algo más rápido */
+.eco-edge-enter-active {
+  transition: opacity var(--dur) var(--ease);
+}
+.eco-edge-leave-active {
+  transition: opacity var(--dur-fast) var(--ease);
+}
+.eco-edge-enter-from,
+.eco-edge-leave-to {
+  opacity: 0;
+}
+/* Texto del núcleo: cambia con un fundido corto */
+.eco-text-enter-active,
+.eco-text-leave-active {
+  transition: opacity var(--dur-fast) var(--ease);
+}
+.eco-text-enter-from,
+.eco-text-leave-to {
+  opacity: 0;
+}
+/* Ficha de escritorio: la nueva entra con fundido; la anterior se va al instante (sin solaparse) */
+.eco-in-enter-active {
+  transition:
+    opacity var(--dur) var(--ease),
+    translate var(--dur) var(--ease);
+}
+.eco-in-enter-from {
+  opacity: 0;
+  translate: 0 8px;
+}
+.eco-in-leave-active {
+  display: none;
+}
+@media (max-width: 720px) {
+  .eco__list-family > ul > li {
+    transition:
+      background-color var(--dur) var(--ease),
+      border-color var(--dur) var(--ease);
   }
 }
 </style>

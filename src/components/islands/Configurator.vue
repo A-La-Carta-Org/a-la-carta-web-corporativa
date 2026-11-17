@@ -42,6 +42,7 @@ import {
   type QuoteModule,
 } from '@/lib/quote';
 import { ctaHref } from '@/lib/cta';
+import { useTweened } from '@/lib/tween';
 
 const props = withDefaults(
   defineProps<{
@@ -397,6 +398,28 @@ const money = (n: number) => {
   return `${int!.replace(/\B(?=(\d{3})+(?!\d))/g, '.')},${dec} €`;
 };
 
+/* Movimiento: los totales corren hasta la cifra nueva (con «reducir movimiento», saltan) */
+const tMonthly = useTweened(() => q.value.monthly);
+const tYearly = useTweened(() => q.value.yearly);
+const tSaving = useTweened(() => q.value.annualSaving);
+const tOnce = useTweened(() => q.value.onceTotal);
+/** Mientras corre, a céntimos (el ticket los enseña siempre) */
+const moneyT = (n: number) => money(Math.round(n * 100) / 100);
+/** En el botón «Tu ticket» (fmtPrice): sin decimales si la cifra final es entera */
+const priceT = (n: number, target: number) =>
+  fmtPrice(Number.isInteger(target) ? Math.round(n) : Math.round(n * 100) / 100);
+
+/**
+ * La línea que se va del ticket se queda clavada donde estaba mientras se funde (sale del flujo)
+ * y las demás se recolocan deslizándose (clase t-list-move), sin salto al final.
+ */
+function pinLeaving(el: Element) {
+  const e = el as HTMLElement;
+  e.style.top = `${e.offsetTop}px`;
+  e.style.left = `${e.offsetLeft}px`;
+  e.style.width = `${e.offsetWidth}px`;
+}
+
 const metaLine = computed(() =>
   [
     `${config.locales} ${config.locales === 1 ? 'local' : 'locales'}`,
@@ -510,7 +533,7 @@ async function copyLink() {
         </label>
         <a href="#mt-ticket" class="mt__jump">
           <span>Tu ticket</span>
-          <b class="num">{{ fmtPrice(q.monthly) }}/mes</b>
+          <b class="num">{{ priceT(tMonthly, q.monthly) }}/mes</b>
         </a>
       </div>
 
@@ -566,40 +589,47 @@ async function copyLink() {
             </component>
             <p class="mt__dish-desc">{{ d.desc }}</p>
 
-            <div v-if="ready && d.qty && isOn(d) && !(d.included && config.sinTpv)" class="mt__qty">
-              <span :id="`mt-q-${d.id}`">{{ d.qty.label }}</span>
-              <div class="mt__stepper" role="group" :aria-labelledby="`mt-q-${d.id}`">
-                <button
-                  type="button"
-                  class="mt__step"
-                  :aria-label="`Menos: ${d.qty.label.toLowerCase()}`"
-                  :disabled="config[d.qty.key] <= QUOTE_LIMITS[d.qty.key].min"
-                  @click="step(d.qty.key, -1)"
-                >
-                  −
-                </button>
-                <input
-                  class="mt__num"
-                  type="number"
-                  inputmode="numeric"
-                  :aria-label="d.qty.label"
-                  :min="QUOTE_LIMITS[d.qty.key].min"
-                  :max="QUOTE_LIMITS[d.qty.key].max"
-                  :value="config[d.qty.key]"
-                  @change="setNum(d.qty.key, $event)"
-                />
-                <button
-                  type="button"
-                  class="mt__step"
-                  :aria-label="`Más: ${d.qty.label.toLowerCase()}`"
-                  :disabled="config[d.qty.key] >= QUOTE_LIMITS[d.qty.key].max"
-                  @click="step(d.qty.key, 1)"
-                >
-                  +
-                </button>
+            <Transition name="t-collapse">
+              <div
+                v-if="ready && d.qty && isOn(d) && !(d.included && config.sinTpv)"
+                class="mt__qty-wrap"
+              >
+                <div class="mt__qty">
+                  <span :id="`mt-q-${d.id}`">{{ d.qty.label }}</span>
+                  <div class="mt__stepper" role="group" :aria-labelledby="`mt-q-${d.id}`">
+                    <button
+                      type="button"
+                      class="mt__step"
+                      :aria-label="`Menos: ${d.qty.label.toLowerCase()}`"
+                      :disabled="config[d.qty.key] <= QUOTE_LIMITS[d.qty.key].min"
+                      @click="step(d.qty.key, -1)"
+                    >
+                      −
+                    </button>
+                    <input
+                      class="mt__num"
+                      type="number"
+                      inputmode="numeric"
+                      :aria-label="d.qty.label"
+                      :min="QUOTE_LIMITS[d.qty.key].min"
+                      :max="QUOTE_LIMITS[d.qty.key].max"
+                      :value="config[d.qty.key]"
+                      @change="setNum(d.qty.key, $event)"
+                    />
+                    <button
+                      type="button"
+                      class="mt__step"
+                      :aria-label="`Más: ${d.qty.label.toLowerCase()}`"
+                      :disabled="config[d.qty.key] >= QUOTE_LIMITS[d.qty.key].max"
+                      @click="step(d.qty.key, 1)"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <small v-if="d.qty.help" class="mt__qty-help">{{ d.qty.help }}</small>
+                </div>
               </div>
-              <small v-if="d.qty.help" class="mt__qty-help">{{ d.qty.help }}</small>
-            </div>
+            </Transition>
           </li>
         </ul>
       </section>
@@ -623,38 +653,54 @@ async function copyLink() {
           <p class="tk__meta">{{ metaLine }}</p>
         </div>
 
-        <ul role="list" class="tk__lines">
+        <TransitionGroup
+          tag="ul"
+          name="t-list"
+          role="list"
+          class="tk__lines"
+          appear
+          @before-leave="pinLeaving"
+        >
           <li v-for="l in q.lines" :key="l.id" class="tk__line">
             <span class="tk__label">{{ l.label }}</span>
             <span class="tk__amount">{{ l.amount === null ? l.text : money(l.amount) }}</span>
             <span v-if="l.detail" class="tk__detail">{{ l.detail }}</span>
           </li>
-          <li v-if="!q.lines.length" class="tk__line is-empty">
+          <li v-if="!q.lines.length" key="vacio" class="tk__line is-empty">
             <span class="tk__label">Marca algo en la carta</span>
           </li>
-        </ul>
+        </TransitionGroup>
 
         <div class="tk__rule" aria-hidden="true"></div>
         <p class="tk__row">
           <span>Comisiones por pedido o reserva</span><span>{{ money(0) }}</span>
         </p>
         <p class="tk__total">
-          <span>Total al mes</span><span>{{ money(q.monthly) }}</span>
+          <span>Total al mes</span><span>{{ moneyT(tMonthly) }}</span>
         </p>
         <p class="tk__row is-muted">
-          <span>12 meses</span><span>{{ money(q.yearly) }}</span>
+          <span>12 meses</span><span>{{ moneyT(tYearly) }}</span>
         </p>
-        <p v-if="q.annualSaving > 0" class="tk__row is-muted">
-          <span>{{
-            config.billing === 'anual' ? 'Ahorras pagando el año' : 'Pagando el año ahorrarías'
-          }}</span>
-          <span>{{ money(q.annualSaving) }}</span>
-        </p>
+        <Transition name="t-fade">
+          <p v-if="q.annualSaving > 0" class="tk__row is-muted">
+            <span>{{
+              config.billing === 'anual' ? 'Ahorras pagando el año' : 'Pagando el año ahorrarías'
+            }}</span>
+            <span>{{ moneyT(tSaving) }}</span>
+          </p>
+        </Transition>
 
         <template v-if="q.once.length">
-          <div class="tk__rule" aria-hidden="true"></div>
-          <p class="tk__section">Pago único</p>
-          <ul role="list" class="tk__lines">
+          <div class="tk__rule tk__in" aria-hidden="true"></div>
+          <p class="tk__section tk__in">Pago único</p>
+          <TransitionGroup
+            tag="ul"
+            name="t-list"
+            role="list"
+            class="tk__lines"
+            appear
+            @before-leave="pinLeaving"
+          >
             <li v-for="l in q.once" :key="l.id" class="tk__line">
               <span class="tk__label">{{ l.label }}</span>
               <span class="tk__amount">
@@ -666,28 +712,32 @@ async function copyLink() {
               </span>
               <span v-if="l.detail" class="tk__detail">{{ l.detail }}</span>
             </li>
-          </ul>
-          <p v-if="q.onceTotal > 0" class="tk__row">
+          </TransitionGroup>
+          <p v-if="q.onceTotal > 0" class="tk__row tk__in">
             <span>Total pago único</span>
-            <span>{{ q.onceFrom ? 'desde ' : '' }}{{ money(q.onceTotal) }}</span>
+            <span>{{ q.onceFrom ? 'desde ' : '' }}{{ moneyT(tOnce) }}</span>
           </p>
         </template>
 
-        <div
-          v-if="q.better || q.upsell || q.notices.length || soonNote"
-          class="tk__rule"
-          aria-hidden="true"
-        ></div>
-        <p v-if="q.better" class="tk__note is-strong">
-          * Te sale mejor el plan {{ q.better.planName }}: −{{ money(q.better.saving) }}/mes frente
-          a {{ q.better.vs }}.
-        </p>
-        <p v-if="q.upsell" class="tk__note">
-          * Por {{ money(q.upsell.extra) }}/mes más, el plan {{ q.upsell.planName }} añade
-          {{ listNames(q.upsell.adds) }}.
-        </p>
-        <p v-for="n in q.notices" :key="n" class="tk__note">* {{ n }}</p>
-        <p v-if="soonNote" class="tk__note">* {{ soonNote }}</p>
+        <!-- Avisos del ticket («te sale mejor», «por X más»…): suben y aparecen -->
+        <TransitionGroup name="t-rise">
+          <div
+            v-if="q.better || q.upsell || q.notices.length || soonNote"
+            key="regla"
+            class="tk__rule"
+            aria-hidden="true"
+          ></div>
+          <p v-if="q.better" key="mejor" class="tk__note is-strong">
+            * Te sale mejor el plan {{ q.better.planName }}: −{{ money(q.better.saving) }}/mes
+            frente a {{ q.better.vs }}.
+          </p>
+          <p v-if="q.upsell" key="upsell" class="tk__note">
+            * Por {{ money(q.upsell.extra) }}/mes más, el plan {{ q.upsell.planName }} añade
+            {{ listNames(q.upsell.adds) }}.
+          </p>
+          <p v-for="n in q.notices" :key="`aviso-${n}`" class="tk__note">* {{ n }}</p>
+          <p v-if="soonNote" key="en-camino" class="tk__note">* {{ soonNote }}</p>
+        </TransitionGroup>
 
         <p class="tk__foot">{{ ESTIMATE_NOTE }} La cifra cerrada va en tu propuesta.</p>
       </div>
@@ -702,12 +752,14 @@ async function copyLink() {
           <button type="button" class="mt__link" @click="reset">Empezar de cero</button>
         </div>
         <p class="mt__copy" aria-live="polite">
-          <template v-if="copyState === 'ok'">
-            Enlace copiado. Quien lo abra verá esta misma cuenta.
-          </template>
-          <template v-else-if="copyState === 'fail'">
-            No se ha podido copiar: copia la dirección de la barra del navegador.
-          </template>
+          <Transition name="t-pop" mode="out-in">
+            <span v-if="copyState === 'ok'" key="ok">
+              Enlace copiado. Quien lo abra verá esta misma cuenta.
+            </span>
+            <span v-else-if="copyState === 'fail'" key="fail">
+              No se ha podido copiar: copia la dirección de la barra del navegador.
+            </span>
+          </Transition>
         </p>
       </div>
     </aside>
@@ -770,6 +822,10 @@ async function copyLink() {
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   color: var(--color-text-muted);
+  transition:
+    background-color var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
 }
 .mt__toggle button.is-on {
   background: var(--white);
@@ -860,6 +916,10 @@ label.mt__dish-row {
 .is-ready .mt__dish-desc {
   padding-left: calc(1.125rem + var(--space-3));
 }
+.mt__dish-row,
+.mt__dish-desc {
+  transition: opacity var(--dur) var(--ease);
+}
 .mt__dish.is-disabled .mt__dish-row,
 .mt__dish.is-disabled .mt__dish-desc {
   opacity: 0.45;
@@ -886,8 +946,12 @@ label.mt__dish-row {
   background: var(--white);
   transform: translateY(0.15em);
   transition:
-    background-color var(--dur-fast) var(--ease),
-    border-color var(--dur-fast) var(--ease);
+    background-color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+label.mt__dish-row:hover .mt__box,
+.mt__check:hover .mt__box {
+  border-color: var(--color-text-muted);
 }
 .mt__box::after {
   content: '';
@@ -896,7 +960,8 @@ label.mt__dish-row {
   border: solid var(--white);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg) scale(0);
-  transition: transform var(--dur-fast) var(--ease);
+  /* La marca entra con un pequeño rebote */
+  transition: transform var(--dur) cubic-bezier(0.34, 1.4, 0.64, 1);
 }
 .mt__dish.is-on .mt__box,
 .mt__check input:checked + .mt__box {
@@ -937,12 +1002,13 @@ label.mt__dish-row {
   background: var(--color-bg-soft);
 }
 
+/* El panel de cantidad se despliega (t-collapse): el hueco de arriba va dentro, como padding */
 .mt__qty {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2) var(--space-3);
-  margin-top: var(--space-2);
+  padding-top: var(--space-2);
   padding-left: calc(1.125rem + var(--space-3));
   font-size: var(--text-sm);
   color: var(--color-text);
@@ -963,6 +1029,11 @@ label.mt__dish-row {
   height: 2.25rem;
   font-size: var(--text-md);
   color: var(--color-text-strong);
+}
+.mt__step {
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
 }
 .mt__step:hover:not(:disabled) {
   background: var(--color-bg-muted);
@@ -1052,13 +1123,20 @@ label.mt__dish-row {
   color: var(--color-text-muted);
 }
 .tk__lines {
+  position: relative;
   display: grid;
   gap: var(--space-2);
+}
+.tk__lines > .t-list-leave-active {
+  position: absolute;
 }
 .tk__line {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   column-gap: var(--space-3);
+}
+/* Rótulos del bloque «Pago único»: entran como las líneas (estas van con <TransitionGroup>) */
+.tk__in {
   animation: tk-in var(--dur) var(--ease) both;
 }
 .tk__line.is-empty {
@@ -1126,7 +1204,7 @@ label.mt__dish-row {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .tk__line {
+  .tk__in {
     animation: none;
   }
 }

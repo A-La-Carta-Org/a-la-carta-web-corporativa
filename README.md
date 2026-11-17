@@ -95,7 +95,7 @@ src/
 │   │                EcosystemMap, ConnectionsDiagram, ReplacesTicket, PriceMini, PriceBand,
 │   │                ProofPoints, HardwareCards, RecommendedSetup, DayTimeline, DemoBlock,
 │   │                SectorHeroVisual, IntegrationsList, Steps, FeatureColumns
-│   ├── home/        HeroStage (hero animado: TPV, comandero y comanda impresa)
+│   ├── home/        HeroScroll (hero con historia al hacer scroll: comanda, ticket, cobro, cajón)
 │   ├── mockups/     Maquetas HTML/CSS del producto (TPV, comandero, KDS, carta, reservas,
 │   │                pedidos, app, llamada, backoffice, informes, clientes, web, ERP, RRHH…)
 │   └── islands/     Componentes Vue interactivos (ver tabla de islas)

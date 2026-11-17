@@ -21,7 +21,7 @@ const groupActive = (g: (typeof mainNav)[number]) =>
 ---
 
 <header class:list={['site-header', { 'is-minimal': variant === 'minimal' }]} data-header>
-  <div class="container site-header__inner">
+  <div class="site-header__inner">
     <a href="/" class="site-header__logo" aria-label="alaCarta, inicio">
       <Logo size={26} />
     </a>
@@ -323,20 +323,29 @@ const groupActive = (g: (typeof mainNav)[number]) =>
 
     const burger = header.querySelector<HTMLButtonElement>('[data-menu-toggle]');
     const mobile = header.querySelector<HTMLElement>('[data-mobile-menu]');
-    const closeMobile = () => {
+    // Abrir y cerrar con transición: `hidden` se quita antes de animar y se pone al terminar
+    let hideTimer = 0;
+    const setMobile = (open: boolean) => {
       if (!mobile || !burger) return;
-      mobile.hidden = true;
-      burger.setAttribute('aria-expanded', 'false');
-      burger.setAttribute('aria-label', 'Abrir menú');
-      document.documentElement.classList.remove('menu-open');
+      window.clearTimeout(hideTimer);
+      burger.setAttribute('aria-expanded', String(open));
+      burger.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+      document.documentElement.classList.toggle('menu-open', open);
+      if (open) {
+        mobile.hidden = false;
+        requestAnimationFrame(() => requestAnimationFrame(() => mobile.classList.add('is-open')));
+      } else {
+        mobile.classList.remove('is-open');
+        const ms = parseFloat(getComputedStyle(mobile).transitionDuration) * 1000 || 0;
+        hideTimer = window.setTimeout(() => (mobile.hidden = true), ms + 40);
+      }
+    };
+    const closeMobile = () => {
+      if (mobile && !mobile.hidden) setMobile(false);
     };
     burger?.addEventListener('click', () => {
       if (!mobile) return;
-      const willOpen = Boolean(mobile.hidden);
-      mobile.hidden = !willOpen;
-      burger.setAttribute('aria-expanded', String(willOpen));
-      burger.setAttribute('aria-label', willOpen ? 'Cerrar menú' : 'Abrir menú');
-      document.documentElement.classList.toggle('menu-open', willOpen);
+      setMobile(!mobile.classList.contains('is-open'));
     });
     window.addEventListener('resize', () => {
       if (window.innerWidth > 1024) closeMobile();
@@ -363,8 +372,10 @@ const groupActive = (g: (typeof mainNav)[number]) =>
   .site-header.is-scrolled {
     border-bottom-color: var(--color-border);
   }
+  /* Sin `.container`: la cabecera ocupa todo el ancho con un margen lateral pequeño */
   .site-header__inner {
     height: var(--header-h);
+    padding-inline: clamp(1rem, 0.5rem + 1.5vw, 2rem);
     display: flex;
     align-items: center;
     gap: var(--space-8);
@@ -436,11 +447,12 @@ const groupActive = (g: (typeof mainNav)[number]) =>
     box-shadow: var(--shadow-md);
     opacity: 0;
     visibility: hidden;
-    transform: translate(-50%, -4px);
+    transform: translate(-50%, -8px) scale(0.985);
+    transform-origin: 50% 0;
     transition:
-      opacity var(--dur-fast) var(--ease),
-      transform var(--dur-fast) var(--ease),
-      visibility var(--dur-fast);
+      opacity var(--dur) var(--ease),
+      transform var(--dur) var(--ease),
+      visibility 0s linear var(--dur);
   }
   .is-wide .mega {
     top: calc(100% - 4px);
@@ -449,7 +461,33 @@ const groupActive = (g: (typeof mainNav)[number]) =>
   .has-children.is-open .mega {
     opacity: 1;
     visibility: visible;
-    transform: translate(-50%, 0);
+    transform: translate(-50%, 0) scale(1);
+    transition-delay: 0s;
+  }
+  /* Las columnas y el destacado llegan escalonados */
+  .mega__col,
+  .mega__featured {
+    opacity: 0;
+    translate: 0 6px;
+    transition:
+      opacity var(--dur) var(--ease),
+      translate var(--dur) var(--ease);
+  }
+  .has-children.is-open :is(.mega__col, .mega__featured) {
+    opacity: 1;
+    translate: 0 0;
+  }
+  .has-children.is-open .mega__col:nth-child(2) {
+    transition-delay: 40ms;
+  }
+  .has-children.is-open .mega__col:nth-child(3) {
+    transition-delay: 80ms;
+  }
+  .has-children.is-open .mega__col:nth-child(4) {
+    transition-delay: 120ms;
+  }
+  .has-children.is-open .mega__featured {
+    transition-delay: 140ms;
   }
   .mega__body {
     display: grid;
@@ -638,6 +676,43 @@ const groupActive = (g: (typeof mainNav)[number]) =>
     overscroll-behavior: contain;
     padding-block: var(--space-4) var(--space-12);
     border-top: 1px solid var(--color-border);
+    opacity: 0;
+    translate: 0 -8px;
+    transition:
+      opacity var(--dur) var(--ease),
+      translate var(--dur) var(--ease);
+  }
+  .mobile-menu.is-open {
+    opacity: 1;
+    translate: 0 0;
+  }
+  /* Los grupos del menú llegan escalonados */
+  .mobile-menu :is(.mobile-menu__actions, .mobile-menu__list > li, .mobile-menu__foot) {
+    opacity: 0;
+    translate: 0 8px;
+    transition:
+      opacity var(--dur) var(--ease),
+      translate var(--dur) var(--ease);
+  }
+  .mobile-menu.is-open :is(.mobile-menu__actions, .mobile-menu__list > li, .mobile-menu__foot) {
+    opacity: 1;
+    translate: 0 0;
+  }
+  .mobile-menu.is-open .mobile-menu__list > li:nth-child(1) {
+    transition-delay: 30ms;
+  }
+  .mobile-menu.is-open .mobile-menu__list > li:nth-child(2) {
+    transition-delay: 60ms;
+  }
+  .mobile-menu.is-open .mobile-menu__list > li:nth-child(3) {
+    transition-delay: 90ms;
+  }
+  .mobile-menu.is-open .mobile-menu__list > li:nth-child(4) {
+    transition-delay: 120ms;
+  }
+  .mobile-menu.is-open .mobile-menu__list > li:nth-child(n + 5),
+  .mobile-menu.is-open .mobile-menu__foot {
+    transition-delay: 150ms;
   }
   .mobile-menu__actions {
     display: grid;
@@ -675,7 +750,7 @@ const groupActive = (g: (typeof mainNav)[number]) =>
     display: none;
   }
   .mobile-menu__summary :global(svg) {
-    transition: rotate var(--dur-fast) var(--ease);
+    transition: rotate var(--dur) var(--ease);
   }
   .mobile-menu__group[open] .mobile-menu__summary :global(svg) {
     rotate: 180deg;

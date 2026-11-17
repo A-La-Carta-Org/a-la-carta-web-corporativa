@@ -14,7 +14,7 @@ import Icon from '@/components/ui/Icon.astro';
 import StatusChip from '@/components/ui/StatusChip.astro';
 import FaqSection from '@/components/blocks/FaqSection.astro';
 import CtaBand from '@/components/blocks/CtaBand.astro';
-import HeroStage from '@/components/home/HeroStage.astro';
+import HeroScroll from '@/components/home/HeroScroll.astro';
 import Mockup from '@/components/mockups/Mockup.astro';
 import KitComposition from '@/components/mockups/KitComposition.astro';
 import ServiceSimulator from '@/components/islands/ServiceSimulator.vue';
@@ -73,34 +73,8 @@ const jsonLd = [
   jsonLd={jsonLd}
   mainClass="home"
 >
-  <!-- 1 · Hero (identidad: docs/auditoria/14) -->
-  <section class="home-hero">
-    <div class="container home-hero__copy">
-      <span class="eyebrow is-live fade-up">{hero.eyebrow}</span>
-      <h1 class="fade-up" style="--delay: 60ms">
-        {hero.titleLead} <em>{hero.titleAccent}</em>
-      </h1>
-      <p class="lead fade-up" style="--delay: 120ms">
-        {hero.text}
-      </p>
-      <div class="home-hero__actions fade-up" style="--delay: 180ms">
-        <a href={hero.primary.href} class="btn is-primary is-lg">
-          {hero.primary.label}
-          <Icon name="arrow-right" size={16} class="btn-arrow" />
-        </a>
-        <a href={hero.secondary.href} class="btn is-secondary is-lg">
-          <Icon name="play" size={16} />
-          {hero.secondary.label}
-        </a>
-      </div>
-      <p class="home-hero__note muted fade-up" style="--delay: 240ms">
-        {hero.note}
-      </p>
-    </div>
-    <div class="container is-wide home-hero__media fade-up" style="--delay: 200ms">
-      <HeroStage />
-    </div>
-  </section>
+  <!-- 1 · Hero con historia al hacer scroll: comanda → cocina → cobro → cajón → cierre -->
+  <HeroScroll />
 
   <!-- 1b · Confianza: lo que más pesa al cambiar de sistema, justo debajo del hero -->
   <section class="section is-sm home-trust-wrap">
@@ -430,42 +404,6 @@ const jsonLd = [
     scroll-margin-top: var(--header-h);
   }
 
-  /* 1 · Hero */
-  .home-hero {
-    padding-block: clamp(2.5rem, 1.5rem + 4vw, 5.5rem) clamp(3rem, 2rem + 3vw, 5rem);
-    overflow: hidden;
-  }
-  .home-hero__inner {
-    display: grid;
-    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-    gap: var(--space-10);
-    align-items: center;
-  }
-  .home-hero__copy {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-5);
-  }
-  .home-hero__copy h1 {
-    max-width: 14ch;
-    text-wrap: balance;
-  }
-  .home-hero__copy .lead {
-    max-width: 34rem;
-  }
-  .home-hero__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    margin-top: var(--space-2);
-  }
-  .home-hero__note {
-    font-size: var(--text-sm);
-  }
-  .home-hero__media {
-    min-width: 0;
-  }
 
   /* Cabecera de sección con enlace a la derecha */
   .home-head {
@@ -896,7 +834,6 @@ const jsonLd = [
   }
 
   @media (max-width: 1024px) {
-    .home-hero__inner,
     .home-replaces,
     .home-setup,
     .home-foryou,
@@ -927,9 +864,6 @@ const jsonLd = [
     }
   }
   @media (max-width: 720px) {
-    .home-hero__copy h1 {
-      max-width: none;
-    }
     .home-points,
     .home-why,
     .home-trust {
@@ -960,48 +894,13 @@ const jsonLd = [
     .home-sectors {
       grid-template-columns: 1fr;
     }
-    .home-hero__actions .btn {
-      flex: 1 1 auto;
-    }
   }
 
-  /* ── Identidad visual (docs/auditoria/14): hero animado, banda oscura y confianza ── */
-  .home-hero {
+ /* ── Identidad visual (docs/auditoria/14): hero animado {
     padding-top: clamp(3rem, 2rem + 4vw, 6rem);
     /* Margen inferior para que la sombra de los dispositivos no se corte */
     padding-bottom: var(--space-12);
     overflow: hidden;
-  }
-  .home-hero__copy {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: var(--space-5);
-    max-width: 54rem;
-  }
-  .home-hero__copy h1 {
-    max-width: 16ch;
-  }
-  .home-hero__copy h1 em {
-    display: block;
-    color: var(--accent);
-  }
-  .home-hero__copy .lead {
-    max-width: 40rem;
-  }
-  .home-hero__actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--space-3);
-    margin-top: var(--space-2);
-  }
-  .home-hero__note {
-    font-size: var(--text-sm);
-  }
-  .home-hero__media {
-    margin-top: clamp(2.5rem, 2rem + 3vw, 5rem);
   }
   /* Sección oscura con calidez: un halo de pimentón casi imperceptible y grano */
   .home-why-wrap {

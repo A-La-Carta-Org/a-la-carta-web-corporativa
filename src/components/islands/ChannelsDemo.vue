@@ -3,7 +3,8 @@
  * D2 · «Un cambio, todos los canales» (docs/auditoria/10). Un backoffice reducido con tres platos
  * de La Plaza (`channelDishes` de `src/data/demo.ts`): cambias un precio o marcas un plato como
  * agotado y el TPV, la carta QR, la tienda online y la app propia lo reflejan a la vez, con un
- * destello gris de 120 ms. La app propia lleva su chip «En camino» (01 §4).
+ * destello gris de 120 ms que se apaga con suavidad, y cada cifra que cambia destella (`t-flash`).
+ * La app propia lleva su chip «En camino» (01 §4).
  *
  * Sin backend, sin cookies, sin almacenamiento. Sin JavaScript se ven los cuatro canales con los
  * mismos precios y los controles desactivados.
@@ -97,7 +98,9 @@ onMounted(() => {
           <li v-for="it in items" :key="it.id" class="cd__row">
             <span class="cd__name">
               <b>{{ it.full }}</b>
-              <span v-if="it.off" class="mk-pill is-warn">Agotado</span>
+              <Transition name="t-pop">
+                <span v-if="it.off" class="mk-pill is-warn">Agotado</span>
+              </Transition>
             </span>
             <span class="cd__price" role="group" :aria-label="`Precio de ${it.full}`">
               <button
@@ -109,7 +112,9 @@ onMounted(() => {
               >
                 −
               </button>
-              <span class="num cd__value">{{ eur(it.price) }}</span>
+              <Transition enter-active-class="t-flash" leave-active-class="cd-gone">
+                <span :key="it.price" class="num cd__value">{{ eur(it.price) }}</span>
+              </Transition>
               <button
                 type="button"
                 class="cd__step"
@@ -136,10 +141,14 @@ onMounted(() => {
           </li>
         </ul>
         <div class="cd__foot">
-          <span class="mk-muted">{{
-            lastChange || 'Prueba: sube un precio o agota un plato.'
-          }}</span>
-          <button v-if="changed" type="button" class="cd__reset" @click="reset">Deshacer</button>
+          <Transition name="cd-in">
+            <span :key="lastChange" class="mk-muted">{{
+              lastChange || 'Prueba: sube un precio o agota un plato.'
+            }}</span>
+          </Transition>
+          <Transition name="t-fade">
+            <button v-if="changed" type="button" class="cd__reset" @click="reset">Deshacer</button>
+          </Transition>
         </div>
       </div>
     </div>
@@ -167,7 +176,11 @@ onMounted(() => {
             <div v-if="c.id === 'tpv'" class="cd__tiles">
               <span v-for="it in items" :key="it.id" class="mk-tile" :class="{ 'is-off': it.off }">
                 {{ it.name }}
-                <span class="num">{{ it.off ? 'Agotado' : eur(it.price, false) }}</span>
+                <Transition enter-active-class="t-flash" leave-active-class="cd-gone">
+                  <span :key="it.off ? 'off' : it.price" class="num">{{
+                    it.off ? 'Agotado' : eur(it.price, false)
+                  }}</span>
+                </Transition>
               </span>
             </div>
             <!-- Carta QR: lista con precio -->
@@ -176,14 +189,19 @@ onMounted(() => {
                 <span class="grow"
                   >{{ it.name }}<span class="sub">{{ it.off ? 'Agotado hoy' : it.al }}</span></span
                 >
-                <span class="num">{{ eur(it.price) }}</span>
+                <Transition enter-active-class="t-flash" leave-active-class="cd-gone">
+                  <span :key="it.price" class="num">{{ eur(it.price) }}</span>
+                </Transition>
               </div>
             </div>
             <!-- Tienda online: con botón de añadir -->
             <div v-else-if="c.id === 'tienda'" class="cd__list">
               <div v-for="it in items" :key="it.id" class="mk-row" :class="{ 'is-off': it.off }">
                 <span class="grow"
-                  >{{ it.name }}<span class="sub num">{{ eur(it.price) }}</span></span
+                  >{{ it.name
+                  }}<Transition enter-active-class="t-flash" leave-active-class="cd-gone"
+                    ><span :key="it.price" class="sub num">{{ eur(it.price) }}</span></Transition
+                  ></span
                 >
                 <span class="mk-btn" :class="{ 'is-dark': !it.off }">{{
                   it.off ? 'No disponible' : 'Añadir'
@@ -195,7 +213,11 @@ onMounted(() => {
               <span v-for="it in items" :key="it.id" class="cd__card" :class="{ 'is-off': it.off }">
                 <span class="cd__img"></span>
                 <span class="mk-strong">{{ it.name }}</span>
-                <span class="num">{{ it.off ? 'Agotado' : eur(it.price) }}</span>
+                <Transition enter-active-class="t-flash" leave-active-class="cd-gone">
+                  <span :key="it.off ? 'off' : it.price" class="num">{{
+                    it.off ? 'Agotado' : eur(it.price)
+                  }}</span>
+                </Transition>
               </span>
             </div>
           </div>
@@ -343,7 +365,7 @@ onMounted(() => {
   padding: 2px;
   border-radius: 999px;
   background: var(--gray-300);
-  transition: background var(--dur-fast) var(--ease);
+  transition: background-color var(--dur) var(--ease);
 }
 .cd__track span {
   display: block;
@@ -351,7 +373,7 @@ onMounted(() => {
   height: 14px;
   border-radius: 999px;
   background: var(--white);
-  transition: translate var(--dur-fast) var(--ease);
+  transition: translate var(--dur) var(--ease);
 }
 .cd__switch[aria-checked='true'] .cd__track {
   background: var(--black);
@@ -396,7 +418,7 @@ onMounted(() => {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--white);
-  transition: background var(--dur-fast) var(--ease);
+  transition: background-color var(--dur-slow) var(--ease);
 }
 .cd__ch.is-flash {
   background: var(--gray-100);
@@ -480,5 +502,36 @@ onMounted(() => {
   .cd__grid {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* ── Movimiento ── */
+/* Lo agotado se apaga y vuelve con suavidad en todos los canales */
+.cd__list .mk-row,
+.cd__card,
+.cd__tiles .mk-tile {
+  transition: opacity var(--dur) var(--ease);
+}
+.cd__list .mk-btn {
+  transition:
+    background-color var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+/* Cifra sustituida: la anterior se retira al instante y la nueva entra con destello (t-flash) */
+.cd-gone {
+  display: none;
+}
+/* Texto del último cambio */
+.cd-in-enter-active {
+  transition:
+    opacity var(--dur) var(--ease),
+    translate var(--dur) var(--ease);
+}
+.cd-in-enter-from {
+  opacity: 0;
+  translate: 0 4px;
+}
+.cd-in-leave-active {
+  display: none;
 }
 </style>

@@ -19,7 +19,7 @@
  * Los catálogos (productos, familias, tipos de local) llegan por props desde Astro para no meter
  * `solutions.ts` en el JavaScript del cliente.
  */
-import { computed, nextTick, onMounted, reactive, ref } from 'vue';
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 import {
   buildMailto,
   emailOk,
@@ -148,7 +148,28 @@ onMounted(() => {
   attribution.value = readAttribution();
   demoDone.value = readDemoDone();
   ready.value = true;
+  nextTick(() => {
+    settled.value = true;
+  });
 });
+
+/* ── Movimiento ────────────────────────────────────────────────────── */
+
+/** Hasta después de hidratar no se anima nada (el paso de «todo visible» a «paso 1» es seco) */
+const settled = ref(false);
+/** Paso adelante o atrás: los pasos entran desde ese lado; al cambiar de modo, solo funden */
+const stepDir = ref('16px');
+const stepFx = ref<'t-step' | 't-fade'>('t-step');
+watch(step, (n, o) => {
+  stepFx.value = 't-step';
+  stepDir.value = n >= o ? '16px' : '-16px';
+});
+/*
+ * Los pasos van con v-show (siguen en el DOM para el envío sin JS y para llevar el foco al
+ * primer error): el que se va desaparece al momento y el que llega entra animado, así nunca
+ * se ven dos a la vez ni cambia el foco que ponen goTo() y setMode().
+ */
+const instantLeave = (_el: Element, done: () => void) => done();
 
 /* ── Validación ────────────────────────────────────────────────────── */
 
@@ -232,6 +253,7 @@ function back() {
 }
 
 function setMode(m: 'demo' | 'llamada') {
+  stepFx.value = 't-fade';
   modo.value = m;
   Object.keys(errors).forEach((k) => delete errors[k]);
   if (m === 'llamada') form.preferencia = 'llamada';
@@ -405,7 +427,11 @@ const describedBy = (key: string, hint?: string) =>
 </script>
 
 <template>
-  <div class="lf" :class="{ 'is-ready': ready, 'is-call': isCall }">
+  <div
+    class="lf"
+    :class="{ 'is-ready': ready, 'is-call': isCall }"
+    :style="{ '--step-dir': stepDir }"
+  >
     <p class="sr-only" aria-live="polite" aria-atomic="true">{{ live }}</p>
 
     <!-- Lo que llega de otras páginas (configurador, placa, comprobador…) -->
@@ -423,28 +449,30 @@ const describedBy = (key: string, hint?: string) =>
     </section>
 
     <!-- Indicador de pasos -->
-    <nav v-if="ready && !isCall" class="lf-progress" aria-label="Pasos del formulario">
-      <ol>
-        <li
-          v-for="s in steps"
-          :key="s.n"
-          :class="{ 'is-current': step === s.n, 'is-done': step > s.n }"
-          :aria-current="step === s.n ? 'step' : undefined"
-        >
-          <button v-if="step > s.n" type="button" class="lf-progress__btn" @click="goTo(s.n)">
-            <span class="lf-progress__n" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="12" height="12"><path d="m5 12 5 5L20 7" /></svg>
+    <Transition name="t-collapse" :css="settled">
+      <nav v-if="ready && !isCall" class="lf-progress" aria-label="Pasos del formulario">
+        <ol>
+          <li
+            v-for="s in steps"
+            :key="s.n"
+            :class="{ 'is-current': step === s.n, 'is-done': step > s.n }"
+            :aria-current="step === s.n ? 'step' : undefined"
+          >
+            <button v-if="step > s.n" type="button" class="lf-progress__btn" @click="goTo(s.n)">
+              <span class="lf-progress__n" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="12" height="12"><path d="m5 12 5 5L20 7" /></svg>
+              </span>
+              <span>{{ s.title }}</span>
+              <span class="sr-only">(hecho, volver)</span>
+            </button>
+            <span v-else class="lf-progress__btn">
+              <span class="lf-progress__n" aria-hidden="true">{{ s.n }}</span>
+              <span>{{ s.title }}</span>
             </span>
-            <span>{{ s.title }}</span>
-            <span class="sr-only">(hecho, volver)</span>
-          </button>
-          <span v-else class="lf-progress__btn">
-            <span class="lf-progress__n" aria-hidden="true">{{ s.n }}</span>
-            <span>{{ s.title }}</span>
-          </span>
-        </li>
-      </ol>
-    </nav>
+          </li>
+        </ol>
+      </nav>
+    </Transition>
 
     <form
       ref="formRef"
@@ -456,278 +484,302 @@ const describedBy = (key: string, hint?: string) =>
       @submit.prevent="onSubmit"
     >
       <!-- Paso 1 · Tu local -->
-      <section v-show="showStep(1)" class="lf-step" aria-labelledby="lf-step-1-title">
-        <header class="lf-step__head">
-          <p class="lf-step__count">Paso 1 de {{ total }}</p>
-          <h2 id="lf-step-1-title" tabindex="-1">Tu local</h2>
-        </header>
+      <Transition :name="stepFx" :css="settled" @leave="instantLeave">
+        <section v-show="showStep(1)" class="lf-step" aria-labelledby="lf-step-1-title">
+          <header class="lf-step__head">
+            <p class="lf-step__count">Paso 1 de {{ total }}</p>
+            <h2 id="lf-step-1-title" tabindex="-1">Tu local</h2>
+          </header>
 
-        <fieldset
-          class="lf-group"
-          role="radiogroup"
-          aria-required="true"
-          :aria-invalid="errors.tipo ? 'true' : undefined"
-          :aria-describedby="describedBy('tipo')"
-        >
-          <legend>¿Qué tipo de local tienes?</legend>
-          <div class="lf-cards is-sectors">
-            <label v-for="s in sectorOptions" :key="s.slug" class="lf-option is-card">
-              <input v-model="form.tipo" type="radio" name="tipo" :value="s.slug" required />
-              <!-- Trazados de icons.ts, fijos en build (no vienen del usuario) -->
-              <!-- eslint-disable vue/no-v-html -->
-              <svg
-                class="lf-option__icon"
-                viewBox="0 0 24 24"
-                width="22"
-                height="22"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.75"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-                v-html="s.icon"
-              ></svg>
-              <!-- eslint-enable vue/no-v-html -->
-              <span class="lf-option__label">{{ s.name }}</span>
-            </label>
-          </div>
-          <p v-if="errors.tipo" id="lf-tipo-error" class="form-error">{{ errors.tipo }}</p>
-        </fieldset>
-
-        <fieldset class="lf-group" role="radiogroup">
-          <legend>¿Cuántos locales?</legend>
-          <div class="lf-pills">
-            <label v-for="o in localesOptions" :key="o.id" class="lf-option is-pill">
-              <input v-model="form.locales" type="radio" name="locales" :value="o.id" />
-              <span class="lf-option__label">{{ o.label }}</span>
-            </label>
-          </div>
-        </fieldset>
-
-        <fieldset
-          class="lf-group"
-          role="radiogroup"
-          aria-required="true"
-          :aria-invalid="errors.momento ? 'true' : undefined"
-          :aria-describedby="describedBy('momento')"
-        >
-          <legend>¿En qué momento estás?</legend>
-          <div class="lf-cards is-two">
-            <label v-for="o in momentOptions" :key="o.id" class="lf-option is-card is-text">
-              <input v-model="form.momento" type="radio" name="momento" :value="o.id" required />
-              <span class="lf-option__label">{{ o.label }}</span>
-              <span class="lf-option__hint">{{ o.hint }}</span>
-            </label>
-          </div>
-          <p v-if="errors.momento" id="lf-momento-error" class="form-error">
-            {{ errors.momento }}
-          </p>
-        </fieldset>
-
-        <div class="field">
-          <label for="lf-local">
-            Nombre del local o del grupo <span class="hint">(opcional)</span>
-          </label>
-          <input
-            id="lf-local"
-            v-model="form.local"
-            class="input"
-            type="text"
-            name="local"
-            autocomplete="organization"
-            maxlength="80"
-          />
-        </div>
-      </section>
-
-      <!-- Paso 2 · Qué te interesa -->
-      <section v-show="showStep(2)" class="lf-step" aria-labelledby="lf-step-2-title">
-        <header class="lf-step__head">
-          <p class="lf-step__count">Paso 2 de {{ total }}</p>
-          <h2 id="lf-step-2-title" tabindex="-1">Qué te interesa</h2>
-          <p class="lf-step__text">
-            Marca lo que quieras ver. Si no lo tienes claro, lo vemos juntos.
-          </p>
-        </header>
-
-        <fieldset class="lf-group">
-          <legend class="sr-only">Productos que te interesan</legend>
-          <div class="lf-families">
-            <div v-for="f in productsByFamily" :key="f.id" class="lf-family">
-              <p :id="`lf-fam-${f.id}`" class="lf-family__name">{{ f.name }}</p>
-              <div class="lf-chips" role="group" :aria-labelledby="`lf-fam-${f.id}`">
-                <label v-for="p in f.items" :key="p.slug" class="lf-chip">
-                  <input
-                    v-model="form.productos"
-                    type="checkbox"
-                    name="productos"
-                    :value="p.slug"
-                  />
-                  <span>{{ p.label }}</span>
-                  <span v-if="p.status" class="lf-chip__status">{{ p.status }}</span>
-                </label>
-              </div>
+          <fieldset
+            class="lf-group"
+            role="radiogroup"
+            aria-required="true"
+            :aria-invalid="errors.tipo ? 'true' : undefined"
+            :aria-describedby="describedBy('tipo')"
+          >
+            <legend>¿Qué tipo de local tienes?</legend>
+            <div class="lf-cards is-sectors">
+              <label v-for="s in sectorOptions" :key="s.slug" class="lf-option is-card">
+                <input v-model="form.tipo" type="radio" name="tipo" :value="s.slug" required />
+                <!-- Trazados de icons.ts, fijos en build (no vienen del usuario) -->
+                <!-- eslint-disable vue/no-v-html -->
+                <svg
+                  class="lf-option__icon"
+                  viewBox="0 0 24 24"
+                  width="22"
+                  height="22"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  v-html="s.icon"
+                ></svg>
+                <!-- eslint-enable vue/no-v-html -->
+                <span class="lf-option__label">{{ s.name }}</span>
+              </label>
             </div>
-          </div>
-        </fieldset>
+            <Transition name="t-fade">
+              <p v-if="errors.tipo" id="lf-tipo-error" class="form-error">{{ errors.tipo }}</p>
+            </Transition>
+          </fieldset>
 
-        <div class="field">
-          <label for="lf-usa">¿Qué usas hoy? <span class="hint">(opcional)</span></label>
-          <input
-            id="lf-usa"
-            v-model="form.usaHoy"
-            class="input"
-            type="text"
-            name="usa_hoy"
-            maxlength="120"
-            placeholder="Otro TPV, caja registradora, libreta y papel…"
-          />
-        </div>
+          <fieldset class="lf-group" role="radiogroup">
+            <legend>¿Cuántos locales?</legend>
+            <div class="lf-pills">
+              <label v-for="o in localesOptions" :key="o.id" class="lf-option is-pill">
+                <input v-model="form.locales" type="radio" name="locales" :value="o.id" />
+                <span class="lf-option__label">{{ o.label }}</span>
+              </label>
+            </div>
+          </fieldset>
 
-        <fieldset class="lf-group" role="radiogroup">
-          <legend>
-            ¿Necesitas equipo? <span class="hint">Tablet, impresora de tickets, cajón…</span>
-          </legend>
-          <div class="lf-pills">
-            <label v-for="o in hardwareOptions" :key="o.id" class="lf-option is-pill">
-              <input v-model="form.hardware" type="radio" name="necesita_equipo" :value="o.id" />
-              <span class="lf-option__label">{{ o.label }}</span>
-            </label>
-          </div>
-        </fieldset>
-      </section>
+          <fieldset
+            class="lf-group"
+            role="radiogroup"
+            aria-required="true"
+            :aria-invalid="errors.momento ? 'true' : undefined"
+            :aria-describedby="describedBy('momento')"
+          >
+            <legend>¿En qué momento estás?</legend>
+            <div class="lf-cards is-two">
+              <label v-for="o in momentOptions" :key="o.id" class="lf-option is-card is-text">
+                <input v-model="form.momento" type="radio" name="momento" :value="o.id" required />
+                <span class="lf-option__label">{{ o.label }}</span>
+                <span class="lf-option__hint">{{ o.hint }}</span>
+              </label>
+            </div>
+            <Transition name="t-fade">
+              <p v-if="errors.momento" id="lf-momento-error" class="form-error">
+                {{ errors.momento }}
+              </p>
+            </Transition>
+          </fieldset>
 
-      <!-- Paso 3 · Cómo hablamos (en modo llamada, reducido) -->
-      <section v-show="showStep(3)" class="lf-step" aria-labelledby="lf-step-3-title">
-        <header class="lf-step__head">
-          <p v-if="!isCall" class="lf-step__count">Paso 3 de {{ total }}</p>
-          <h2 id="lf-step-3-title" tabindex="-1">{{ isCall ? 'Te llamamos' : 'Cómo hablamos' }}</h2>
-          <p v-if="isCall" class="lf-step__text">
-            Déjanos tu nombre y tu teléfono y te llamamos cuando mejor te venga.
-          </p>
-        </header>
-
-        <fieldset v-if="!isCall" class="lf-group" role="radiogroup">
-          <legend>¿Cómo prefieres verlo?</legend>
-          <div class="lf-cards is-three">
-            <label v-for="o in preferenceOptions" :key="o.id" class="lf-option is-card is-text">
-              <input v-model="form.preferencia" type="radio" name="preferencia" :value="o.id" />
-              <span class="lf-option__label">{{ o.label }}</span>
-              <span class="lf-option__hint">{{ o.hint }}</span>
-            </label>
-          </div>
-        </fieldset>
-
-        <div class="lf-grid">
           <div class="field">
-            <label for="lf-nombre">Tu nombre</label>
+            <label for="lf-local">
+              Nombre del local o del grupo <span class="hint">(opcional)</span>
+            </label>
             <input
-              id="lf-nombre"
-              v-model="form.nombre"
+              id="lf-local"
+              v-model="form.local"
               class="input"
               type="text"
-              name="nombre"
-              autocomplete="name"
+              name="local"
+              autocomplete="organization"
               maxlength="80"
-              required
-              :aria-invalid="errors.nombre ? 'true' : undefined"
-              :aria-describedby="describedBy('nombre')"
-              @input="revalidate('nombre')"
             />
-            <p v-if="errors.nombre" id="lf-nombre-error" class="form-error">{{ errors.nombre }}</p>
           </div>
-          <div v-if="!isCall" class="field">
-            <label for="lf-email">Correo electrónico</label>
-            <input
-              id="lf-email"
-              v-model="form.email"
-              class="input"
-              type="email"
-              name="email"
-              autocomplete="email"
-              maxlength="120"
-              required
-              :aria-invalid="errors.email ? 'true' : undefined"
-              :aria-describedby="describedBy('email')"
-              @input="revalidate('email')"
-            />
-            <p v-if="errors.email" id="lf-email-error" class="form-error">{{ errors.email }}</p>
-          </div>
+        </section>
+      </Transition>
+
+      <!-- Paso 2 · Qué te interesa -->
+      <Transition :name="stepFx" :css="settled" @leave="instantLeave">
+        <section v-show="showStep(2)" class="lf-step" aria-labelledby="lf-step-2-title">
+          <header class="lf-step__head">
+            <p class="lf-step__count">Paso 2 de {{ total }}</p>
+            <h2 id="lf-step-2-title" tabindex="-1">Qué te interesa</h2>
+            <p class="lf-step__text">
+              Marca lo que quieras ver. Si no lo tienes claro, lo vemos juntos.
+            </p>
+          </header>
+
+          <fieldset class="lf-group">
+            <legend class="sr-only">Productos que te interesan</legend>
+            <div class="lf-families">
+              <div v-for="f in productsByFamily" :key="f.id" class="lf-family">
+                <p :id="`lf-fam-${f.id}`" class="lf-family__name">{{ f.name }}</p>
+                <div class="lf-chips" role="group" :aria-labelledby="`lf-fam-${f.id}`">
+                  <label v-for="p in f.items" :key="p.slug" class="lf-chip">
+                    <input
+                      v-model="form.productos"
+                      type="checkbox"
+                      name="productos"
+                      :value="p.slug"
+                    />
+                    <span>{{ p.label }}</span>
+                    <span v-if="p.status" class="lf-chip__status">{{ p.status }}</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </fieldset>
+
           <div class="field">
-            <label for="lf-telefono">
-              Teléfono
-              <span v-if="!phoneRequired" class="hint">(opcional)</span>
-            </label>
+            <label for="lf-usa">¿Qué usas hoy? <span class="hint">(opcional)</span></label>
             <input
-              id="lf-telefono"
-              v-model="form.telefono"
+              id="lf-usa"
+              v-model="form.usaHoy"
               class="input"
-              type="tel"
-              name="telefono"
-              autocomplete="tel"
-              inputmode="tel"
-              maxlength="24"
-              :required="phoneRequired"
-              :aria-invalid="errors.telefono ? 'true' : undefined"
-              :aria-describedby="describedBy('telefono', !phoneRequired ? 'lf-telefono-hint' : '')"
-              @input="revalidate('telefono')"
+              type="text"
+              name="usa_hoy"
+              maxlength="120"
+              placeholder="Otro TPV, caja registradora, libreta y papel…"
             />
-            <p v-if="!phoneRequired" id="lf-telefono-hint" class="hint">
-              Solo si prefieres que te llamemos.
-            </p>
-            <p v-if="errors.telefono" id="lf-telefono-error" class="form-error">
-              {{ errors.telefono }}
-            </p>
           </div>
-        </div>
 
-        <fieldset class="lf-group" role="radiogroup">
-          <legend>¿Cuándo te viene mejor?</legend>
-          <div class="lf-pills">
-            <label v-for="o in slotOptions" :key="o.id" class="lf-option is-pill">
-              <input v-model="form.franja" type="radio" name="franja" :value="o.id" />
-              <span class="lf-option__label">{{ o.label }}</span>
+          <fieldset class="lf-group" role="radiogroup">
+            <legend>
+              ¿Necesitas equipo? <span class="hint">Tablet, impresora de tickets, cajón…</span>
+            </legend>
+            <div class="lf-pills">
+              <label v-for="o in hardwareOptions" :key="o.id" class="lf-option is-pill">
+                <input v-model="form.hardware" type="radio" name="necesita_equipo" :value="o.id" />
+                <span class="lf-option__label">{{ o.label }}</span>
+              </label>
+            </div>
+          </fieldset>
+        </section>
+      </Transition>
+
+      <!-- Paso 3 · Cómo hablamos (en modo llamada, reducido) -->
+      <Transition :name="stepFx" :css="settled" @leave="instantLeave">
+        <section v-show="showStep(3)" class="lf-step" aria-labelledby="lf-step-3-title">
+          <header class="lf-step__head">
+            <p v-if="!isCall" class="lf-step__count">Paso 3 de {{ total }}</p>
+            <h2 id="lf-step-3-title" tabindex="-1">
+              {{ isCall ? 'Te llamamos' : 'Cómo hablamos' }}
+            </h2>
+            <p v-if="isCall" class="lf-step__text">
+              Déjanos tu nombre y tu teléfono y te llamamos cuando mejor te venga.
+            </p>
+          </header>
+
+          <fieldset v-if="!isCall" class="lf-group" role="radiogroup">
+            <legend>¿Cómo prefieres verlo?</legend>
+            <div class="lf-cards is-three">
+              <label v-for="o in preferenceOptions" :key="o.id" class="lf-option is-card is-text">
+                <input v-model="form.preferencia" type="radio" name="preferencia" :value="o.id" />
+                <span class="lf-option__label">{{ o.label }}</span>
+                <span class="lf-option__hint">{{ o.hint }}</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="lf-grid">
+            <div class="field">
+              <label for="lf-nombre">Tu nombre</label>
+              <input
+                id="lf-nombre"
+                v-model="form.nombre"
+                class="input"
+                type="text"
+                name="nombre"
+                autocomplete="name"
+                maxlength="80"
+                required
+                :aria-invalid="errors.nombre ? 'true' : undefined"
+                :aria-describedby="describedBy('nombre')"
+                @input="revalidate('nombre')"
+              />
+              <Transition name="t-fade">
+                <p v-if="errors.nombre" id="lf-nombre-error" class="form-error">
+                  {{ errors.nombre }}
+                </p>
+              </Transition>
+            </div>
+            <div v-if="!isCall" class="field">
+              <label for="lf-email">Correo electrónico</label>
+              <input
+                id="lf-email"
+                v-model="form.email"
+                class="input"
+                type="email"
+                name="email"
+                autocomplete="email"
+                maxlength="120"
+                required
+                :aria-invalid="errors.email ? 'true' : undefined"
+                :aria-describedby="describedBy('email')"
+                @input="revalidate('email')"
+              />
+              <Transition name="t-fade">
+                <p v-if="errors.email" id="lf-email-error" class="form-error">{{ errors.email }}</p>
+              </Transition>
+            </div>
+            <div class="field">
+              <label for="lf-telefono">
+                Teléfono
+                <span v-if="!phoneRequired" class="hint">(opcional)</span>
+              </label>
+              <input
+                id="lf-telefono"
+                v-model="form.telefono"
+                class="input"
+                type="tel"
+                name="telefono"
+                autocomplete="tel"
+                inputmode="tel"
+                maxlength="24"
+                :required="phoneRequired"
+                :aria-invalid="errors.telefono ? 'true' : undefined"
+                :aria-describedby="
+                  describedBy('telefono', !phoneRequired ? 'lf-telefono-hint' : '')
+                "
+                @input="revalidate('telefono')"
+              />
+              <p v-if="!phoneRequired" id="lf-telefono-hint" class="hint">
+                Solo si prefieres que te llamemos.
+              </p>
+              <Transition name="t-fade">
+                <p v-if="errors.telefono" id="lf-telefono-error" class="form-error">
+                  {{ errors.telefono }}
+                </p>
+              </Transition>
+            </div>
+          </div>
+
+          <fieldset class="lf-group" role="radiogroup">
+            <legend>¿Cuándo te viene mejor?</legend>
+            <div class="lf-pills">
+              <label v-for="o in slotOptions" :key="o.id" class="lf-option is-pill">
+                <input v-model="form.franja" type="radio" name="franja" :value="o.id" />
+                <span class="lf-option__label">{{ o.label }}</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div v-if="!isCall" class="field">
+            <label for="lf-mensaje"
+              >Algo que debamos saber <span class="hint">(opcional)</span></label
+            >
+            <textarea
+              id="lf-mensaje"
+              v-model="form.mensaje"
+              class="textarea"
+              name="mensaje"
+              maxlength="1500"
+              placeholder="Cuándo abres, qué no te funciona, cuántas mesas tienes…"
+            />
+          </div>
+
+          <div class="field">
+            <label class="lf-consent">
+              <input
+                v-model="form.consentimiento"
+                type="checkbox"
+                name="consentimiento"
+                value="si"
+                required
+                :aria-invalid="errors.consentimiento ? 'true' : undefined"
+                :aria-describedby="describedBy('consentimiento')"
+                @change="revalidate('consentimiento')"
+              />
+              <span>
+                He leído la <a href="/legal/privacidad">política de privacidad</a> y acepto que
+                alaCarta use estos datos para responder a mi solicitud.
+              </span>
             </label>
+            <Transition name="t-fade">
+              <p v-if="errors.consentimiento" id="lf-consentimiento-error" class="form-error">
+                {{ errors.consentimiento }}
+              </p>
+            </Transition>
           </div>
-        </fieldset>
-
-        <div v-if="!isCall" class="field">
-          <label for="lf-mensaje"
-            >Algo que debamos saber <span class="hint">(opcional)</span></label
-          >
-          <textarea
-            id="lf-mensaje"
-            v-model="form.mensaje"
-            class="textarea"
-            name="mensaje"
-            maxlength="1500"
-            placeholder="Cuándo abres, qué no te funciona, cuántas mesas tienes…"
-          />
-        </div>
-
-        <div class="field">
-          <label class="lf-consent">
-            <input
-              v-model="form.consentimiento"
-              type="checkbox"
-              name="consentimiento"
-              value="si"
-              required
-              :aria-invalid="errors.consentimiento ? 'true' : undefined"
-              :aria-describedby="describedBy('consentimiento')"
-              @change="revalidate('consentimiento')"
-            />
-            <span>
-              He leído la <a href="/legal/privacidad">política de privacidad</a> y acepto que
-              alaCarta use estos datos para responder a mi solicitud.
-            </span>
-          </label>
-          <p v-if="errors.consentimiento" id="lf-consentimiento-error" class="form-error">
-            {{ errors.consentimiento }}
-          </p>
-        </div>
-      </section>
+        </section>
+      </Transition>
 
       <!-- Contexto y atribución (también para el envío sin JavaScript) -->
       <input type="hidden" name="modo" :value="modo" />
@@ -783,31 +835,35 @@ const describedBy = (key: string, hint?: string) =>
         </p>
       </div>
 
-      <div
-        v-if="status === 'noendpoint'"
-        ref="noticeRef"
-        class="notice lf-notice"
-        role="status"
-        tabindex="-1"
-      >
-        <p>
-          <strong>El envío automático aún no está activo.</strong> Te abrimos el correo con tu
-          solicitud ya escrita; solo tienes que darle a enviar.
-        </p>
-        <a :href="mailto" class="btn is-primary" @click="onMailto">Enviar por correo</a>
-      </div>
-      <div
-        v-if="status === 'error'"
-        ref="noticeRef"
-        class="notice is-danger lf-notice"
-        role="alert"
-        tabindex="-1"
-      >
-        <p>
-          No se ha podido enviar ({{ errorText }}). Inténtalo de nuevo en unos minutos o
-          <a :href="mailto" @click="onMailto">mándanoslo por correo</a>.
-        </p>
-      </div>
+      <Transition name="t-rise">
+        <div
+          v-if="status === 'noendpoint'"
+          ref="noticeRef"
+          class="notice lf-notice"
+          role="status"
+          tabindex="-1"
+        >
+          <p>
+            <strong>El envío automático aún no está activo.</strong> Te abrimos el correo con tu
+            solicitud ya escrita; solo tienes que darle a enviar.
+          </p>
+          <a :href="mailto" class="btn is-primary" @click="onMailto">Enviar por correo</a>
+        </div>
+      </Transition>
+      <Transition name="t-rise">
+        <div
+          v-if="status === 'error'"
+          ref="noticeRef"
+          class="notice is-danger lf-notice"
+          role="alert"
+          tabindex="-1"
+        >
+          <p>
+            No se ha podido enviar ({{ errorText }}). Inténtalo de nuevo en unos minutos o
+            <a :href="mailto" @click="onMailto">mándanoslo por correo</a>.
+          </p>
+        </div>
+      </Transition>
     </form>
 
     <p v-if="ready" class="lf-switch">
@@ -899,6 +955,7 @@ legend .hint {
 .lf-progress li {
   border-top: 2px solid var(--color-border);
   padding-top: var(--space-3);
+  transition: border-top-color var(--dur) var(--ease);
 }
 .lf-progress li.is-current,
 .lf-progress li.is-done {
@@ -936,6 +993,9 @@ button.lf-progress__btn:hover span:not(.lf-progress__n) {
   background: var(--color-bg-muted);
   font-size: var(--text-xs);
   font-weight: var(--weight-medium);
+  transition:
+    background-color var(--dur) var(--ease),
+    color var(--dur) var(--ease);
 }
 .is-current .lf-progress__n,
 .is-done .lf-progress__n {
@@ -1025,8 +1085,9 @@ button.lf-progress__btn:hover span:not(.lf-progress__n) {
   font-size: var(--text-sm);
   color: var(--color-text);
   transition:
-    border-color var(--dur-fast) var(--ease),
-    background-color var(--dur-fast) var(--ease);
+    border-color var(--dur) var(--ease),
+    background-color var(--dur) var(--ease),
+    color var(--dur) var(--ease);
 }
 .lf-option:hover {
   border-color: var(--color-text-muted);
@@ -1067,6 +1128,7 @@ button.lf-progress__btn:hover span:not(.lf-progress__n) {
 .lf-option__icon {
   flex: 0 0 auto;
   color: var(--color-text-muted);
+  transition: color var(--dur) var(--ease);
 }
 .lf-option:has(input:checked) .lf-option__icon {
   color: var(--color-text-strong);
@@ -1114,6 +1176,10 @@ button.lf-progress__btn:hover span:not(.lf-progress__n) {
   font-size: var(--text-sm);
   cursor: pointer;
   background: var(--white);
+  transition:
+    border-color var(--dur) var(--ease),
+    background-color var(--dur) var(--ease),
+    color var(--dur) var(--ease);
 }
 .lf-chip:hover {
   border-color: var(--color-text-muted);

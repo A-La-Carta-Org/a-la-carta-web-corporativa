@@ -8,7 +8,7 @@
  * pasa al título de cada paso. Sin JavaScript (o antes de hidratar) se ve la lista de preguntas
  * y un enlace a la demo, que es el mismo camino.
  */
-import { computed, nextTick, onMounted, reactive, ref } from 'vue';
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 import {
   checkerQuestions,
   evaluateEquipment,
@@ -28,9 +28,24 @@ const step = ref(0);
 const answers = reactive<CheckerAnswers>({});
 const heading = ref<HTMLElement | null>(null);
 
+/** Hasta después de hidratar no se anima nada: el cambio de la lista inicial al paso 1 es seco */
+const settled = ref(false);
+/** Dirección del paso (adelante o atrás) para la transición horizontal */
+const stepDir = ref('16px');
+
 onMounted(() => {
   ready.value = true;
+  nextTick(() => {
+    settled.value = true;
+  });
 });
+
+watch(
+  () => step.value,
+  (n, o) => {
+    stepDir.value = n >= o ? '16px' : '-16px';
+  }
+);
 
 const question = computed(() => checkerQuestions[step.value]);
 const done = computed(() => step.value >= total);
@@ -48,8 +63,20 @@ const resultHref = computed(() =>
     : fallbackHref
 );
 
+/*
+ * Con las transiciones «out-in» el paso nuevo entra cuando el viejo ha salido: el foco se pone
+ * al título en cuanto el nuevo está en el DOM (hook @enter), no en el nextTick de antes.
+ */
+let pendingFocus = false;
 async function focusHeading() {
+  pendingFocus = true;
   await nextTick();
+  // Sin transición (antes de hidratar o si no cambia nada) el título ya está: foco directo
+  if (!settled.value) focusNow();
+}
+function focusNow() {
+  if (!pendingFocus) return;
+  pendingFocus = false;
   heading.value?.focus();
 }
 
@@ -73,110 +100,125 @@ function restart() {
 </script>
 
 <template>
-  <div class="eqc">
-    <!-- Sin JS / antes de hidratar: las preguntas y el mismo destino -->
-    <div v-if="!ready" class="eqc__fallback">
-      <p class="eqc__progress">Cuatro preguntas</p>
-      <ol class="eqc__list">
-        <li v-for="q in checkerQuestions" :key="q.id">{{ q.title }}</li>
-      </ol>
-      <p class="eqc__help">
-        Respóndelas al pedir la demo y te decimos qué te sirve y qué te falta.
-      </p>
-      <a :href="fallbackHref" class="btn is-primary">Contarnos qué equipo tengo</a>
-    </div>
-
-    <form v-else-if="!done && question" class="eqc__step" novalidate @submit.prevent="next">
-      <div class="eqc__head">
-        <p class="eqc__progress">Pregunta {{ step + 1 }} de {{ total }}</p>
-        <div class="eqc__bar" aria-hidden="true">
-          <span v-for="i in total" :key="i" :class="{ 'is-on': i <= step + 1 }"></span>
-        </div>
-      </div>
-
-      <fieldset class="eqc__fieldset">
-        <legend class="eqc__title">
-          <span ref="heading" tabindex="-1" class="eqc__focus">{{ question.title }}</span>
-        </legend>
-        <p v-if="question.help" :id="`eqc-help-${question.id}`" class="eqc__help">
-          {{ question.help }}
+  <div class="eqc" :style="{ '--step-dir': stepDir }">
+    <Transition name="t-rise" mode="out-in" :css="settled" @enter="focusNow">
+      <!-- Sin JS / antes de hidratar: las preguntas y el mismo destino -->
+      <div v-if="!ready" key="fallback" class="eqc__fallback">
+        <p class="eqc__progress">Cuatro preguntas</p>
+        <ol class="eqc__list">
+          <li v-for="q in checkerQuestions" :key="q.id">{{ q.title }}</li>
+        </ol>
+        <p class="eqc__help">
+          Respóndelas al pedir la demo y te decimos qué te sirve y qué te falta.
         </p>
+        <a :href="fallbackHref" class="btn is-primary">Contarnos qué equipo tengo</a>
+      </div>
 
-        <div v-if="question.kind === 'choice'" class="eqc__options">
-          <label
-            v-for="opt in question.options"
-            :key="opt.id"
-            class="eqc__opt"
-            :class="{ 'is-on': answers[question.id] === opt.id }"
+      <form
+        v-else-if="!done && question"
+        key="form"
+        class="eqc__step"
+        novalidate
+        @submit.prevent="next"
+      >
+        <div class="eqc__head">
+          <p class="eqc__progress">Pregunta {{ step + 1 }} de {{ total }}</p>
+          <div class="eqc__bar" aria-hidden="true">
+            <span v-for="i in total" :key="i" :class="{ 'is-on': i <= step + 1 }"></span>
+          </div>
+        </div>
+
+        <Transition name="t-step" mode="out-in" @enter="focusNow">
+          <fieldset :key="question.id" class="eqc__fieldset">
+            <legend class="eqc__title">
+              <span ref="heading" tabindex="-1" class="eqc__focus">{{ question.title }}</span>
+            </legend>
+            <p v-if="question.help" :id="`eqc-help-${question.id}`" class="eqc__help">
+              {{ question.help }}
+            </p>
+
+            <div v-if="question.kind === 'choice'" class="eqc__options">
+              <label
+                v-for="opt in question.options"
+                :key="opt.id"
+                class="eqc__opt"
+                :class="{ 'is-on': answers[question.id] === opt.id }"
+              >
+                <input
+                  v-model="answers[question.id]"
+                  type="radio"
+                  :name="`eqc-${question.id}`"
+                  :value="opt.id"
+                  :aria-describedby="question.help ? `eqc-help-${question.id}` : undefined"
+                />
+                <span class="eqc__opt-text">
+                  <span class="eqc__opt-label">{{ opt.label }}</span>
+                  <span v-if="opt.hint" class="eqc__opt-hint">{{ opt.hint }}</span>
+                </span>
+              </label>
+            </div>
+
+            <div v-else class="field eqc__field">
+              <label :for="`eqc-${question.id}`">{{ question.fieldLabel }}</label>
+              <input
+                :id="`eqc-${question.id}`"
+                v-model="answers[question.id]"
+                class="input"
+                type="text"
+                maxlength="60"
+                autocomplete="off"
+                :aria-describedby="question.help ? `eqc-help-${question.id}` : undefined"
+              />
+            </div>
+          </fieldset>
+        </Transition>
+
+        <div class="eqc__actions">
+          <button v-if="step > 0" type="button" class="btn is-ghost" @click="back">Atrás</button>
+          <button type="submit" class="btn is-primary" :disabled="!canNext">
+            {{ step === total - 1 ? 'Ver el resultado' : 'Siguiente' }}
+          </button>
+        </div>
+      </form>
+
+      <div v-else-if="result" key="result" class="eqc__result" :class="`is-${result.verdict}`">
+        <div class="eqc__head">
+          <p class="eqc__progress">Resultado</p>
+          <div class="eqc__bar" aria-hidden="true">
+            <span v-for="i in total" :key="i" class="is-on"></span>
+          </div>
+        </div>
+        <h3 class="eqc__title">
+          <span ref="heading" tabindex="-1" class="eqc__focus">{{ result.title }}</span>
+        </h3>
+        <p class="eqc__help">{{ result.text }}</p>
+
+        <ul class="eqc__lines">
+          <li
+            v-for="(line, i) in result.lines"
+            :key="line.name"
+            class="eqc__line"
+            :style="{ '--i': i }"
           >
-            <input
-              v-model="answers[question.id]"
-              type="radio"
-              :name="`eqc-${question.id}`"
-              :value="opt.id"
-              :aria-describedby="question.help ? `eqc-help-${question.id}` : undefined"
-            />
-            <span class="eqc__opt-text">
-              <span class="eqc__opt-label">{{ opt.label }}</span>
-              <span v-if="opt.hint" class="eqc__opt-hint">{{ opt.hint }}</span>
+            <span class="eqc__verdict" :class="`is-${line.verdict}`">
+              {{ verdictLabels[line.verdict] }}
             </span>
-          </label>
+            <span class="eqc__line-body">
+              <strong>{{ line.name }}</strong>
+              <span>{{ line.text }}</span>
+            </span>
+          </li>
+        </ul>
+
+        <p class="eqc__suggestion">{{ result.suggestion }}</p>
+
+        <div class="eqc__actions">
+          <a :href="resultHref" class="btn is-primary">Pedir propuesta con este equipo</a>
+          <button type="button" class="btn is-ghost" @click="restart">Volver a empezar</button>
         </div>
-
-        <div v-else class="field eqc__field">
-          <label :for="`eqc-${question.id}`">{{ question.fieldLabel }}</label>
-          <input
-            :id="`eqc-${question.id}`"
-            v-model="answers[question.id]"
-            class="input"
-            type="text"
-            maxlength="60"
-            autocomplete="off"
-            :aria-describedby="question.help ? `eqc-help-${question.id}` : undefined"
-          />
-        </div>
-      </fieldset>
-
-      <div class="eqc__actions">
-        <button v-if="step > 0" type="button" class="btn is-ghost" @click="back">Atrás</button>
-        <button type="submit" class="btn is-primary" :disabled="!canNext">
-          {{ step === total - 1 ? 'Ver el resultado' : 'Siguiente' }}
-        </button>
+        <p class="eqc__note">Te llevamos al formulario con tus respuestas ya anotadas.</p>
       </div>
-    </form>
-
-    <div v-else-if="result" class="eqc__result" :class="`is-${result.verdict}`">
-      <div class="eqc__head">
-        <p class="eqc__progress">Resultado</p>
-        <div class="eqc__bar" aria-hidden="true">
-          <span v-for="i in total" :key="i" class="is-on"></span>
-        </div>
-      </div>
-      <h3 class="eqc__title">
-        <span ref="heading" tabindex="-1" class="eqc__focus">{{ result.title }}</span>
-      </h3>
-      <p class="eqc__help">{{ result.text }}</p>
-
-      <ul class="eqc__lines">
-        <li v-for="line in result.lines" :key="line.name" class="eqc__line">
-          <span class="eqc__verdict" :class="`is-${line.verdict}`">
-            {{ verdictLabels[line.verdict] }}
-          </span>
-          <span class="eqc__line-body">
-            <strong>{{ line.name }}</strong>
-            <span>{{ line.text }}</span>
-          </span>
-        </li>
-      </ul>
-
-      <p class="eqc__suggestion">{{ result.suggestion }}</p>
-
-      <div class="eqc__actions">
-        <a :href="resultHref" class="btn is-primary">Pedir propuesta con este equipo</a>
-        <button type="button" class="btn is-ghost" @click="restart">Volver a empezar</button>
-      </div>
-      <p class="eqc__note">Te llevamos al formulario con tus respuestas ya anotadas.</p>
-    </div>
+    </Transition>
   </div>
 </template>
 
@@ -280,8 +322,9 @@ function restart() {
   border-radius: var(--radius-md);
   cursor: pointer;
   transition:
-    border-color var(--dur-fast) var(--ease),
-    background var(--dur-fast) var(--ease);
+    border-color var(--dur) var(--ease),
+    background-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
 }
 .eqc__opt:hover {
   border-color: var(--gray-400);
@@ -380,6 +423,19 @@ function restart() {
 .eqc__note {
   font-size: var(--text-xs);
   color: var(--color-text-muted);
+}
+/* Las líneas del resultado entran una detrás de otra */
+@media (prefers-reduced-motion: no-preference) {
+  .eqc__result .eqc__line {
+    animation: eqc-line-in var(--dur-slow) var(--ease) both;
+    animation-delay: calc(120ms + var(--i, 0) * 70ms);
+  }
+}
+@keyframes eqc-line-in {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
 }
 @media (max-width: 640px) {
   .eqc {
