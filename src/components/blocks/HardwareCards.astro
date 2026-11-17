@@ -1,0 +1,103 @@
+---
+/**
+ * Equipamiento recomendado de un producto (docs/auditoria/04 §4.6 y 08): tarjetas de
+ * dispositivo con «o usa el tuyo» y enlace a la página de hardware. Sin precios hasta que se
+ * publiquen (HARDWARE_PRICE_LABEL).
+ */
+import Icon from '@/components/ui/Icon.astro';
+import StatusChip from '@/components/ui/StatusChip.astro';
+import { getDevice, HARDWARE_PRICE_LABEL, type HardwareSlug } from '@/data/hardware';
+
+interface Props {
+  items: HardwareSlug[];
+}
+const { items } = Astro.props;
+const devices = items.map(getDevice);
+const onlyPlates = items.length === 1 && items[0] === 'placas-qr';
+const moreHref = onlyPlates ? '/hardware/placas-qr' : '/hardware';
+---
+
+<ul role="list" class="hw-cards">
+  {devices.map((d) => (
+    <li class="hw-card">
+      <span class="hw-card__icon">
+        <Icon name={d.icon} size={22} />
+      </span>
+      <span class="hw-card__name">
+        {d.name}
+        <StatusChip status={d.status} />
+      </span>
+      <span class="hw-card__text">{d.text}</span>
+      <span class="hw-card__price">{HARDWARE_PRICE_LABEL}</span>
+    </li>
+  ))}
+</ul>
+<p class="hw-foot">
+  <span class="muted">
+    {onlyPlates
+      ? 'O imprime tú los códigos de cada mesa desde el backoffice.'
+      : 'O usa el tuyo: si tu equipo cumple los requisitos, lo aprovechamos y lo dejamos configurado.'}
+  </span>
+  <a href={moreHref} class="link-arrow">
+    {onlyPlates ? 'Ver las placas QR' : 'Ver todo el equipamiento'}
+    <Icon name="arrow-right" size={14} />
+  </a>
+</p>
+
+<style>
+  .hw-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr));
+    gap: var(--space-4);
+  }
+  .hw-card {
+    display: grid;
+    align-content: start;
+    gap: var(--space-2);
+    padding: var(--space-5);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+  }
+  .hw-card__icon {
+    width: 2.75rem;
+    height: 2.75rem;
+    display: grid;
+    place-items: center;
+    margin-bottom: var(--space-2);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-muted);
+    color: var(--color-text-strong);
+  }
+  .hw-card__name {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-2);
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-snug);
+    color: var(--color-text-strong);
+  }
+  .hw-card__text {
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+    color: var(--color-text-muted);
+  }
+  .hw-card__price {
+    margin-top: var(--space-2);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-strong);
+  }
+  .hw-foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3) var(--space-6);
+    margin-top: var(--space-6);
+    font-size: var(--text-sm);
+  }
+</style>

@@ -5,8 +5,11 @@ import CtaBand from '@/components/blocks/CtaBand.astro';
 import SolutionGrid from '@/components/blocks/SolutionGrid.astro';
 import { getCollection, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
-import type { SolutionSlug } from '@/data/solutions';
+import Icon from '@/components/ui/Icon.astro';
+import { getItem, type EcosystemSlug } from '@/data/solutions';
+import { moments, momentPath } from '@/data/moments';
 import { breadcrumbJsonLd } from '@/lib/seo';
+import { ctaHref } from '@/lib/cta';
 import { SITE_NAME, SITE_URL, absoluteUrl } from '@/data/site';
 
 export async function getStaticPaths() {
@@ -28,13 +31,29 @@ const crumbs = [
 ];
 const fmt = (d: Date) =>
   d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+const { publishedAt, updatedAt, reviewedAt, cta } = entry.data;
+/* La fecha de modificación es la más reciente entre publicación, actualización y revisión */
+const modified = [publishedAt, updatedAt, reviewedAt]
+  .filter((d): d is Date => Boolean(d))
+  .reduce((a, b) => (b.getTime() > a.getTime() ? b : a));
+const relatedMoments = moments.filter((m) => entry.data.moments.includes(m.slug));
+/* Valida en build: un slug mal escrito en el frontmatter rompe la compilación */
+const modulo = cta?.modulo ? getItem(cta.modulo as EcosystemSlug).slug : undefined;
+const origen = `guia-${entry.id}-cierre`;
+const calcLink = cta?.calculadora
+  ? {
+      label: 'Calcula tus comisiones',
+      href: ctaHref({ to: 'calculadora', origen }),
+      text: 'Pon tus pedidos y tu ticket medio y mira lo que se queda el agregador al año.',
+    }
+  : undefined;
 const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: entry.data.title,
   description: entry.data.description,
-  datePublished: entry.data.publishedAt.toISOString(),
-  dateModified: (entry.data.updatedAt ?? entry.data.publishedAt).toISOString(),
+  datePublished: publishedAt.toISOString(),
+  dateModified: modified.toISOString(),
   inLanguage: 'es-ES',
   mainEntityOfPage: absoluteUrl(path),
   author: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
@@ -53,9 +72,21 @@ const articleJsonLd = {
     <header class="container is-narrow guide-page__head">
       <Breadcrumbs items={crumbs.slice(0, 3)} />
       <p class="muted guide-page__meta">
-        <time datetime={entry.data.publishedAt.toISOString()}>{fmt(entry.data.publishedAt)}</time>
-        {entry.data.updatedAt && <> · actualizado el {fmt(entry.data.updatedAt)}</>}·{' '}
-        {entry.data.readingMinutes} min de lectura
+        <span>
+          Publicada el <time datetime={publishedAt.toISOString()}>{fmt(publishedAt)}</time>
+        </span>
+        {updatedAt && (
+          <span>
+            Actualizada el <time datetime={updatedAt.toISOString()}>{fmt(updatedAt)}</time>
+          </span>
+        )}
+        {reviewedAt && (
+          <span class="guide-page__reviewed">
+            <Icon name="shield-check" size={14} />
+            Datos revisados el <time datetime={reviewedAt.toISOString()}>{fmt(reviewedAt)}</time>
+          </span>
+        )}
+        <span>{entry.data.readingMinutes} min de lectura</span>
       </p>
       <h1>{entry.data.title}</h1>
       <p class="lead">{entry.data.description}</p>
@@ -63,14 +94,34 @@ const articleJsonLd = {
     <div class="container is-narrow prose guide-page__body">
       <Content />
     </div>
+    {relatedMoments.length > 0 && (
+      <aside class="container is-narrow guide-page__moments" aria-label="Si estás en este momento">
+        {relatedMoments.map((m) => (
+          <a href={momentPath(m.slug)} class="card is-link guide-page__moment">
+            <Icon name={m.icon} size={20} />
+            <span>
+              <b>{m.navLabel}</b>
+              <span class="muted">{m.tagline}</span>
+            </span>
+            <Icon name="arrow-right" size={16} />
+          </a>
+        ))}
+      </aside>
+    )}
     {entry.data.related.length > 0 && (
       <aside class="container is-narrow guide-page__related">
         <h2>Relacionado en alaCarta</h2>
-        <SolutionGrid only={entry.data.related as SolutionSlug[]} columns={3} compact />
+        <SolutionGrid only={entry.data.related as EcosystemSlug[]} columns={3} compact />
       </aside>
     )}
   </article>
-  <CtaBand />
+  <CtaBand
+    title={cta?.title}
+    text={cta?.text}
+    modulo={modulo}
+    origen={origen}
+    calcLink={calcLink}
+  />
 </BaseLayout>
 
 <style>
@@ -87,6 +138,38 @@ const articleJsonLd = {
   }
   .guide-page__meta {
     font-size: var(--text-sm);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+  }
+  .guide-page__reviewed {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    color: var(--color-text-strong);
+    font-weight: var(--weight-medium);
+  }
+  .guide-page__moments {
+    margin-top: var(--space-12);
+    display: grid;
+    gap: var(--space-3);
+  }
+  .guide-page__moment {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--space-4);
+    align-items: center;
+  }
+  .guide-page__moment > span {
+    display: grid;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+  }
+  .guide-page__moment b {
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-md);
+    color: var(--color-text-strong);
   }
   .guide-page__body {
     font-size: var(--text-md);

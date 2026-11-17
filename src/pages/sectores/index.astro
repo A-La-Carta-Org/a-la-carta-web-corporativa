@@ -1,21 +1,49 @@
 ---
+/**
+ * Índice de sectores (docs/auditoria/12 §3): los tipos de local con su icono y su configuración
+ * tipo (precio orientativo calculado con quote.ts), «¿En qué momento estás?» con los tres
+ * momentos, el destacado de grupos, «Mismo sistema, distinta configuración» y «¿No ves tu tipo
+ * de local?», que lleva al formulario. Sin islas.
+ */
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHero from '@/components/blocks/PageHero.astro';
 import SectionHeader from '@/components/ui/SectionHeader.astro';
-import SectorGrid from '@/components/blocks/SectorGrid.astro';
 import CtaBand from '@/components/blocks/CtaBand.astro';
 import FeatureColumns from '@/components/blocks/FeatureColumns.astro';
+import Mockup from '@/components/mockups/Mockup.astro';
+import Icon from '@/components/ui/Icon.astro';
+import StatusChip from '@/components/ui/StatusChip.astro';
+import { sectors, sectorPath, otherVenues, getSector } from '@/data/sectors';
+import { moments, momentPath } from '@/data/moments';
+import { getItem } from '@/data/solutions';
+import { fmtPrice } from '@/data/pricing';
+import { quote, sectorPresets } from '@/lib/quote';
 import { breadcrumbJsonLd } from '@/lib/seo';
+import { ctaHref } from '@/lib/cta';
 
 const crumbs = [
   { name: 'Inicio', path: '/' },
   { name: 'Sectores', path: '/sectores' },
 ];
+const origen = 'sectores';
+const list = sectors.map((s) => {
+  const q = quote(sectorPresets[s.slug] ?? {});
+  return { ...s, monthly: q.monthly, isGroup: (sectorPresets[s.slug]?.locales ?? 1) > 1 };
+});
+const groups = getSector('grupos-y-cadenas');
+const erp = getItem('erp');
+const groupPoints = [
+  { text: 'Carta maestra con variantes por local, zona y canal' },
+  { text: 'Roles y permisos comunes para todos los locales' },
+  { text: 'Ventas, ticket medio y margen por local, comparados' },
+  { text: 'Turnos, fichajes y vacaciones de todos los centros' },
+  { text: 'ERP multiempresa: compras y facturas por sociedad', status: erp.status },
+];
 ---
 
 <BaseLayout
-  title="Software de hostelería por tipo de negocio: restaurantes, bares, cafeterías…"
-  description="alaCarta se configura para restaurantes, bares, cafeterías, pizzerías, hamburgueserías, cervecerías, pubs, take away, delivery y grupos con varios locales. Misma plataforma, distinto flujo."
+  title="Software de hostelería por tipo de local"
+  description="alaCarta para restaurantes, bares, cafeterías, pizzerías, hamburgueserías, cervecerías, pubs, take away y grupos. Un sistema, configurado para tu local."
   path="/sectores"
   jsonLd={breadcrumbJsonLd(crumbs)}
 >
@@ -25,11 +53,115 @@ const crumbs = [
     eyebrow="Sectores"
     title="Una plataforma para cada tipo de local"
     text="Un bar de barrio y un grupo con doce restaurantes no trabajan igual, pero necesitan lo mismo: cobrar bien, servir rápido y saber qué pasa. alaCarta es un solo sistema que se configura para cada caso."
+    primary={{ label: 'Solicitar demo', href: ctaHref({ to: 'demo', origen: `${origen}-hero` }) }}
+    secondary={{
+      label: 'Monta tu alaCarta',
+      href: ctaHref({ to: 'precios', origen: `${origen}-hero`, hash: 'monta' }),
+    }}
   />
 
+  <!-- Tipos de local -->
   <section class="section is-sm">
     <div class="container">
-      <SectorGrid />
+      <h2 class="sr-only">Tipos de local</h2>
+      <ul role="list" class="sx-grid">
+        {list.map((s) => (
+          <li>
+            <a href={sectorPath(s.slug)} class="card is-link sx-card">
+              <span class="sx-card__icon">
+                <Icon name={s.icon} size={24} />
+              </span>
+              <span class="sx-card__name">{s.name}</span>
+              <span class="sx-card__text">{s.tagline}</span>
+              <span class="sx-card__price">
+                {s.isGroup ? (
+                  <>
+                    Desde 3 locales: <b>precio por volumen</b>
+                  </>
+                ) : (
+                  <>
+                    Configuración tipo: <b class="num">{fmtPrice(s.monthly)}/mes</b>
+                  </>
+                )}
+              </span>
+              <Icon name="arrow-right" size={16} class="sx-card__arrow" />
+            </a>
+          </li>
+        ))}
+      </ul>
+      <p class="sx-note">
+        Precios orientativos sin IVA de la configuración recomendada para cada tipo de local. Ábrela
+        en su página y ajústala en el configurador.
+      </p>
+    </div>
+  </section>
+
+  <!-- ¿En qué momento estás? -->
+  <section class="section has-rule">
+    <div class="container sx-moments-wrap">
+      <SectionHeader
+        eyebrow="Tu momento"
+        title="¿En qué momento estás?"
+        text="A veces lo que pesa no es el tipo de local, sino lo que te está pasando: abres, cambias de sistema o te has cansado de pagar comisiones."
+      />
+      <ul role="list" class="sx-moments">
+        {moments.map((m) => (
+          <li>
+            <a href={momentPath(m.slug)} class="card is-link sx-moment">
+              <span class="sx-moment__icon">
+                <Icon name={m.icon} size={20} />
+              </span>
+              <span class="sx-moment__body">
+                <span class="sx-moment__name">{m.navLabel}</span>
+                <span class="muted">{m.tagline}</span>
+              </span>
+              <Icon name="arrow-right" size={16} class="sx-moment__arrow" />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- Destacado: grupos -->
+  <section class="section has-rule">
+    <div class="container sx-groups">
+      <div class="sx-groups__copy">
+        <SectionHeader
+          eyebrow="Grupos y cadenas"
+          title="¿Tienes varios locales?"
+          text={groups.intro}
+        />
+        <ul role="list" class="sx-groups__list">
+          {groupPoints.map((p) => (
+            <li>
+              <Icon name="check" size={16} />
+              <span>{p.text}</span>
+              {p.status && <StatusChip status={p.status} />}
+            </li>
+          ))}
+        </ul>
+        <div class="sx-groups__actions">
+          <a href={sectorPath(groups.slug)} class="btn is-primary">
+            Ver alaCarta para grupos
+            <Icon name="arrow-right" size={16} class="btn-arrow" />
+          </a>
+          <a
+            href={ctaHref({
+              to: 'demo',
+              sector: groups.slug,
+              plan: 'grupos',
+              origen: `${origen}-grupos`,
+            })}
+            class="btn is-secondary"
+          >
+            Hablar de mi grupo
+          </a>
+        </div>
+      </div>
+      <div class="sx-groups__media">
+        <Mockup kind="backoffice" />
+      </div>
     </div>
   </section>
 
@@ -38,18 +170,18 @@ const crumbs = [
       <SectionHeader
         eyebrow="Cómo lo hacemos"
         title="Mismo sistema, distinta configuración"
-        text="Lo que cambia entre sectores no es el programa, son los módulos activos, el flujo de cobro y la forma de la carta."
+        text="Lo que cambia entre sectores no es el programa, son las piezas activas, el flujo de cobro y la forma de la carta."
       />
       <FeatureColumns
         columns={3}
         items={[
           {
-            title: 'Módulos a medida',
-            text: 'Un bar arranca con TPV y carta QR; un restaurante añade comandero, cocina y reservas; una pizzería, pedidos online. Nada sobra.',
+            title: 'Piezas a medida',
+            text: 'Un bar arranca con TPV y carta QR; un restaurante añade comandero, cocina y reservas; una pizzería, pedidos online y llamadas con IA. Nada sobra.',
           },
           {
             title: 'Flujo de cobro',
-            text: 'Modo barra para vender sin abrir mesa, modo sala para gestionar mesas y tiempos, modo mostrador para recogidas.',
+            text: 'Modo barra para vender sin abrir mesa, modo sala para gestionar mesas y tiempos, modo mostrador para recogidas y modo oscuro para la noche.',
           },
           {
             title: 'Carta con su lógica',
@@ -60,8 +192,218 @@ const crumbs = [
     </div>
   </section>
 
+  <!-- ¿No ves tu tipo de local? -->
+  <section class="section">
+    <div class="container sx-other">
+      <div>
+        <h2 class="sx-other__title">¿No ves tu tipo de local?</h2>
+        <p class="muted">
+          Si es hostelería, lo más probable es que encaje. Cuéntanos cómo trabajas y te decimos qué
+          piezas te harían falta.
+        </p>
+      </div>
+      <ul role="list" class="sx-other__list">
+        {otherVenues.map((v) => (
+          <li class="chip">{v}</li>
+        ))}
+      </ul>
+      <a href={ctaHref({ to: 'demo', origen: `${origen}-otro-local` })} class="btn is-secondary">
+        Cuéntanos cómo trabajas
+        <Icon name="arrow-right" size={16} class="btn-arrow" />
+      </a>
+    </div>
+  </section>
+
   <CtaBand
-    title="¿Tu local no está en la lista?"
-    text="Si es hostelería, lo más probable es que encaje. Cuéntanos cómo trabajas y te decimos qué módulos te harían falta."
+    title="Vamos a ver tu local"
+    text="En una videollamada corta repasamos tu carta, tus canales y tu equipo, y te enseñamos la configuración que te encaja."
+    origen={`${origen}-cierre`}
   />
 </BaseLayout>
+
+<style>
+  .sx-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+  .sx-card {
+    position: relative;
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    height: 100%;
+    padding: var(--space-6) var(--space-12) var(--space-6) var(--space-6);
+    border-radius: var(--radius-lg);
+  }
+  .sx-card:hover {
+    text-decoration: none;
+  }
+  .sx-card__icon {
+    width: 3rem;
+    height: 3rem;
+    display: grid;
+    place-items: center;
+    margin-bottom: var(--space-2);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-muted);
+    color: var(--color-text-strong);
+  }
+  .sx-card__name {
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-xl);
+    letter-spacing: var(--tracking-snug);
+    color: var(--color-text-strong);
+  }
+  .sx-card__text {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .sx-card__price {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .sx-card__price b {
+    font-family: var(--font-mono);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-strong);
+  }
+  .sx-card :global(.sx-card__arrow) {
+    position: absolute;
+    top: var(--space-6);
+    right: var(--space-6);
+    color: var(--color-text-subtle);
+    transition: transform var(--dur-fast) var(--ease);
+  }
+  .sx-card:hover :global(.sx-card__arrow) {
+    color: var(--color-text-strong);
+  }
+  .sx-note {
+    margin-top: var(--space-6);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+
+  .sx-moments-wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: var(--space-16);
+    align-items: start;
+  }
+  .sx-moments {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .sx-moment {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+  }
+  .sx-moment:hover {
+    text-decoration: none;
+  }
+  .sx-moment__icon {
+    flex: 0 0 auto;
+    width: 2.75rem;
+    height: 2.75rem;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-muted);
+    color: var(--color-text-strong);
+  }
+  .sx-moment__body {
+    display: grid;
+    gap: 0.15rem;
+    flex: 1 1 auto;
+    font-size: var(--text-sm);
+  }
+  .sx-moment__name {
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-lg);
+    letter-spacing: var(--tracking-snug);
+    color: var(--color-text-strong);
+  }
+  .sx-moment :global(.sx-moment__arrow) {
+    flex: 0 0 auto;
+    color: var(--color-text-subtle);
+  }
+
+  .sx-groups {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: var(--space-16);
+    align-items: center;
+  }
+  .sx-groups__copy :global(.section-header) {
+    margin-bottom: var(--space-8);
+  }
+  .sx-groups__list {
+    display: grid;
+    gap: var(--space-3);
+    margin-bottom: var(--space-8);
+  }
+  .sx-groups__list li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--color-text);
+  }
+  .sx-groups__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .sx-other {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    gap: var(--space-10);
+    align-items: center;
+    padding: var(--space-8);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+  }
+  .sx-other__title {
+    font-size: var(--text-2xl);
+    margin-bottom: var(--space-2);
+  }
+  .sx-other__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  @media (max-width: 1024px) {
+    .sx-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .sx-moments-wrap,
+    .sx-groups {
+      grid-template-columns: 1fr;
+      gap: var(--space-10);
+    }
+    .sx-other {
+      grid-template-columns: 1fr;
+      justify-items: start;
+      gap: var(--space-6);
+    }
+  }
+  @media (max-width: 640px) {
+    .sx-grid {
+      grid-template-columns: 1fr;
+    }
+    .sx-other {
+      padding: var(--space-6);
+    }
+  }
+</style>

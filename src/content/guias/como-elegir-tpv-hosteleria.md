@@ -1,9 +1,12 @@
 ---
 title: 'Cómo elegir un TPV para hostelería en 2026'
-description: 'Qué mirar antes de contratar un TPV para un bar o restaurante: licencia o suscripción, hardware, funcionamiento sin internet, comisiones, VeriFactu y qué preguntas hacer en la demo.'
+description: 'Qué mirar antes de contratar un TPV para un bar o restaurante: suscripción, hardware, sin internet, comisiones, VeriFactu y qué preguntar en la demo.'
 publishedAt: 2026-11-16
 readingMinutes: 8
 related: ['tpv', 'comandero']
+moments: ['cambiar-de-tpv']
+cta:
+  modulo: 'tpv'
 ---
 
 Elegir el TPV es la decisión de software más duradera que toma un local: se usa cada día, a todas horas, y cambiarlo cuesta tiempo y formación. Esta guía recoge lo que conviene mirar antes de firmar, con independencia de qué sistema acabes eligiendo.

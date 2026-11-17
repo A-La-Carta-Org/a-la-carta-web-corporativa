@@ -1,0 +1,207 @@
+---
+/**
+ * Web de restaurante hecha por alaCarta: la home de La Plaza con los botones de reservar y pedir,
+ * la carta sincronizada con el backoffice, el horario y la ficha de Google revisada.
+ */
+---
+
+<div class="mk mk-web">
+  <div class="mk-web__nav">
+    <span class="mk-web__logo">La Plaza</span>
+    <span class="mk-web__links">
+      <span>Carta</span>
+      <span>Reservar</span>
+      <span>Pedir</span>
+      <span>Cómo llegar</span>
+    </span>
+    <span class="mk-btn is-dark mk-web__cta">Reservar mesa</span>
+  </div>
+
+  <div class="mk-web__hero">
+    <div class="mk-web__copy">
+      <span class="mk-muted">Cocina de mercado · Centro</span>
+      <span class="mk-web__title">Arroces, brasa y producto de temporada</span>
+      <span class="mk-web__actions">
+        <span class="mk-btn is-dark">Reservar mesa</span>
+        <span class="mk-btn">Pedir para recoger</span>
+      </span>
+    </div>
+    <div class="mk-web__photo" aria-hidden="true">
+      <i></i>
+      <i></i>
+      <i></i>
+    </div>
+  </div>
+
+  <div class="mk-web__cols">
+    <div class="mk-panel mk-web__card">
+      <div class="mk-row">
+        <span class="grow mk-strong">Carta de hoy</span>
+        <span class="mk-pill is-ok">Al día</span>
+      </div>
+      <div class="mk-row">
+        <span class="grow">Arroz de señoret</span>
+        <span class="num">16,50 €</span>
+      </div>
+      <div class="mk-row">
+        <span class="grow">Pulpo a la brasa</span>
+        <span class="num">18,00 €</span>
+      </div>
+      <div class="mk-row">
+        <span class="grow mk-muted">Alcachofas confitadas</span>
+        <span class="mk-pill">Agotado</span>
+      </div>
+    </div>
+    <div class="mk-panel mk-web__card">
+      <div class="mk-row">
+        <span class="grow mk-strong">Horario</span>
+      </div>
+      <div class="mk-row">
+        <span class="grow">Lun. a jue.</span>
+        <span class="num">13–16, 20–23</span>
+      </div>
+      <div class="mk-row">
+        <span class="grow">Vie. y sáb.</span>
+        <span class="num">13–16, 20–24</span>
+      </div>
+      <div class="mk-row">
+        <span class="grow">Domingo</span>
+        <span class="num">13–16</span>
+      </div>
+    </div>
+    <div class="mk-panel mk-web__card mk-web__google">
+      <div class="mk-row">
+        <span class="grow mk-strong">Ficha de Google</span>
+        <span class="mk-muted">revisada</span>
+      </div>
+      <div class="mk-row">
+        <span class="mk-check is-on"></span>
+        <span class="grow">Horario y festivos</span>
+      </div>
+      <div class="mk-row">
+        <span class="mk-check is-on"></span>
+        <span class="grow">Carta y fotos</span>
+      </div>
+      <div class="mk-row">
+        <span class="mk-check is-on"></span>
+        <span class="grow">Enlace de reserva</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .mk-web__nav {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--gray-200);
+    white-space: nowrap;
+  }
+  .mk-web__logo {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: -0.03em;
+  }
+  .mk-web__links {
+    display: flex;
+    gap: 12px;
+    color: var(--gray-500);
+    font-weight: 500;
+    margin-left: auto;
+  }
+  .mk-web__cta {
+    padding: 5px 10px;
+  }
+  .mk-web__hero {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 14px;
+    padding: 16px;
+    align-items: center;
+  }
+  .mk-web__copy {
+    display: grid;
+    gap: 8px;
+    align-content: center;
+  }
+  .mk-web__title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+  }
+  .mk-web__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 2px;
+  }
+  /* Hueco de foto: bloques grises, sin imágenes falsas */
+  .mk-web__photo {
+    position: relative;
+    height: 112px;
+    border-radius: 10px;
+    background: var(--gray-100);
+    overflow: hidden;
+  }
+  .mk-web__photo i {
+    position: absolute;
+    border-radius: 999px;
+    background: var(--gray-200);
+  }
+  .mk-web__photo i:nth-child(1) {
+    width: 90px;
+    height: 90px;
+    left: 18%;
+    top: 14px;
+  }
+  .mk-web__photo i:nth-child(2) {
+    width: 44px;
+    height: 44px;
+    right: 14%;
+    top: 18px;
+    background: var(--gray-300);
+  }
+  .mk-web__photo i:nth-child(3) {
+    width: 30px;
+    height: 30px;
+    right: 24%;
+    bottom: 12px;
+  }
+  .mk-web__cols {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 0 16px 16px;
+  }
+  .mk-web__card {
+    padding: 4px 10px;
+  }
+  .mk-web__card .num {
+    white-space: nowrap;
+  }
+  @container (max-width: 520px) {
+    .mk-web__links {
+      display: none;
+    }
+    .mk-web__cta {
+      margin-left: auto;
+    }
+    .mk-web__hero {
+      grid-template-columns: 1fr;
+    }
+    .mk-web__photo {
+      display: none;
+    }
+    .mk-web__cols {
+      grid-template-columns: 1fr 1fr;
+    }
+    .mk-web__google {
+      display: none;
+    }
+  }
+</style>

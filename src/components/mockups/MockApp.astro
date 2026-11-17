@@ -1,0 +1,174 @@
+---
+/**
+ * App propia en móvil: la pantalla de inicio de La Plaza con las tres acciones (reservar, pedir,
+ * mis puntos), el último pedido para repetir y la barra de pestañas. App web instalable.
+ */
+import Icon from '@/components/ui/Icon.astro';
+---
+
+<div class="mk mk-app">
+  <div class="mk-app__head">
+    <span class="mk-app__logo">La Plaza</span>
+    <span class="mk-pill is-ok">
+      <i class="mk-dot"></i> Abierto
+    </span>
+  </div>
+  <p class="mk-app__hello">
+    Hola, Marta
+    <span class="mk-muted">Hoy cocina hasta las 23:30</span>
+  </p>
+
+  <div class="mk-app__actions">
+    <span class="mk-app__action is-main">
+      <Icon name="calendar" size={18} />
+      <b>Reservar</b>
+      <span>Mesa para hoy o cuando quieras</span>
+    </span>
+    <span class="mk-app__action">
+      <Icon name="bag" size={18} />
+      <b>Pedir</b>
+      <span>Recoger o a domicilio</span>
+    </span>
+    <span class="mk-app__action">
+      <Icon name="star" size={18} />
+      <b>Mis puntos</b>
+      <span class="num">240 pts</span>
+    </span>
+  </div>
+
+  <div class="mk-app__points mk-panel is-soft">
+    <div class="mk-row">
+      <span class="grow mk-strong">
+        Te faltan 60 puntos<span class="sub">para un postre de la casa</span>
+      </span>
+      <span class="num mk-strong">240 / 300</span>
+    </div>
+    <div class="mk-app__bar">
+      <i style="--w:80%"></i>
+    </div>
+  </div>
+
+  <div class="mk-app__last">
+    <span class="mk-muted">Tu último pedido</span>
+    <div class="mk-row">
+      <span class="grow mk-strong">
+        Arroz negro y croquetas<span class="sub">Recogido el viernes · 2 personas</span>
+      </span>
+      <span class="num">32,50 €</span>
+    </div>
+    <span class="mk-btn is-dark is-block">Repetir pedido</span>
+  </div>
+
+  <div class="mk-app__tabs">
+    <span class="is-on">Inicio</span>
+    <span>Carta</span>
+    <span>Pedidos</span>
+    <span>Perfil</span>
+  </div>
+</div>
+
+<style>
+  .mk-app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding-top: 34px;
+  }
+  .mk-app__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 14px 6px;
+  }
+  .mk-app__logo {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -0.03em;
+  }
+  .mk-app__hello {
+    display: grid;
+    gap: 1px;
+    padding: 4px 14px 10px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: -0.02em;
+  }
+  .mk-app__hello .mk-muted {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+  .mk-app__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    padding: 0 14px;
+  }
+  .mk-app__action {
+    display: grid;
+    gap: 2px;
+    align-content: start;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--gray-200);
+    background: var(--white);
+  }
+  .mk-app__action b {
+    font-weight: 600;
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  .mk-app__action span {
+    color: var(--gray-500);
+    font-size: 9px;
+  }
+  .mk-app__action.is-main {
+    grid-column: 1 / -1;
+    background: var(--black);
+    border-color: var(--black);
+    color: var(--white);
+  }
+  .mk-app__action.is-main span {
+    color: var(--gray-300);
+  }
+  .mk-app__points {
+    margin: 10px 14px 0;
+    padding: 4px 10px 10px;
+  }
+  .mk-app__bar {
+    height: 4px;
+    background: var(--gray-200);
+    border-radius: 999px;
+  }
+  .mk-app__bar i {
+    display: block;
+    width: var(--w);
+    height: 100%;
+    background: var(--black);
+    border-radius: 999px;
+  }
+  .mk-app__last {
+    flex: 1 1 auto;
+    display: grid;
+    align-content: start;
+    gap: 4px;
+    padding: 12px 14px 8px;
+  }
+  .mk-app__tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding: 8px 6px 16px;
+    border-top: 1px solid var(--gray-150);
+    background: var(--gray-50);
+    text-align: center;
+    font-size: 9.5px;
+    color: var(--gray-500);
+    font-weight: 500;
+  }
+  .mk-app__tabs .is-on {
+    color: var(--black);
+  }
+</style>

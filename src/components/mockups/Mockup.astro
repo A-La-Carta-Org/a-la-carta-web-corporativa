@@ -1,52 +1,72 @@
 ---
 /**
- * Pinta la maqueta de un módulo dentro de su marco. Las de móvil (comandero, carta, pedidos)
- * van en un teléfono; el resto, en una ventana de navegador.
+ * Pinta la maqueta de un módulo dentro de su marco. Las de móvil (comandero, carta, tienda online,
+ * app propia) van en un teléfono; el resto, en una ventana de navegador.
  */
 import type { MockupKey } from '@/data/solutions';
 import DeviceFrame from './DeviceFrame.astro';
 import MockTpv from './MockTpv.astro';
 import MockComandero from './MockComandero.astro';
 import MockKds from './MockKds.astro';
+import type { KdsMode, TpvMode } from './modes';
 import MockCarta from './MockCarta.astro';
 import MockReservas from './MockReservas.astro';
 import MockPedidos from './MockPedidos.astro';
 import MockBackoffice from './MockBackoffice.astro';
 import MockInformes from './MockInformes.astro';
 import MockClientes from './MockClientes.astro';
+import MockApp from './MockApp.astro';
+import MockWeb from './MockWeb.astro';
+import MockLlamada from './MockLlamada.astro';
+import MockErp from './MockErp.astro';
+import MockRrhh from './MockRrhh.astro';
 
 interface Props {
   kind: MockupKey;
   class?: string;
   shadow?: boolean;
+  /** Contenido del TPV según el tipo de local; «noche» lo pinta en modo oscuro */
+  tpvMode?: TpvMode;
+  /** Contenido de la pantalla de cocina según el tipo de local */
+  kdsMode?: KdsMode;
 }
-const { kind, class: className = '', shadow = true } = Astro.props;
+const { kind, class: className = '', shadow = true, tpvMode, kdsMode } = Astro.props;
+const night = kind === 'tpv' && tpvMode === 'noche';
 
-const phones: MockupKey[] = ['comandero', 'carta', 'pedidos'];
+const phones: MockupKey[] = ['comandero', 'carta', 'tienda-online', 'app'];
 const isPhone = phones.includes(kind);
 const urls: Partial<Record<MockupKey, string>> = {
-  tpv: 'tpv.alacarta.com/sala',
+  tpv: `tpv.alacarta.com/${tpvMode === 'barra' || tpvMode === 'noche' ? 'barra' : tpvMode === 'mostrador' ? 'mostrador' : 'sala'}`,
   kds: 'cocina.alacarta.com/pase',
   reservas: 'app.alacarta.com/reservas',
   backoffice: 'app.alacarta.com/carta',
-  informes: 'app.alacarta.com',
+  'panel-ventas': 'app.alacarta.com',
   clientes: 'app.alacarta.com/clientes',
+  web: 'www.tulocal.es',
+  llamada: 'app.alacarta.com/llamadas',
+  erp: 'app.alacarta.com/compras',
+  rrhh: 'app.alacarta.com/equipo',
 };
 ---
 
 <DeviceFrame
   kind={isPhone ? 'phone' : 'browser'}
   url={urls[kind]}
-  class={className}
+  class={[className, night ? 'is-night' : ''].filter(Boolean).join(' ')}
   shadow={shadow}
 >
-  {kind === 'tpv' && <MockTpv />}
+  {kind === 'tpv' && <MockTpv mode={tpvMode} />}
   {kind === 'comandero' && <MockComandero />}
-  {kind === 'kds' && <MockKds />}
+  {kind === 'kds' && <MockKds mode={kdsMode} />}
   {kind === 'carta' && <MockCarta />}
   {kind === 'reservas' && <MockReservas />}
-  {kind === 'pedidos' && <MockPedidos />}
+  {kind === 'tienda-online' && <MockPedidos />}
   {kind === 'backoffice' && <MockBackoffice />}
-  {kind === 'informes' && <MockInformes />}
+  {kind === 'panel-ventas' && <MockInformes />}
   {kind === 'clientes' && <MockClientes />}
+  {kind === 'app' && <MockApp />}
+  {kind === 'web' && <MockWeb />}
+  {kind === 'llamada' && <MockLlamada />}
+  {kind === 'erp' && <MockErp />}
+  {kind === 'rrhh' && <MockRrhh />}
 </DeviceFrame>

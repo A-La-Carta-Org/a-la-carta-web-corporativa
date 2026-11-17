@@ -1,0 +1,151 @@
+---
+/**
+ * «Un día en tu local» (docs/auditoria/12 §2.3): una línea horaria de la apertura al cierre con
+ * la pieza del ecosistema que actúa en cada momento. Horizontal en escritorio, vertical en
+ * tableta y móvil. Las piezas que no están disponibles llevan su chip.
+ */
+import Icon from '@/components/ui/Icon.astro';
+import StatusChip from '@/components/ui/StatusChip.astro';
+import { getItem } from '@/data/solutions';
+import type { DayMoment } from '@/data/sectors';
+
+interface Props {
+  items: DayMoment[];
+}
+const { items } = Astro.props;
+const rows = items.map((d) => ({ ...d, item: getItem(d.piece) }));
+---
+
+<ol role="list" class="day" style={`--n: ${rows.length}`}>
+  {rows.map((d) => (
+    <li class="day__step">
+      <span class="day__time num">{d.time}</span>
+      <span class="day__dot" aria-hidden="true"></span>
+      <div class="day__body">
+        <h3 class="day__title">{d.title}</h3>
+        <p class="day__text">{d.text}</p>
+        <a href={d.item.path} class="day__piece">
+          <Icon name={d.item.icon} size={16} />
+          <span>{d.item.navLabel}</span>
+          <StatusChip status={d.item.status} />
+        </a>
+      </div>
+    </li>
+  ))}
+</ol>
+
+<style>
+  .day {
+    display: grid;
+    grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+    gap: 0 var(--space-6);
+    position: relative;
+  }
+  /* La línea del día, a la altura de los puntos */
+  .day::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(var(--space-8) + 5px);
+    border-top: 1px solid var(--color-border-strong);
+  }
+  .day__step {
+    display: grid;
+    grid-template-rows: var(--space-8) auto 1fr;
+    gap: 0;
+    min-width: 0;
+  }
+  .day__time {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-text-strong);
+    font-weight: var(--weight-medium);
+  }
+  .day__dot {
+    position: relative;
+    width: 11px;
+    height: 11px;
+    border-radius: var(--radius-pill);
+    background: var(--white);
+    border: 2px solid var(--black);
+  }
+  .day__step:first-child .day__dot,
+  .day__step:last-child .day__dot {
+    background: var(--black);
+  }
+  .day__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding-top: var(--space-5);
+  }
+  .day__title {
+    font-size: var(--text-lg);
+    line-height: 1.25;
+  }
+  .day__text {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .day__piece {
+    margin-top: auto;
+    padding-top: var(--space-3);
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-strong);
+  }
+  .day__piece span:first-of-type {
+    text-decoration: underline;
+    text-decoration-color: var(--color-border-strong);
+    text-underline-offset: 3px;
+  }
+  .day__piece:hover {
+    text-decoration: none;
+  }
+  .day__piece:hover span:first-of-type {
+    text-decoration-color: currentColor;
+  }
+
+  @media (max-width: 1024px) {
+    .day {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+    .day::before {
+      top: var(--space-2);
+      bottom: var(--space-2);
+      right: auto;
+      left: calc(4rem + 5px);
+      border-top: 0;
+      border-left: 1px solid var(--color-border-strong);
+    }
+    .day__step {
+      grid-template-columns: 4rem 11px minmax(0, 1fr);
+      grid-template-rows: auto;
+      column-gap: 0;
+      padding-bottom: var(--space-8);
+    }
+    .day__step:last-child {
+      padding-bottom: 0;
+    }
+    .day__time {
+      padding-top: 0.1rem;
+    }
+    .day__dot {
+      margin-top: 0.35rem;
+    }
+    .day__body {
+      padding-top: 0;
+      padding-left: var(--space-5);
+    }
+    .day__piece {
+      margin-top: var(--space-1);
+      padding-top: 0;
+    }
+  }
+</style>

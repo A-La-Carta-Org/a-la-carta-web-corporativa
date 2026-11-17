@@ -1,55 +1,116 @@
 ---
+/**
+ * Aviso legal (borrador, docs/auditoria/13 §7). Los datos del titular no existen todavía: van
+ * como marcadores visibles (`Pending`). Revisión por asesor antes de publicar (docs/TODO.md).
+ */
 import LegalLayout from '@/layouts/LegalLayout.astro';
-import { CONTACT_EMAIL } from '@/data/site';
+import Pending from '@/components/ui/Pending.astro';
+import { CONTACT_EMAIL, SITE_URL } from '@/data/site';
+
+const domain = SITE_URL.replace('https://', '');
 ---
 
 <LegalLayout
   title="Aviso legal"
-  description="Aviso legal del sitio web alacarta.com."
+  description="Aviso legal del sitio web alacarta.com: titular, condiciones de uso y responsabilidad."
   path="/legal/aviso-legal"
 >
   <h2>1. Titular del sitio web</h2>
   <p>
-    En cumplimiento de la Ley 34/2002, de Servicios de la Sociedad de la Información y de Comercio
-    Electrónico, se informa de que el titular de <strong>alacarta.com</strong> es{' '}
-    <strong>[Denominación social]</strong>, con NIF <strong>[NIF]</strong>, domicilio en{' '}
-    <strong>[Dirección completa]</strong>, inscrita en el Registro Mercantil de{' '}
-    <strong>[Provincia]</strong>, tomo [—], folio [—], hoja [—]. Correo de contacto:{' '}
-    <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+    En cumplimiento del artículo 10 de la Ley 34/2002, de Servicios de la Sociedad de la Información
+    y de Comercio Electrónico (LSSI), estos son los datos del titular de <strong>{domain}</strong>:
   </p>
+  <ul>
+    <li>
+      Denominación social: <Pending what="denominación social" />
+    </li>
+    <li>
+      NIF: <Pending what="NIF" />
+    </li>
+    <li>
+      Domicilio social: <Pending what="dirección completa" />
+    </li>
+    <li>
+      Datos registrales: Registro Mercantil de <Pending what="provincia" />, tomo, folio y hoja{' '}
+      <Pending />
+    </li>
+    <li>
+      Correo electrónico: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+    </li>
+    <li>
+      Teléfono: <Pending what="teléfono de contacto" />
+    </li>
+  </ul>
 
   <h2>2. Objeto</h2>
   <p>
-    Este sitio web tiene por objeto informar sobre la plataforma de gestión para hostelería
-    alaCarta, sus módulos, precios orientativos y canales de contacto, así como permitir la
-    solicitud de demostraciones y de información.
+    Este sitio informa sobre alaCarta, un ecosistema de software y servicios para hostelería: sus
+    productos, su estado (disponible, en piloto o en camino), los precios orientativos, el
+    equipamiento y la puesta en marcha. También permite probar demostraciones interactivas, calcular
+    precios y comisiones, y pedir una demostración, una llamada o información.
   </p>
 
   <h2>3. Condiciones de uso</h2>
   <p>
     El acceso al sitio es gratuito y atribuye la condición de usuario, que acepta estas condiciones.
     El usuario se compromete a hacer un uso adecuado de los contenidos y a no emplearlos para
-    actividades ilícitas o contrarias a la buena fe.
+    actividades ilícitas o contrarias a la buena fe, ni a enviar a través de los formularios datos
+    de terceros sin su permiso.
   </p>
 
-  <h2>4. Propiedad intelectual e industrial</h2>
+  <h2>4. Precios, estado del producto y contenidos informativos</h2>
+  <ul>
+    <li>
+      Los <strong>precios</strong> que aparecen en la web son orientativos de lanzamiento y no
+      incluyen IVA. El precio vinculante es el de la propuesta por escrito.
+    </li>
+    <li>
+      Cada producto indica su <strong>estado</strong>. Lo marcado «En camino» no está disponible y
+      no tiene fecha comprometida salvo que se diga expresamente.
+    </li>
+    <li>
+      Las <strong>demostraciones</strong> funcionan con un local de ejemplo y datos ficticios. Las
+      cifras de las maquetas son ilustrativas.
+    </li>
+    <li>
+      Las <strong>guías</strong> tienen carácter informativo, indican la fecha en que se revisaron y
+      no sustituyen el asesoramiento de un profesional (gestoría, asesor laboral o fiscal).
+    </li>
+    <li>
+      La <strong>calculadora de comisiones</strong> y el configurador hacen estimaciones con los
+      datos que introduce el usuario y con rangos de mercado orientativos, citados con su fuente.
+    </li>
+  </ul>
+
+  <h2>5. Propiedad intelectual e industrial</h2>
   <p>
-    Los contenidos del sitio (textos, diseño, logotipos, código, maquetas de producto) son
-    titularidad de alaCarta o de terceros que han autorizado su uso, y están protegidos por la
-    normativa de propiedad intelectual e industrial. Queda prohibida su reproducción, distribución o
-    transformación sin autorización expresa.
+    Los contenidos del sitio (textos, diseño, logotipos, código y maquetas de producto) son
+    titularidad de <Pending what="denominación social" /> o de terceros que han autorizado su uso, y
+    están protegidos por la normativa de propiedad intelectual e industrial. Queda prohibida su
+    reproducción, distribución o transformación sin autorización expresa.
   </p>
-
-  <h2>5. Exclusión de responsabilidad</h2>
   <p>
-    alaCarta procura que la información publicada sea exacta y actual, pero no garantiza la ausencia
-    de errores. Los precios mostrados son orientativos y se confirman en la propuesta comercial.
-    alaCarta no se hace responsable del contenido de sitios de terceros enlazados desde esta web.
+    Las marcas de terceros que se mencionan en el sitio (plataformas de reparto, servicios de
+    Google, medios de pago) pertenecen a sus titulares. Se citan solo para describir con qué se
+    conecta o se compara alaCarta, sin que exista relación comercial con ellos salvo que se indique.
   </p>
 
-  <h2>6. Legislación aplicable</h2>
+  <h2>6. Exclusión de responsabilidad</h2>
+  <p>
+    Procuramos que la información publicada sea exacta y esté al día, pero no garantizamos la
+    ausencia de errores. No nos hacemos responsables del contenido de los sitios de terceros
+    enlazados desde esta web, ni de las decisiones que se tomen solo a partir de la información
+    general del sitio.
+  </p>
+
+  <h2>7. Legislación aplicable</h2>
   <p>
     Estas condiciones se rigen por la legislación española. Para cualquier controversia, las partes
     se someten a los juzgados y tribunales que correspondan conforme a la normativa aplicable.
+  </p>
+
+  <p>
+    Más información: <a href="/legal/privacidad">política de privacidad</a> y{' '}
+    <a href="/legal/cookies">política de cookies</a>.
   </p>
 </LegalLayout>

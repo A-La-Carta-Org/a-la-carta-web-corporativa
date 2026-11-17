@@ -1,5 +1,5 @@
 ---
-/** Los sectores como lista de enlaces con filete, sin tarjetas. */
+/** Los sectores como lista de enlaces con filete e icono de línea, sin tarjetas. */
 import Icon from '@/components/ui/Icon.astro';
 import { sectors, sectorPath, type SectorSlug } from '@/data/sectors';
 
@@ -14,7 +14,10 @@ const list = only ? only.map((s) => sectors.find((x) => x.slug === s)!).filter(B
   {list.map((s) => (
     <li>
       <a href={sectorPath(s.slug)} class="sector-link">
-        <span class="sector-link__name">{s.name}</span>
+        <span class="sector-link__name">
+          <Icon name={s.icon} size={18} class="sector-link__icon" />
+          {s.name}
+        </span>
         <span class="sector-link__text">{s.tagline}</span>
         <Icon name="arrow-right" size={16} class="sector-link__arrow" />
       </a>
@@ -40,24 +43,30 @@ const list = only ? only.map((s) => sectors.find((x) => x.slug === s)!).filter(B
     text-decoration: none;
   }
   .sector-link__name {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
     font-family: var(--font-display);
     font-weight: var(--weight-semibold);
     font-size: var(--text-lg);
     letter-spacing: var(--tracking-snug);
     color: var(--color-text-strong);
   }
+  .sector-link__name :global(.sector-link__icon) {
+    color: var(--color-text-muted);
+  }
   .sector-link__text {
     font-size: var(--text-sm);
     color: var(--color-text-muted);
   }
-  .sector-link__arrow {
+  .sector-link :global(.sector-link__arrow) {
     position: absolute;
     right: 0;
     top: var(--space-6);
     color: var(--color-text-subtle);
     transition: translate var(--dur-fast) var(--ease);
   }
-  .sector-link:hover .sector-link__arrow {
+  .sector-link:hover :global(.sector-link__arrow) {
     translate: 3px 0;
     color: var(--color-text-strong);
   }

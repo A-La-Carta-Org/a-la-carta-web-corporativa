@@ -1,0 +1,443 @@
+---
+/**
+ * Puesta en marcha (docs/auditoria/08): línea temporal orientativa, migración (desde otro TPV o
+ * desde el papel), qué se traspasa y qué no, estrategia local, qué necesitamos de ti, qué cuesta
+ * (desde pricing.ts) y FAQ. Copy en `src/data/onboarding.ts`.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import FaqSection from '@/components/blocks/FaqSection.astro';
+import Icon from '@/components/ui/Icon.astro';
+import {
+  onboardingSteps,
+  onboardingNeeds,
+  migrationPaths,
+  migrationImports,
+  migrationNotImported,
+  localStrategy,
+  onboardingFaqs,
+} from '@/data/onboarding';
+import { services } from '@/data/pricing';
+import { breadcrumbJsonLd, faqJsonLd, serviceJsonLd } from '@/lib/seo';
+import { ctaHref } from '@/lib/cta';
+
+const path = '/puesta-en-marcha';
+const crumbs = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Puesta en marcha', path },
+];
+const description =
+  'Importamos tu carta, configuramos mesas, impresoras y equipo, formamos a tu personal y te acompañamos en el primer servicio. Remota, incluida.';
+---
+
+<BaseLayout
+  title="Puesta en marcha: del primer contacto al servicio"
+  description={description}
+  path={path}
+  jsonLd={[
+    breadcrumbJsonLd(crumbs),
+    serviceJsonLd({
+      name: 'Puesta en marcha de alaCarta',
+      description,
+      path,
+      serviceType: 'Implantación, migración de datos y formación de TPV para hostelería',
+    }),
+    faqJsonLd(onboardingFaqs),
+  ]}
+>
+  <PageHero
+    variant="compact"
+    breadcrumbs={crumbs}
+    eyebrow="Equipamiento y servicios"
+    eyebrowIcon="wrench"
+    title="Del primer contacto al primer servicio, acompañado"
+    text="Cambiar de sistema da respeto, y abrir un local ya es bastante trabajo. Por eso la puesta en marcha la hacemos nosotros: cargamos tu carta, dejamos el equipo funcionando y formamos a tu gente antes del primer servicio."
+    primary={{
+      label: 'Solicitar demo',
+      href: ctaHref({ to: 'demo', modulo: 'puesta-en-marcha', origen: 'puesta-en-marcha' }),
+    }}
+    secondary={{ label: 'Qué cuesta', href: '#coste' }}
+  />
+
+  <section class="section is-sm">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Cómo es"
+        title="Una semana, paso a paso"
+        text="Plazos orientativos para un local con su carta lista. En la propuesta te damos las fechas concretas para el tuyo."
+      />
+      <ol role="list" class="pm-timeline">
+        {onboardingSteps.map((st, i) => (
+          <li class="pm-timeline__step">
+            <span class="pm-timeline__dot" aria-hidden="true">
+              <Icon name={st.icon} size={18} />
+            </span>
+            <span class="pm-timeline__when num">
+              <span class="sr-only">Paso {i + 1}: </span>
+              {st.when}
+            </span>
+            <h3>{st.title}</h3>
+            <p>{st.text}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section is-soft" id="migracion">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Migración"
+        title="Vengas de donde vengas, lo pasamos nosotros"
+        text="No tienes que teclear la carta otra vez ni aprender a exportar nada: dinos de dónde partes y nos encargamos."
+      />
+      <div class="pm-paths">
+        {migrationPaths.map((m) => (
+          <article class="card pm-path">
+            <span class="pm-icon">
+              <Icon name={m.icon} size={20} />
+            </span>
+            <h3>{m.title}</h3>
+            <p class="muted">{m.text}</p>
+            <ol role="list" class="pm-path__steps">
+              {m.steps.map((s, i) => (
+                <li>
+                  <span class="num">{String(i + 1).padStart(2, '0')}</span>
+                  <span>{s}</span>
+                </li>
+              ))}
+            </ol>
+          </article>
+        ))}
+      </div>
+      <div class="pm-transfer">
+        <div>
+          <h3>Lo que traspasamos</h3>
+          <ul role="list" class="check-list">
+            {migrationImports.map((it) => (
+              <li>{it}</li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h3>Lo que no, y por qué</h3>
+          <ul role="list" class="pm-not">
+            {migrationNotImported.map((it) => (
+              <li>
+                <Icon name="close" size={14} />
+                <span>{it}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Estrategia local"
+        title="Que te encuentren el primer día, en tus canales"
+        text="Abrir con el sistema funcionando no basta si nadie te encuentra. Repasamos contigo dónde te buscan tus clientes y dejamos tus enlaces de reserva y pedido en cada sitio, sin intermediarios."
+      />
+      <ul role="list" class="pm-local">
+        {localStrategy.map((it) => (
+          <li class="column pm-local__item">
+            <span class="pm-icon">
+              <Icon name={it.icon} size={20} />
+            </span>
+            <h3>{it.title}</h3>
+            <p>{it.text}</p>
+            {it.href && (
+              <a href={it.href} class="link-arrow">
+                Ver más
+                <Icon name="arrow-right" size={14} />
+              </a>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section is-soft" id="coste">
+    <div class="container pm-cols">
+      <div>
+        <SectionHeader
+          eyebrow="Qué necesitamos de ti"
+          title="Poca cosa, y te ayudamos a reunirla"
+        />
+        <ul role="list" class="check-list">
+          {onboardingNeeds.map((n) => (
+            <li>{n}</li>
+          ))}
+        </ul>
+        <p class="pm-aside muted">
+          ¿No sabes si tu equipo sirve?
+          <a href="/hardware#comprobador">Compruébalo en cuatro preguntas</a>.
+        </p>
+      </div>
+      <div>
+        <SectionHeader eyebrow="Qué cuesta" title="Lo remoto, incluido" />
+        <ul role="list" class="pm-prices">
+          {services.map((sv) => (
+            <li>
+              <div class="pm-prices__row">
+                <span>{sv.name}</span>
+                <strong class="num">{sv.price}</strong>
+              </div>
+              <p class="muted">{sv.text}</p>
+            </li>
+          ))}
+        </ul>
+        <p class="pm-aside">
+          <strong>Locales fundadores:</strong>
+          <span class="muted">la puesta en marcha presencial va incluida.</span>
+          <a href="/locales-fundadores" class="link-arrow">
+            Ver condiciones
+            <Icon name="arrow-right" size={14} />
+          </a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <FaqSection items={onboardingFaqs} title="Preguntas sobre la puesta en marcha" />
+
+  <CtaBand
+    title="¿Cuándo quieres empezar?"
+    text="En la demo vemos tu local y te damos un plan con fechas, lo que necesitamos de ti y el precio por escrito."
+    modulo="puesta-en-marcha"
+    origen="puesta-en-marcha-cierre"
+    calcLink={{
+      label: 'Comprobar mi equipo',
+      href: '/hardware#comprobador',
+      text: 'Cuatro preguntas para saber si te sirve lo que ya tienes.',
+    }}
+  />
+</BaseLayout>
+
+<style>
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Línea temporal: filete horizontal que une los pasos; vertical en móvil */
+  .pm-timeline {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--space-6);
+  }
+  .pm-timeline::before {
+    content: '';
+    position: absolute;
+    top: 1.25rem;
+    left: 1.25rem;
+    right: 1.25rem;
+    height: 1px;
+    background: var(--color-border-strong);
+  }
+  .pm-timeline__step {
+    position: relative;
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+  }
+  .pm-timeline__dot {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: grid;
+    place-items: center;
+    margin-bottom: var(--space-3);
+    border-radius: var(--radius-pill);
+    background: var(--white);
+    border: 1px solid var(--color-border-strong);
+    color: var(--color-text-strong);
+  }
+  .pm-timeline__step:last-child .pm-timeline__dot {
+    background: var(--black);
+    border-color: var(--black);
+    color: var(--white);
+  }
+  .pm-timeline__when {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+  .pm-timeline__step h3 {
+    font-size: var(--text-lg);
+  }
+  .pm-timeline__step p {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .pm-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-muted);
+    color: var(--color-text-strong);
+  }
+  .pm-paths {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+  }
+  .pm-path {
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+    justify-items: start;
+  }
+  .pm-path h3 {
+    font-size: var(--text-xl);
+  }
+  .pm-path__steps {
+    display: grid;
+    gap: var(--space-3);
+    width: 100%;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+    font-size: var(--text-sm);
+  }
+  .pm-path__steps li {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: var(--space-2);
+  }
+  .pm-path__steps .num {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    padding-top: 0.15rem;
+  }
+  .pm-transfer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-12);
+    margin-top: var(--space-12);
+  }
+  .pm-transfer h3 {
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-4);
+  }
+  .pm-transfer .check-list,
+  .pm-not {
+    font-size: var(--text-sm);
+  }
+  .pm-not {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .pm-not li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-3);
+    align-items: start;
+    color: var(--color-text);
+  }
+  .pm-not li > :global(svg) {
+    margin-top: 0.25rem;
+    color: var(--color-text-subtle);
+  }
+  .pm-local {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-8) var(--space-6);
+  }
+  .pm-local__item {
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+    justify-items: start;
+  }
+  .pm-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-16);
+    align-items: start;
+  }
+  .pm-prices {
+    border-top: 1px solid var(--color-border);
+  }
+  .pm-prices li {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: var(--text-sm);
+  }
+  .pm-prices__row {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+  .pm-aside {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-2);
+    align-items: baseline;
+    margin-top: var(--space-6);
+    font-size: var(--text-sm);
+  }
+  .pm-aside a:not(.link-arrow) {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .pm-aside strong {
+    font-weight: var(--weight-medium);
+    color: var(--color-text-strong);
+  }
+  @media (max-width: 1024px) {
+    .pm-local {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .pm-cols {
+      grid-template-columns: 1fr;
+      gap: var(--space-10);
+    }
+  }
+  @media (max-width: 860px) {
+    .pm-timeline {
+      grid-template-columns: 1fr;
+      gap: var(--space-6);
+    }
+    .pm-timeline::before {
+      top: 1.25rem;
+      bottom: 1.25rem;
+      left: 1.25rem;
+      right: auto;
+      width: 1px;
+      height: auto;
+    }
+    .pm-timeline__step {
+      grid-template-columns: 2.5rem minmax(0, 1fr);
+      column-gap: var(--space-4);
+    }
+    .pm-timeline__dot {
+      grid-row: 1 / span 3;
+      margin-bottom: 0;
+    }
+    .pm-timeline__step > :not(.pm-timeline__dot) {
+      grid-column: 2;
+    }
+  }
+  @media (max-width: 720px) {
+    .pm-paths,
+    .pm-transfer,
+    .pm-local {
+      grid-template-columns: 1fr;
+    }
+    .pm-transfer {
+      gap: var(--space-8);
+    }
+  }
+</style>

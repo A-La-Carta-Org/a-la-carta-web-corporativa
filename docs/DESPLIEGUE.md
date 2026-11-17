@@ -76,6 +76,21 @@ El formulario envía JSON a `PUBLIC_FORM_ENDPOINT`. Opciones, de más simple a m
 Sea cual sea, debe: aceptar CORS desde `alacarta.com`, responder `2xx` en JSON, limitar
 frecuencia, y guardar el consentimiento con fecha y origen.
 
+Contrato que ya usa la web (fase 6, `docs/auditoria/11`):
+
+- **Con JavaScript**: `POST` con `Content-Type: application/json`. Demo y llamada
+  (`src/components/islands/LeadForm.vue`): `tipo` (`demo|llamada|propuesta|fundador`), datos del
+  local, `productos`, contacto, `preferencia`, `franja`, contexto de la URL (`origen`, `motivo`,
+  `plan`, `config`, `config_tipo`, `equipo`, `resumen`) y atribución (`entrada`, `referrer`,
+  `llegada`, `utm_*`, `demo_completada`). Contacto (`ContactForm.vue`): `tipo: "contacto"`,
+  `motivo`, `nombre`, `email`, `empresa`, `mensaje`. Con `2xx`, la web redirige a
+  `/gracias?tipo=…`; con error, ofrece el correo.
+- **Sin JavaScript**: el mismo formulario hace un `POST` normal (`application/x-www-form-urlencoded`)
+  al endpoint, con un campo `redireccion` (`/gracias?tipo=demo` o `/gracias?tipo=contacto`). El
+  endpoint debería aceptar los dos formatos y, en el envío sin JS, redirigir a esa ruta.
+- **Sin endpoint** (hoy): la web abre el correo con la solicitud ya escrita y lleva a
+  `/gracias?…&via=correo`. Sin JS, el formulario se envía a `mailto:` (texto plano).
+
 ## 7. Build y release
 
 - Versionado semántico en `package.json` y etiquetas `vX.Y.Z` en Git para cada publicación.

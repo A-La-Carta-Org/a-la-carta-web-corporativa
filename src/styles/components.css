@@ -145,6 +145,20 @@
   color: var(--white);
   border-color: var(--black);
 }
+/* Estado de producto: pequeño, gris, sin color (solo se pinta si no está disponible) */
+.chip.is-status {
+  padding: 0.1rem 0.45rem;
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  background: var(--color-bg-muted);
+  border-color: transparent;
+  color: var(--gray-600);
+  letter-spacing: 0.01em;
+}
+.is-dark .chip.is-status {
+  background: var(--gray-800);
+  color: var(--gray-300);
+}
 
 /* ── Tarjeta sobria ───────────────────────────────────────────────── */
 .card {
@@ -271,7 +285,10 @@
 .textarea:focus {
   outline: none;
   border-color: var(--color-ink);
-  box-shadow: 0 0 0 3px rgb(11 11 10 / 0.08);
+  /* Borde negro de 2 px (1 px de borde + 1 px de sombra) y halo suave: foco bien visible */
+  box-shadow:
+    0 0 0 1px var(--color-ink),
+    0 0 0 4px rgb(11 11 10 / 0.08);
 }
 .input[aria-invalid='true'],
 .select[aria-invalid='true'],
@@ -284,7 +301,7 @@
 }
 .select {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2374746e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23696963' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   padding-right: 2.5rem;

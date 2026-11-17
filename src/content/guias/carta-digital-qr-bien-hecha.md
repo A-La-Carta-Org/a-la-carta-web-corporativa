@@ -1,9 +1,11 @@
 ---
-title: 'Carta digital QR: cómo hacerla bien (y qué evitar)'
+title: 'Carta digital QR: cómo hacerla bien y qué evitar'
 description: 'Lo que diferencia una carta QR que ayuda de una que molesta: conexión con el TPV, alérgenos, fotos, idiomas, pedido desde la mesa y cuándo no activarlo.'
 publishedAt: 2026-11-16
 readingMinutes: 5
 related: ['carta-qr', 'cocina']
+cta:
+  modulo: 'carta-qr'
 ---
 
 La carta QR se extendió por obligación en 2020 y muchos locales la retiraron después porque la experiencia era mala: PDF que no se leían, precios desactualizados y clientes mirando el móvil en vez de la mesa. Una carta digital bien hecha es otra cosa.

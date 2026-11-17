@@ -27,7 +27,7 @@ export const organizationJsonLd = () => ({
   url: SITE_URL,
   logo: `${SITE_URL}/brand/alacarta-logo.png`,
   description:
-    'Plataforma integral de gestión para hostelería: TPV, comandero, cocina, carta QR, reservas, pedidos y gestión del negocio.',
+    'Ecosistema de gestión para hostelería: sala y cocina, clientes y canales propios, gestión del negocio y equipo, conectados en un solo sistema, con el equipamiento y la puesta en marcha.',
   areaServed: 'ES',
 });
 
@@ -44,7 +44,11 @@ export const softwareJsonLd = (opts: {
   description: string;
   path: string;
   category?: string;
+  /** Sistemas en los que funciona; por defecto, navegador, Android e iOS */
+  os?: string;
   price?: number;
+  /** Matiz del precio para `Offer.description` */
+  priceNote?: string;
 }) => ({
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
@@ -52,7 +56,7 @@ export const softwareJsonLd = (opts: {
   description: opts.description,
   url: absoluteUrl(opts.path),
   applicationCategory: opts.category ?? 'BusinessApplication',
-  operatingSystem: 'Web, Android, iOS',
+  operatingSystem: opts.os ?? 'Web, Android, iOS',
   provider: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
   ...(opts.price !== undefined
     ? {
@@ -60,10 +64,33 @@ export const softwareJsonLd = (opts: {
           '@type': 'Offer',
           price: opts.price,
           priceCurrency: 'EUR',
-          description: 'Precio orientativo por local y mes, sin IVA',
+          description: opts.priceNote ?? 'Precio orientativo por local y mes, sin IVA',
         },
       }
     : {}),
+});
+
+/**
+ * Servicios (web, puesta en marcha, equipamiento): `Service` en vez de `SoftwareApplication`.
+ * Hardware y placas también van como `Service` (suministro configurado) y no como `Product`:
+ * sin precio publicado ni valoraciones, Google marca un `Product` como incompleto. Nunca se
+ * añaden precios ni valoraciones que no existan.
+ */
+export const serviceJsonLd = (opts: {
+  name: string;
+  description: string;
+  path: string;
+  /** Tipo de servicio en lenguaje llano: «Suministro e instalación de TPV para hostelería» */
+  serviceType?: string;
+}) => ({
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: opts.name,
+  description: opts.description,
+  url: absoluteUrl(opts.path),
+  ...(opts.serviceType ? { serviceType: opts.serviceType } : {}),
+  areaServed: 'ES',
+  provider: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
 });
 
 export const faqJsonLd = (items: { q: string; a: string }[]) => ({

@@ -1,52 +1,133 @@
 ---
+/**
+ * Política de cookies (borrador, docs/auditoria/13 §7). La web no instala cookies; las demos y el
+ * formulario usan `sessionStorage` (claves en src/lib/attribution.ts, Configurator.vue y
+ * DemoCarta.vue). Si se añade una clave nueva, se añade a esta tabla.
+ */
 import LegalLayout from '@/layouts/LegalLayout.astro';
+import { ATTRIBUTION_KEY, DEMO_DONE_KEY, LAST_LEAD_KEY } from '@/lib/attribution';
+
+const storage = [
+  {
+    key: ATTRIBUTION_KEY,
+    what: 'Primera página que ves, web desde la que llegas, fecha de llegada y parámetros de campaña (utm) si los hay.',
+    why: 'Que el formulario sepa de dónde vienes si pides una demo. Solo se envía si envías el formulario.',
+  },
+  {
+    key: DEMO_DONE_KEY,
+    what: 'Que has terminado el simulador de servicio.',
+    why: 'Que el formulario y la página de gracias lo tengan en cuenta.',
+  },
+  {
+    key: LAST_LEAD_KEY,
+    what: 'Tu nombre de pila, tu correo y la franja que elegiste, después de enviar una solicitud.',
+    why: 'Que la página de gracias te diga a qué correo te escribimos sin ponerlo en la dirección.',
+  },
+  {
+    key: 'alacarta:monta',
+    what: 'Las piezas que has elegido en «Monta tu alaCarta».',
+    why: 'Que no pierdas tu configuración al cambiar de página.',
+  },
+  {
+    key: 'alacarta-demo-carta',
+    what: 'El idioma, los filtros y el pedido de ejemplo de la carta QR de demostración.',
+    why: 'Que la demo siga donde la dejaste.',
+  },
+];
 ---
 
 <LegalLayout
   title="Política de cookies"
-  description="Política de cookies de alacarta.com."
+  description="Política de cookies de alacarta.com: no usamos cookies, y lo poco que se guarda en tu navegador se borra al cerrar la pestaña."
   path="/legal/cookies"
 >
-  <h2>1. Qué son las cookies</h2>
+  <h2>1. Resumen</h2>
   <p>
-    Las cookies son pequeños archivos que el sitio web guarda en tu navegador para recordar
-    información entre visitas o durante la misma visita.
+    <strong>Esta web no instala cookies</strong>, ni propias ni de terceros. No hay analítica, ni
+    publicidad, ni botones de redes sociales que te sigan. Las fuentes tipográficas y las imágenes
+    se sirven desde el propio dominio.
   </p>
 
-  <h2>2. Cookies que utiliza este sitio</h2>
+  <h2>2. Qué son las cookies y el almacenamiento del navegador</h2>
   <p>
-    En su configuración actual, <strong>alacarta.com no instala cookies</strong> ni utiliza
-    almacenamiento local con fines de seguimiento, analítica o publicidad. Las fuentes tipográficas
-    se sirven desde el propio dominio y los formularios no cargan servicios de terceros en la
-    página.
-  </p>
-  <table>
-    <thead>
-      <tr>
-        <th>Cookie</th>
-        <th>Tipo</th>
-        <th>Finalidad</th>
-        <th>Duración</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td colspan="4">Ninguna en la configuración actual.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <h2>3. Si se activan herramientas de analítica</h2>
-  <p>
-    Si en el futuro se incorpora una herramienta de medición de audiencia, se actualizará esta tabla
-    y, cuando la herramienta requiera consentimiento conforme a la normativa, se mostrará un aviso
-    para aceptarla o rechazarla antes de instalarse. Se dará preferencia a soluciones sin cookies o
-    con datos agregados y anónimos.
+    Las cookies son pequeños archivos que una web guarda en tu navegador para recordar información
+    entre visitas o durante una misma visita. El almacenamiento de sesión (
+    <code>sessionStorage</code>) es parecido, pero solo vive mientras la pestaña está abierta, no se
+    envía al servidor en cada visita y ninguna otra web puede leerlo.
   </p>
 
-  <h2>4. Cómo gestionar las cookies</h2>
+  <h2>3. Cookies que utiliza este sitio</h2>
+  <div class="legal__table">
+    <table>
+      <thead>
+        <tr>
+          <th>Cookie</th>
+          <th>Tipo</th>
+          <th>Finalidad</th>
+          <th>Duración</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan="4">Ninguna.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>4. Lo que se guarda en el almacenamiento de sesión</h2>
   <p>
-    Puedes configurar tu navegador para bloquear o eliminar cookies. Consulta la ayuda de tu
-    navegador para hacerlo.
+    Todo se guarda solo en tu navegador, se borra al cerrar la pestaña y no se comparte con
+    terceros. Si tu navegador lo bloquea (por ejemplo, en modo privado), la web funciona igual.
+  </p>
+  <div class="legal__table">
+    <table class="is-stacked">
+      <thead>
+        <tr>
+          <th>Clave</th>
+          <th>Qué guarda</th>
+          <th>Para qué</th>
+        </tr>
+      </thead>
+      <tbody>
+        {storage.map((s) => (
+          <tr>
+            <td>
+              <code>{s.key}</code>
+            </td>
+            <td data-label="Qué guarda">{s.what}</td>
+            <td data-label="Para qué">{s.why}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p class="legal-note">
+    Nota para la revisión legal: el artículo 22.2 de la LSSI se aplica también a este tipo de
+    almacenamiento. Las demos y el configurador son funciones que pide el propio usuario; queda por
+    confirmar si la clave de atribución puede considerarse exenta o si debe pedirse consentimiento
+    antes de guardarla (o desactivarse).
+  </p>
+
+  <h2>5. Si algún día añadimos analítica</h2>
+  <p>
+    Si incorporamos una herramienta de medición de audiencia, actualizaremos esta página y, cuando
+    la herramienta lo requiera, te pediremos permiso antes de activarla, con la misma facilidad para
+    aceptar que para rechazar. Daremos preferencia a soluciones sin cookies y con datos agregados.
+  </p>
+
+  <h2>6. Cómo borrarlo</h2>
+  <p>
+    Basta con cerrar la pestaña. También puedes borrar los datos de navegación de este sitio desde
+    la configuración de tu navegador.
   </p>
 </LegalLayout>
+
+<style>
+  .legal-note {
+    font-size: var(--text-sm);
+    padding: var(--space-3) var(--space-4);
+    border-left: 2px dashed var(--color-border-strong);
+    color: var(--color-text-muted);
+  }
+</style>

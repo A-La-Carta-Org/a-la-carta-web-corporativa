@@ -1,25 +1,57 @@
 ---
+/**
+ * Hub de soluciones (docs/auditoria/04 §3): hero, mapa del ecosistema, las cuatro familias con
+ * sus piezas y una maqueta representativa, «cómo viaja un dato» entre familias, tres caminos
+ * para empezar con precio y cierre. Todo se lee de `solutions.ts` y `pricing.ts`.
+ *
+ * El mapa es la versión estática (`EcosystemMap.astro`); la interactiva (D7) lo sustituye en la
+ * fase 4 sin tocar esta página.
+ */
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHero from '@/components/blocks/PageHero.astro';
 import SectionHeader from '@/components/ui/SectionHeader.astro';
 import SolutionGrid from '@/components/blocks/SolutionGrid.astro';
+import EcosystemMap from '@/components/blocks/EcosystemMap.astro';
 import CtaBand from '@/components/blocks/CtaBand.astro';
 import Mockup from '@/components/mockups/Mockup.astro';
+import QrPlate from '@/components/ui/QrPlate.astro';
 import Icon from '@/components/ui/Icon.astro';
-import { solutions, solutionPath } from '@/data/solutions';
+import StatusChip from '@/components/ui/StatusChip.astro';
+import IntegrationsList from '@/components/blocks/IntegrationsList.astro';
+import {
+  dataStories,
+  familiesWithItems,
+  getItem,
+  solutions,
+  type FamilyId,
+} from '@/data/solutions';
+import { NO_PRICE_LABEL, VAT_NOTE, startingPaths } from '@/data/pricing';
 import { breadcrumbJsonLd } from '@/lib/seo';
+import { ctaHref } from '@/lib/cta';
 
 const crumbs = [
   { name: 'Inicio', path: '/' },
   { name: 'Soluciones', path: '/soluciones' },
 ];
-const base = solutions.filter((s) => s.availability === 'base');
-const modules = solutions.filter((s) => s.availability === 'modulo');
+const groups = familiesWithItems();
+const paths = startingPaths();
+const origen = 'soluciones';
+
+/** Una maqueta por familia: la que mejor la representa */
+const familyMedia: Record<
+  FamilyId,
+  { kind: 'mockup'; mockup: 'tpv' | 'app' | 'panel-ventas' } | { kind: 'plate' }
+> = {
+  servicio: { kind: 'mockup', mockup: 'tpv' },
+  canales: { kind: 'mockup', mockup: 'app' },
+  gestion: { kind: 'mockup', mockup: 'panel-ventas' },
+  equipamiento: { kind: 'plate' },
+};
 ---
 
 <BaseLayout
-  title="Soluciones para hostelería: TPV, comandero, cocina, QR, reservas y gestión"
-  description="Todos los módulos de alaCarta: TPV, comandero, pantalla de cocina, carta QR, reservas, pedidos online, gestión, informes y clientes. Un solo sistema, a la carta."
+  title="Soluciones para hostelería, todo conectado"
+  description="El ecosistema de alaCarta: TPV, comandero, cocina, carta QR, reservas, pedidos, app, web, backoffice, ERP, RRHH y hardware. Todo conectado."
   path="/soluciones"
   jsonLd={breadcrumbJsonLd(crumbs)}
 >
@@ -27,96 +59,352 @@ const modules = solutions.filter((s) => s.availability === 'modulo');
     variant="compact"
     breadcrumbs={crumbs}
     eyebrow="Soluciones"
-    title="Nueve módulos. Un sistema."
-    text="Cada módulo resuelve una parte del servicio o de la gestión, y todos trabajan sobre la misma carta, las mismas mesas y los mismos datos. Empieza por lo que necesitas; el resto se activa cuando toque."
+    title="Un ecosistema. Todo tu restaurante."
+    text={`${solutions.length} productos y el equipo para ponerlos en marcha, sobre la misma carta, las mismas mesas, los mismos clientes y los mismos datos. Empieza por lo que necesitas; el resto se conecta cuando toque.`}
+    primary={{ label: 'Solicitar demo', href: ctaHref({ to: 'demo', origen }) }}
+    secondary={{ label: 'Pruébalo', href: ctaHref({ to: 'probar', origen }) }}
   />
 
-  <section class="section is-sm">
+  <section class="section is-sm hub-map" aria-label="Mapa del ecosistema">
     <div class="container">
-      <SectionHeader
-        eyebrow="En el plan base"
-        title="Lo que todo local necesita"
-        text="Cobrar, tener la carta al día, gobernar el negocio y ver los números. Está en todos los planes."
-      />
-      <SolutionGrid only={base.map((s) => s.slug)} columns={4} />
+      <EcosystemMap />
     </div>
   </section>
 
-  <section class="section is-sm">
+  {groups.map((f, i) => {
+    const media = familyMedia[f.id];
+    return (
+      <section class="section has-rule" id={f.id}>
+        <div class:list={['container', 'hub-family', { 'is-flipped': i % 2 === 1 }]}>
+          <div class="hub-family__copy">
+            <span class="eyebrow has-icon">
+              <Icon name={f.icon} size={16} />
+              {f.name}
+            </span>
+            <h2>{f.claim}</h2>
+            <p class="muted hub-family__text">{f.text}</p>
+            <SolutionGrid family={f.id} columns={2} />
+          </div>
+          <div class="hub-family__media">
+            {media.kind === 'plate' ? (
+              <QrPlate href={ctaHref({ to: 'carta', origen: `${origen}-placa` })} size={128} />
+            ) : (
+              <Mockup kind={media.mockup} />
+            )}
+          </div>
+        </div>
+      </section>
+    );
+  })}
+
+  <section class="section is-soft">
     <div class="container">
       <SectionHeader
-        eyebrow="Módulos"
-        title="Lo que añade cada tipo de servicio"
-        text="Incluidos en el plan Completo o contratables uno a uno sobre el Esencial."
+        eyebrow="Cómo viaja un dato"
+        title="Lo apuntas una vez. Llega a todas partes."
+        text="Tres historias de un día normal que cruzan de una familia a otra. Lo marcado «en camino» depende de una integración que todavía no está hecha."
       />
-      <SolutionGrid only={modules.map((s) => s.slug)} columns={3} />
+      <ol role="list" class="hub-stories">
+        {dataStories.map((story) => (
+          <li class="hub-story">
+            <h3>{story.title}</h3>
+            <p class="muted hub-story__text">{story.text}</p>
+            <ol role="list" class="hub-steps">
+              {story.steps.map((step) => {
+                const item = getItem(step.at);
+                return (
+                  <li class:list={['hub-step', { 'is-pending': step.status }]}>
+                    <span class="hub-step__icon">
+                      <Icon name={item.icon} size={16} />
+                    </span>
+                    <span class="hub-step__body">
+                      <a href={item.path} class="hub-step__where">
+                        {item.navLabel}
+                      </a>
+                      <span>{step.text}</span>
+                      <StatusChip status={step.status} />
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" id="integraciones">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Integraciones"
+        title="Lo de dentro, conectado de serie. Lo de fuera, con su estado."
+        text="Entre las piezas de alaCarta no hay integraciones que mantener: comparten los mismos datos. Con los servicios de fuera, esto es lo que conecta hoy y lo que está en camino."
+      />
+      <IntegrationsList />
+      <p class="hub-int__more">
+        <a href="/novedades" class="link-arrow">
+          Todo lo que está en camino
+          <Icon name="arrow-right" size={14} />
+        </a>
+        <span class="muted">
+          ¿Usas algo que no está en la lista? Cuéntanoslo en la demo y te decimos si encaja.
+        </span>
+      </p>
     </div>
   </section>
 
   <section class="section has-rule">
     <div class="container">
-      <SectionHeader eyebrow="Uno a uno" title="Qué hace cada módulo" align="center" />
-      <div class="sol-list">
-        {solutions.map((s, i) => (
-          <article class:list={['sol-item', { 'is-reverse': i % 2 === 1 }]}>
-            <div class="sol-item__copy">
-              <span class="eyebrow">{s.navLabel}</span>
-              <h3>{s.title}</h3>
-              <p class="muted">{s.intro}</p>
-              <a href={solutionPath(s.slug)} class="link-arrow">
-                Ver {s.navLabel}
-                <Icon name="arrow-right" size={14} />
-              </a>
+      <SectionHeader
+        eyebrow="Por dónde empezar"
+        title="Tres caminos. Cambias cuando quieras."
+        text="Precio por local y mes, sin permanencia ni comisiones. Puedes empezar por lo justo y sumar el resto más adelante."
+      />
+      <ul role="list" class="hub-paths">
+        {paths.map((p) => (
+          <li class:list={['card', 'hub-path', { 'is-featured': p.featured }]}>
+            <div class="hub-path__head">
+              <h3>{p.name}</h3>
+              {p.featured && <span class="chip is-dark">Recomendado</span>}
             </div>
-            <div class="sol-item__media">
-              <Mockup kind={s.mockup} />
-            </div>
-          </article>
+            <p class="muted">{p.claim}</p>
+            <p class="hub-path__price">
+              {p.amount ? (
+                <>
+                  <b class="num">{p.amount}</b>
+                  <span>/mes por local {VAT_NOTE}</span>
+                </>
+              ) : (
+                <b class="is-text">{NO_PRICE_LABEL}</b>
+              )}
+            </p>
+            <ul role="list" class="check-list">
+              {p.includes.map((x) => (
+                <li>{x}</li>
+              ))}
+            </ul>
+            <a
+              href={ctaHref({
+                to: 'demo',
+                plan: p.plan,
+                origen: `${origen}-caminos`,
+                motivo: p.plan ? undefined : 'ecosistema',
+              })}
+              class:list={['btn', p.featured ? 'is-primary' : 'is-secondary']}
+            >
+              Solicitar demo
+            </a>
+          </li>
         ))}
-      </div>
+      </ul>
+      <p class="hub-paths__more">
+        <a
+          href={ctaHref({ to: 'precios', origen: `${origen}-caminos`, hash: 'monta' })}
+          class="link-arrow"
+        >
+          Monta tu alaCarta pieza a pieza
+          <Icon name="arrow-right" size={14} />
+        </a>
+        <a href="/precios" class="link-arrow">
+          Ver todos los precios
+          <Icon name="arrow-right" size={14} />
+        </a>
+      </p>
     </div>
   </section>
 
-  <CtaBand />
+  <CtaBand origen="soluciones-cierre" />
 </BaseLayout>
 
 <style>
-  .sol-list {
-    display: grid;
-    gap: var(--space-20);
+  .hub-map {
+    padding-top: 0;
   }
-  .sol-item {
+  .hub-int__more {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-3) var(--space-6);
+    margin-top: var(--space-12);
+    font-size: var(--text-sm);
+  }
+  section[id] {
+    scroll-margin-top: var(--header-h);
+  }
+  .hub-family {
     display: grid;
-    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-    gap: var(--space-12);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-16);
     align-items: center;
   }
-  .sol-item.is-reverse .sol-item__copy {
+  .hub-family.is-flipped .hub-family__copy {
     order: 2;
   }
-  .sol-item__copy {
+  .hub-family__copy {
     display: grid;
     gap: var(--space-4);
-    justify-items: start;
+    align-content: start;
   }
-  .sol-item__copy h3 {
-    font-size: var(--text-2xl);
+  .hub-family__copy h2 {
+    font-size: var(--text-4xl);
   }
-  .sol-item__media {
+  .hub-family__text {
+    font-size: var(--text-md);
+    max-width: 32rem;
+    margin-bottom: var(--space-4);
+  }
+  .eyebrow.has-icon::before {
+    display: none;
+  }
+  .hub-family__media {
     display: flex;
     justify-content: center;
     min-width: 0;
   }
-  .sol-item__media :global(.device.is-phone) {
-    max-width: 15rem;
+  .hub-family__media :global(.device.is-phone) {
+    max-width: 16rem;
   }
+
+  .hub-stories {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-10);
+  }
+  .hub-story {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-border-strong);
+  }
+  .hub-story h3 {
+    font-size: var(--text-xl);
+  }
+  .hub-story__text {
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-4);
+  }
+  .hub-steps {
+    display: grid;
+  }
+  .hub-step {
+    position: relative;
+    display: flex;
+    gap: var(--space-3);
+    padding-bottom: var(--space-5);
+  }
+  /* Línea que une los pasos: discontinua si el paso depende de algo en camino */
+  .hub-step:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: calc(1rem - 0.75px);
+    top: 2rem;
+    bottom: 0;
+    border-left: 1.5px solid var(--gray-300);
+  }
+  .hub-step.is-pending::before,
+  .hub-step:has(+ .is-pending)::before {
+    border-left-style: dashed;
+    border-left-color: var(--gray-400);
+  }
+  .hub-step__icon {
+    flex: 0 0 auto;
+    width: 2rem;
+    height: 2rem;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-pill);
+    background: var(--white);
+    border: 1px solid var(--color-border-strong);
+    color: var(--color-text-strong);
+  }
+  .is-pending .hub-step__icon {
+    border-style: dashed;
+    border-color: var(--gray-400);
+  }
+  .hub-step__body {
+    display: grid;
+    gap: 0.15rem;
+    justify-items: start;
+    padding-top: 0.2rem;
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+  }
+  .hub-step__where {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .hub-paths {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+  .hub-path {
+    display: grid;
+    grid-template-rows: auto auto auto 1fr auto;
+    gap: var(--space-4);
+  }
+  .hub-path.is-featured {
+    border-color: var(--color-ink);
+  }
+  .hub-path__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+  .hub-path__head h3 {
+    font-size: var(--text-xl);
+  }
+  .hub-path__price {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+  .hub-path__price b {
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-3xl);
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-text-strong);
+  }
+  .hub-path__price b.is-text {
+    font-size: var(--text-xl);
+    letter-spacing: var(--tracking-snug);
+  }
+  .hub-path .btn {
+    justify-self: start;
+  }
+  .hub-paths__more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-8);
+    margin-top: var(--space-8);
+  }
+
   @media (max-width: 1024px) {
-    .sol-item {
+    .hub-family {
       grid-template-columns: 1fr;
-      gap: var(--space-8);
+      gap: var(--space-10);
     }
-    .sol-item.is-reverse .sol-item__copy {
+    .hub-family.is-flipped .hub-family__copy {
       order: 0;
+    }
+    .hub-stories,
+    .hub-paths {
+      grid-template-columns: 1fr;
+    }
+    .hub-stories {
+      gap: var(--space-8);
     }
   }
 </style>

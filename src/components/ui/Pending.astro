@@ -1,0 +1,13 @@
+---
+/**
+ * Marcador de dato pendiente en los textos legales en borrador: «[pendiente: NIF]». Se ve a
+ * propósito (estilo en LegalLayout) para que nadie publique el texto sin completarlo.
+ */
+interface Props {
+  /** Qué falta: «NIF», «domicilio social»… */
+  what?: string;
+}
+const { what } = Astro.props;
+---
+
+<span class="legal__pending">[pendiente{what ? `: ${what}` : ''}]</span>

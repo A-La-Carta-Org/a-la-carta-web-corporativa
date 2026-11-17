@@ -1,0 +1,157 @@
+---
+/**
+ * Visual del hero de cada sector (docs/auditoria/12 §2.1): la maqueta que define ese tipo de
+ * local (TPV en modo barra, mostrador o noche, cocina de pizzería, carta maestra…), un móvil
+ * opcional y una tarjeta flotante con un momento concreto del servicio. Solo HTML y CSS.
+ *
+ * En móvil se quedan la maqueta principal y la tarjeta; el teléfono se oculta para que el primer
+ * pantallazo no sea un collage ilegible.
+ */
+import Mockup from '@/components/mockups/Mockup.astro';
+import Icon from '@/components/ui/Icon.astro';
+import StatusChip from '@/components/ui/StatusChip.astro';
+import { getItem } from '@/data/solutions';
+import type { SectorHero } from '@/data/sectors';
+
+interface Props {
+  hero: SectorHero;
+}
+const { hero } = Astro.props;
+const product = hero.card.product ? getItem(hero.card.product) : null;
+---
+
+<div class:list={['shv', { 'has-phone': hero.phone }]} role="img" aria-label={hero.alt}>
+  <div class="shv__main" aria-hidden="true">
+    <Mockup kind={hero.main} tpvMode={hero.tpvMode} kdsMode={hero.kdsMode} />
+  </div>
+  {hero.phone && (
+    <div class="shv__phone" aria-hidden="true">
+      <Mockup kind={hero.phone} />
+    </div>
+  )}
+  <div class="shv__card" aria-hidden="true">
+    <span class="shv__card-icon">
+      <Icon name={hero.card.icon} size={18} />
+    </span>
+    <span class="shv__card-body">
+      <span class="shv__card-head">
+        <b>{hero.card.title}</b>
+        {product && <StatusChip status={product.status} />}
+      </span>
+      <span class="shv__card-text">{hero.card.text}</span>
+      <span class="shv__card-meta num">{hero.card.meta}</span>
+    </span>
+  </div>
+</div>
+
+<style>
+  .shv {
+    position: relative;
+    padding: var(--space-12) 0 var(--space-8);
+  }
+  .shv.has-phone {
+    padding-bottom: var(--space-12);
+  }
+  /* Con móvil, la maqueta se aparta a la derecha para que el teléfono tape lo mínimo */
+  .shv.has-phone .shv__main {
+    margin-left: 3rem;
+  }
+  .shv__main {
+    position: relative;
+  }
+  /* El móvil se dibuja a su tamaño natural y se reduce con zoom, para que su maqueta no se
+     reorganice como si fuera una pantalla estrecha */
+  .shv__phone {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 17rem;
+    zoom: 0.6;
+    z-index: 2;
+  }
+  .shv__card {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 3;
+    display: flex;
+    gap: var(--space-3);
+    align-items: flex-start;
+    width: 18rem;
+    padding: var(--space-3) var(--space-4);
+    background: var(--white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+  }
+  .shv__card-icon {
+    flex: 0 0 auto;
+    width: 2.25rem;
+    height: 2.25rem;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-pill);
+    background: var(--black);
+    color: var(--white);
+  }
+  .shv__card-body {
+    display: grid;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+  .shv__card-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-strong);
+  }
+  .shv__card-head b {
+    font-weight: var(--weight-semibold);
+  }
+  .shv__card-text {
+    font-size: var(--text-sm);
+    color: var(--color-text);
+  }
+  .shv__card-meta {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+
+  @media (max-width: 1024px) {
+    .shv {
+      max-width: 44rem;
+      margin-inline: auto;
+    }
+  }
+  @media (max-width: 720px) {
+    .shv,
+    .shv.has-phone {
+      padding: 5.5rem 0 0;
+    }
+    .shv__phone {
+      display: none;
+    }
+    /* La maqueta se dibuja con su ancho de escritorio y se reduce: así enseña sus columnas en
+       vez de una tira larga */
+    .shv__main,
+    .shv.has-phone .shv__main {
+      width: 38rem;
+      zoom: 0.8;
+      margin-inline: auto;
+    }
+    .shv__card {
+      right: var(--space-3);
+      width: auto;
+      max-width: calc(100% - var(--space-6));
+    }
+  }
+  @media (max-width: 520px) {
+    .shv__main,
+    .shv.has-phone .shv__main {
+      zoom: 0.54;
+    }
+  }
+</style>

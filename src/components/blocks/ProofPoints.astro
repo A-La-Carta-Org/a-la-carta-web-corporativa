@@ -1,0 +1,58 @@
+---
+/**
+ * Datos del sector con su fuente (docs/auditoria/04 §2, `proofPoints`). Cifras de MERCADO,
+ * nunca de clientes de alaCarta. Sin fuente no se publican.
+ */
+import type { ProofPoint } from '@/data/solutions';
+
+interface Props {
+  items: ProofPoint[];
+}
+const { items } = Astro.props;
+---
+
+<ul role="list" class="proof" style={`--cols:${items.length}`}>
+  {items.map((p) => (
+    <li class="column proof__item">
+      <span class="proof__value num">{p.value}</span>
+      <span class="proof__label">{p.label}</span>
+      <span class="proof__source">Fuente: {p.source}</span>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .proof {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+    gap: var(--space-8);
+  }
+  .proof__item {
+    gap: var(--space-2);
+  }
+  .proof__value {
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-4xl);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-text-strong);
+    font-variant-numeric: tabular-nums;
+  }
+  .proof__label {
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    color: var(--color-text);
+    max-width: 22rem;
+  }
+  .proof__source {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+  @media (max-width: 720px) {
+    .proof {
+      grid-template-columns: 1fr;
+      gap: var(--space-6);
+    }
+  }
+</style>

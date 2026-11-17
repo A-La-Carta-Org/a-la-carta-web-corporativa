@@ -26,10 +26,12 @@ const fmt = new Date(LEGAL_UPDATED).toLocaleDateString('es-ES', {
       <Breadcrumbs items={crumbs} />
       <h1>{title}</h1>
       <p class="muted legal__date">Última actualización: {fmt}</p>
-      <div class="notice legal__notice">
-        <strong>Borrador.</strong> Este texto es una base de trabajo preparada para la puesta en
-        marcha de alaCarta. Debe completarse con los datos de la sociedad titular y revisarse por un
-        asesor legal antes de publicar la web (ver docs/TODO.md).
+      <div class="notice legal__notice" role="note">
+        <strong>Borrador pendiente de revisión legal.</strong> Este texto es una base de trabajo
+        preparada para la puesta en marcha de alaCarta. Lo marcado como{' '}
+        <span class="legal__pending">[pendiente]</span> son datos de la sociedad titular o
+        decisiones que todavía no existen, y todo el documento debe revisarlo un asesor legal antes
+        de publicar la web.
       </div>
       <div class="prose legal__body">
         <slot />
@@ -55,5 +57,57 @@ const fmt = new Date(LEGAL_UPDATED).toLocaleDateString('es-ES', {
   }
   .legal__body {
     font-size: var(--text-base);
+  }
+  /* Marcadores de dato pendiente: visibles a propósito */
+  .legal :global(.legal__pending) {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background: var(--color-warn-soft);
+    color: var(--color-warn);
+    padding: 0 var(--space-1);
+    border-radius: var(--radius-sm);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+  .legal__body :global(table) {
+    font-size: var(--text-sm);
+  }
+  .legal__body :global(td),
+  .legal__body :global(th) {
+    vertical-align: top;
+  }
+  .legal__body :global(.legal__table) {
+    overflow-x: auto;
+  }
+  /* En móvil, las tablas con data-label pasan a fichas: sin scroll lateral */
+  @media (max-width: 640px) {
+    .legal__body :global(table.is-stacked thead) {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+    .legal__body :global(table.is-stacked),
+    .legal__body :global(table.is-stacked tbody),
+    .legal__body :global(table.is-stacked tr),
+    .legal__body :global(table.is-stacked td) {
+      display: block;
+      width: 100%;
+    }
+    .legal__body :global(table.is-stacked tr) {
+      padding-block: var(--space-3);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .legal__body :global(table.is-stacked td) {
+      border: 0;
+      padding: var(--space-1) 0;
+    }
+    .legal__body :global(table.is-stacked td[data-label]::before) {
+      content: attr(data-label);
+      display: block;
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+    }
   }
 </style>

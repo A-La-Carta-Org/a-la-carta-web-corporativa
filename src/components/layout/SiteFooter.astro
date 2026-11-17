@@ -1,7 +1,15 @@
 ---
+/**
+ * Pie: bloque de conversión («¿Hablamos?»), una columna por familia del ecosistema más empresa y
+ * recursos, las integraciones con su estado (docs/auditoria/13 §6) y los enlaces legales. Todo sale
+ * de los datos (docs/auditoria/02 §6).
+ */
 import Logo from '@/components/ui/Logo.astro';
+import Icon from '@/components/ui/Icon.astro';
 import { footerNav, legalNav } from '@/data/navigation';
+import { integrationsAvailable, integrationsPending } from '@/data/integrations';
 import { CONTACT_EMAIL, SITE_TAGLINE } from '@/data/site';
+import { ctaHref } from '@/lib/cta';
 const year = new Date().getFullYear();
 ---
 
@@ -13,25 +21,55 @@ const year = new Date().getFullYear();
           <Logo size={26} />
         </a>
         <p class="muted">{SITE_TAGLINE}.</p>
-        <a href={`mailto:${CONTACT_EMAIL}`} class="site-footer__mail">
-          {CONTACT_EMAIL}
-        </a>
       </div>
-      <nav class="site-footer__nav" aria-label="Pie de página">
-        {footerNav.map((group) => (
-          <div class="site-footer__group">
-            <h2 class="site-footer__title">{group.title}</h2>
-            <ul role="list">
-              {group.links.map((l) => (
-                <li>
-                  <a href={l.href}>{l.label}</a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </nav>
+      <div class="site-footer__talk">
+        <div>
+          <h2 class="site-footer__talk-title">¿Hablamos?</h2>
+          <p class="muted">
+            Escríbenos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> o pide una demo y
+            te enseñamos el sistema con un caso como el tuyo.
+          </p>
+        </div>
+        <div class="site-footer__talk-actions">
+          <a href={ctaHref({ to: 'llamada', origen: 'pie' })} class="btn is-secondary">
+            <Icon name="ai-call" size={16} />
+            Te llamamos
+          </a>
+          <a href={ctaHref({ to: 'demo', origen: 'pie' })} class="btn is-primary">
+            Solicitar demo
+          </a>
+        </div>
+      </div>
     </div>
+
+    <nav class="site-footer__nav" aria-label="Pie de página">
+      {footerNav.map((group) => (
+        <div class="site-footer__group">
+          <h2 class="site-footer__title">{group.title}</h2>
+          <ul role="list">
+            {group.links.map((l) => (
+              <li>
+                <a href={l.href}>{l.label}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </nav>
+
+    <div class="site-footer__int">
+      <h2 class="site-footer__title">Integraciones</h2>
+      <p>
+        <span class="site-footer__int-label">Hoy:</span>{' '}
+        {integrationsAvailable.map((i) => i.name).join(' · ')}.
+      </p>
+      <p>
+        <span class="site-footer__int-label">En camino:</span>{' '}
+        {integrationsPending.map((i) => i.name).join(' · ')}.
+      </p>
+      <a href="/soluciones#integraciones">Ver integraciones</a>
+    </div>
+
     <div class="site-footer__bottom">
       <p class="muted">© {year} alaCarta. Todos los derechos reservados.</p>
       <ul role="list" class="site-footer__legal">
@@ -48,31 +86,60 @@ const year = new Date().getFullYear();
 <style>
   .site-footer {
     border-top: 1px solid var(--color-border);
-    padding-block: var(--space-16) var(--space-10);
+    padding-block: var(--space-12) var(--space-10);
     font-size: var(--text-sm);
   }
   .site-footer__top {
     display: grid;
-    grid-template-columns: 1.2fr 2.4fr;
-    gap: var(--space-12);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+    gap: var(--space-10);
+    align-items: center;
+    padding-bottom: var(--space-10);
+    border-bottom: 1px solid var(--color-border);
   }
   .site-footer__brand {
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
+    gap: var(--space-3);
     align-items: flex-start;
   }
   .site-footer__brand p {
-    max-width: 18rem;
+    max-width: 20rem;
   }
-  .site-footer__mail {
+  .site-footer__talk {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-6);
+    padding: var(--space-6);
+    background: var(--color-bg-soft);
+    border-radius: var(--radius-lg);
+  }
+  .site-footer__talk-title {
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-1);
+  }
+  .site-footer__talk p {
+    max-width: 30rem;
+  }
+  .site-footer__talk p a {
     color: var(--color-text-strong);
     font-weight: var(--weight-medium);
   }
+  .site-footer__talk-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    flex: 0 0 auto;
+  }
+  .site-footer__talk-actions .btn {
+    gap: var(--space-2);
+  }
   .site-footer__nav {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 1.4fr);
     gap: var(--space-8);
+    padding-top: var(--space-10);
   }
   .site-footer__title {
     font-family: var(--font-body);
@@ -87,14 +154,44 @@ const year = new Date().getFullYear();
     display: grid;
     gap: var(--space-2);
   }
+  .site-footer__group:last-child ul {
+    display: block;
+    columns: 2;
+    column-gap: var(--space-6);
+  }
+  .site-footer__group:last-child li {
+    break-inside: avoid;
+    margin-bottom: var(--space-2);
+  }
   .site-footer__group a {
     color: var(--color-text);
   }
   .site-footer__group a:hover {
     color: var(--color-text-strong);
   }
+  .site-footer__int {
+    margin-top: var(--space-10);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-border);
+    display: grid;
+    gap: var(--space-2);
+    color: var(--color-text-muted);
+  }
+  .site-footer__int .site-footer__title {
+    margin-bottom: var(--space-1);
+  }
+  .site-footer__int-label {
+    color: var(--color-text-strong);
+    font-weight: var(--weight-medium);
+  }
+  .site-footer__int a {
+    color: var(--color-text);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    justify-self: start;
+  }
   .site-footer__bottom {
-    margin-top: var(--space-12);
+    margin-top: var(--space-10);
     padding-top: var(--space-6);
     border-top: 1px solid var(--color-border);
     display: flex;
@@ -113,6 +210,19 @@ const year = new Date().getFullYear();
   @media (max-width: 1024px) {
     .site-footer__top {
       grid-template-columns: 1fr;
+      gap: var(--space-6);
+    }
+    .site-footer__nav {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .site-footer__group:last-child {
+      grid-column: span 2;
+    }
+  }
+  @media (max-width: 720px) {
+    .site-footer__talk {
+      flex-direction: column;
+      align-items: flex-start;
     }
     .site-footer__nav {
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -121,6 +231,9 @@ const year = new Date().getFullYear();
   @media (max-width: 480px) {
     .site-footer__nav {
       grid-template-columns: 1fr;
+    }
+    .site-footer__group:last-child {
+      grid-column: auto;
     }
   }
 </style>

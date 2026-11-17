@@ -4,7 +4,7 @@ import PageHero from '@/components/blocks/PageHero.astro';
 import CtaBand from '@/components/blocks/CtaBand.astro';
 import Icon from '@/components/ui/Icon.astro';
 import { solutions } from '@/data/solutions';
-import { SUPPORT_EMAIL } from '@/data/site';
+import { REPLY_HOURS, SUPPORT_EMAIL } from '@/data/site';
 import { breadcrumbJsonLd } from '@/lib/seo';
 
 const crumbs = [
@@ -16,7 +16,7 @@ const crumbs = [
 
 <BaseLayout
   title="Centro de ayuda de alaCarta"
-  description="Documentación de uso de la plataforma alaCarta por módulo: TPV, comandero, cocina, carta QR, reservas, pedidos, gestión, informes y clientes."
+  description="Documentación de uso de la plataforma alaCarta por módulo: TPV, comandero, cocina, carta QR, reservas, pedidos, backoffice y clientes."
   path="/recursos/ayuda"
   jsonLd={breadcrumbJsonLd(crumbs)}
 >
@@ -31,9 +31,10 @@ const crumbs = [
   <section class="section is-sm">
     <div class="container">
       <div class="notice help-notice">
-        <strong>En construcción.</strong> La documentación se publicará con el acceso a la
-        plataforma. Si ya eres cliente, escribe a{' '}
-        <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>.
+        <strong>Disponible con el lanzamiento.</strong> La documentación de cada pieza se publica
+        junto con el acceso a la plataforma. Mientras tanto, escríbenos a{' '}
+        <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> y te respondemos en menos de{' '}
+        {REPLY_HOURS} horas laborables.
       </div>
       <ul role="list" class="help-grid">
         {solutions.map((s) => (
@@ -59,6 +60,7 @@ const crumbs = [
   <CtaBand
     title="¿Aún no eres cliente?"
     text="Pide una demo y te enseñamos la plataforma con un caso parecido al tuyo."
+    origen="ayuda-cierre"
   />
 </BaseLayout>
 

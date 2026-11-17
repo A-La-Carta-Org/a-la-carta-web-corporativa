@@ -22,3 +22,4 @@ npm-debug.log*
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
+docs/auditoria/capturas/

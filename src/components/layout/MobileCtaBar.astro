@@ -1,0 +1,93 @@
+---
+/**
+ * Barra fija de conversión en móvil (< 720 px). Aparece al pasar el primer bloque de la página
+ * y ofrece las dos puertas de menor fricción en móvil: «Te llamamos» y «Solicitar demo».
+ * No se pinta en el formulario, en /gracias ni en la carta de ejemplo (docs/auditoria/02 §5).
+ */
+import Icon from '@/components/ui/Icon.astro';
+import { ctaHref } from '@/lib/cta';
+
+interface Props {
+  /** Ruta de la página, para el `origen` */
+  path: string;
+}
+const { path } = Astro.props;
+const origen = `barra-movil${path === '/' ? '-home' : path.replace(/\//g, '-')}`;
+---
+
+<div class="mobile-cta" data-mobile-cta>
+  <a href={ctaHref({ to: 'llamada', origen })} class="btn is-secondary mobile-cta__call">
+    <Icon name="ai-call" size={18} />
+    Te llamamos
+  </a>
+  <a href={ctaHref({ to: 'demo', origen })} class="btn is-primary mobile-cta__demo">
+    Solicitar demo
+    <Icon name="arrow-right" size={16} class="btn-arrow" />
+  </a>
+</div>
+
+<script>
+  // Se muestra cuando el primer bloque del <main> deja de verse (el hero).
+  const bar = document.querySelector<HTMLElement>('[data-mobile-cta]');
+  const hero = document.querySelector<HTMLElement>('main > :first-child');
+  if (bar) {
+    document.documentElement.classList.add('has-mobile-cta');
+    const show = (v: boolean) => bar.classList.toggle('is-visible', v);
+    if (hero && 'IntersectionObserver' in window) {
+      new IntersectionObserver(([entry]) => show(!entry!.isIntersecting), {
+        rootMargin: '-64px 0px 0px 0px',
+      }).observe(hero);
+    } else {
+      show(true);
+    }
+  }
+</script>
+
+<style>
+  .mobile-cta {
+    display: none;
+  }
+  @media (max-width: 719px) {
+    .mobile-cta {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: calc(var(--z-header) + 1);
+      display: flex;
+      gap: var(--space-2);
+      padding: var(--space-3) var(--gutter) calc(var(--space-3) + env(safe-area-inset-bottom));
+      background: rgb(255 255 255 / 0.96);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid var(--color-border);
+      translate: 0 110%;
+      transition: translate var(--dur) var(--ease);
+    }
+    .mobile-cta.is-visible {
+      translate: 0 0;
+    }
+    .mobile-cta .btn {
+      gap: var(--space-2);
+      min-height: 2.875rem;
+    }
+    .mobile-cta__call {
+      flex: 0 0 auto;
+      padding-inline: var(--space-4);
+    }
+    .mobile-cta__demo {
+      flex: 1 1 auto;
+    }
+    :global(html.has-mobile-cta body) {
+      padding-bottom: 4.5rem;
+    }
+    :global(html.menu-open) .mobile-cta {
+      display: none;
+    }
+  }
+  @media (max-width: 719px) and (prefers-reduced-motion: reduce) {
+    .mobile-cta {
+      transition: none;
+    }
+  }
+</style>

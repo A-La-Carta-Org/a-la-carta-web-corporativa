@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
- * Los planes con el selector mensual/anual. Es la única parte de /precios que necesita
- * JavaScript; el resto de la página es HTML estático.
+ * Los cuatro planes con el selector mensual/anual. Sin JavaScript se ven con el precio mensual.
+ * En móvil van en carrusel horizontal, con el recomendado (Completo) primero.
  */
 import { ref, computed } from 'vue';
 import {
@@ -12,6 +12,7 @@ import {
   fmtPrice,
   VAT_NOTE,
   TRIAL_DAYS,
+  totalAsSeparate,
   type Billing,
 } from '@/data/pricing';
 
@@ -63,6 +64,9 @@ const cards = computed(() =>
             <span v-if="billing === 'anual' && p.yearly" class="plan__yearly">
               {{ fmtPrice(p.yearly) }} al año, en un pago
             </span>
+            <span v-else-if="p.id === 'total'" class="plan__yearly">
+              Por separado saldría a {{ fmtPrice(totalAsSeparate) }}/mes
+            </span>
             <span v-else class="plan__yearly"
               >Sin permanencia · {{ TRIAL_DAYS }} días de prueba</span
             >
@@ -83,6 +87,7 @@ const cards = computed(() =>
         </ul>
       </li>
     </ul>
+    <p class="pricing__hint">Desliza para ver los cuatro planes.</p>
   </div>
 </template>
 
@@ -123,7 +128,7 @@ const cards = computed(() =>
 }
 .pricing__grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-4);
   align-items: stretch;
 }
@@ -131,7 +136,7 @@ const cards = computed(() =>
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
-  padding: var(--space-8);
+  padding: var(--space-6);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   background: var(--white);
@@ -188,11 +193,41 @@ const cards = computed(() =>
 .plan__includes {
   margin-top: var(--space-2);
 }
-@media (max-width: 1024px) {
+@media (max-width: 1180px) {
   .pricing__grid {
-    grid-template-columns: 1fr;
-    max-width: 32rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 48rem;
     margin-inline: auto;
+  }
+}
+.pricing__hint {
+  display: none;
+  margin-top: calc(var(--space-8) * -1);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+/* Móvil: carrusel con el recomendado primero; se ve asomar la tarjeta siguiente */
+@media (max-width: 720px) {
+  .pricing__grid {
+    display: flex;
+    max-width: none;
+    margin-inline: calc(var(--gutter, 1rem) * -1);
+    padding: 2px var(--gutter, 1rem) var(--space-3);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--gutter, 1rem);
+    overscroll-behavior-x: contain;
+  }
+  .plan {
+    flex: 0 0 min(84%, 22rem);
+    scroll-snap-align: start;
+  }
+  .plan.is-featured {
+    order: -1;
+  }
+  .pricing__hint {
+    display: block;
   }
 }
 </style>

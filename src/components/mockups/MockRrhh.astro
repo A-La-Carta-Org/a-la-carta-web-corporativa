@@ -1,0 +1,247 @@
+---
+/**
+ * Equipo y RRHH: cuadrante semanal publicado (sala, barra y cocina) y los fichajes de hoy. Las
+ * personas son nombres inventados como ejemplo de interfaz.
+ */
+const days = ['L 17', 'M 18', 'X 19', 'J 20', 'V 21', 'S 22', 'D 23'];
+const today = 4;
+type Cell = string | null;
+const people: { name: string; role: string; week: Cell[] }[] = [
+  {
+    name: 'Marta',
+    role: 'Sala',
+    week: ['12–16', '12–16', null, '20–24', '12–16 20–24', '20–24', '12–16'],
+  },
+  {
+    name: 'Iván',
+    role: 'Sala',
+    week: [null, '20–24', '20–24', '12–16', '20–24', '12–16 20–24', null],
+  },
+  {
+    name: 'Sara',
+    role: 'Barra',
+    week: ['8–16', '8–16', '8–16', null, '16–24', '16–24', 'vac'],
+  },
+  {
+    name: 'Lucía',
+    role: 'Cocina',
+    week: ['10–16', null, '10–16', '10–16 19–23', '10–16 19–23', '19–23', '10–16'],
+  },
+  {
+    name: 'Omar',
+    role: 'Cocina',
+    week: ['19–23', '19–23', null, '19–23', '12–16 19–23', '12–16', null],
+  },
+];
+---
+
+<div class="mk mk-hr">
+  <div class="mk-topbar">
+    <span class="mk-logo">
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+    </span>
+    <div class="mk-tabs">
+      <span class="mk-tab is-on">Cuadrante</span>
+      <span class="mk-tab">Fichajes</span>
+      <span class="mk-tab">Vacaciones</span>
+      <span class="mk-tab">Documentos</span>
+    </div>
+    <div class="mk-right">
+      <span class="mk-pill is-ok">Publicado</span>
+    </div>
+  </div>
+  <div class="mk-hr__body">
+    <section class="mk-hr__grid">
+      <div class="mk-hr__head">
+        <span class="mk-strong">Semana 17–23 nov</span>
+        <span class="mk-muted">2 intercambios aprobados</span>
+      </div>
+      <div class="mk-hr__table" style={`--days:${days.length}`}>
+        <span class="mk-hr__corner"></span>
+        {days.map((d, i) => (
+          <span class:list={['mk-hr__day', { 'is-today': i === today }]}>{d}</span>
+        ))}
+        {people.map((p) => (
+          <>
+            <span class="mk-hr__who">
+              <b>{p.name}</b>
+              <span>{p.role}</span>
+            </span>
+            {p.week.map((c, i) => (
+              <span
+                class:list={[
+                  'mk-hr__cell',
+                  { 'is-off': c === null, 'is-vac': c === 'vac', 'is-today': i === today },
+                ]}
+              >
+                {c === null ? 'Libre' : c === 'vac' ? 'Vacac.' : c}
+              </span>
+            ))}
+          </>
+        ))}
+      </div>
+    </section>
+    <aside class="mk-hr__side">
+      <div class="mk-panel mk-hr__clock">
+        <div class="mk-row">
+          <span class="grow mk-strong">Fichajes de hoy</span>
+          <span class="mk-muted">viernes</span>
+        </div>
+        <div class="mk-row">
+          <span class="grow">
+            Lucía<span class="sub">Tablet de la entrada</span>
+          </span>
+          <span class="num">09:56</span>
+          <span class="mk-pill is-ok">Dentro</span>
+        </div>
+        <div class="mk-row">
+          <span class="grow">
+            Marta<span class="sub">Móvil</span>
+          </span>
+          <span class="num">11:58</span>
+          <span class="mk-pill is-ok">Dentro</span>
+        </div>
+        <div class="mk-row">
+          <span class="grow">
+            Omar<span class="sub">Turno de 12:00</span>
+          </span>
+          <span class="num">—</span>
+          <span class="mk-pill is-warn">Sin fichar</span>
+        </div>
+        <div class="mk-row">
+          <span class="grow">
+            Sara<span class="sub">Turno de 16:00</span>
+          </span>
+          <span class="num">—</span>
+          <span class="mk-pill">Más tarde</span>
+        </div>
+      </div>
+      <div class="mk-panel is-soft mk-hr__kpi">
+        <span class="mk-muted">Horas esta semana</span>
+        <span class="num mk-hr__big">186 h</span>
+        <span class="mk-muted">de 192 h planificadas</span>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<style>
+  .mk-hr__body {
+    display: grid;
+    grid-template-columns: 1fr 32%;
+    min-height: 290px;
+  }
+  .mk-hr__grid {
+    padding: 10px 12px;
+    min-width: 0;
+  }
+  .mk-hr__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    padding-bottom: 8px;
+  }
+  .mk-hr__table {
+    display: grid;
+    grid-template-columns: 54px repeat(var(--days), minmax(0, 1fr));
+    gap: 3px;
+  }
+  .mk-hr__day {
+    padding: 2px 0 4px;
+    text-align: center;
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--gray-500);
+  }
+  .mk-hr__day.is-today {
+    color: var(--black);
+    font-weight: 600;
+  }
+  .mk-hr__who {
+    display: grid;
+    align-content: center;
+    line-height: 1.15;
+  }
+  .mk-hr__who b {
+    font-weight: 600;
+  }
+  .mk-hr__who span {
+    font-size: 9px;
+    color: var(--gray-500);
+  }
+  .mk-hr__cell {
+    display: grid;
+    place-items: center;
+    min-height: 34px;
+    padding: 3px 2px;
+    border-radius: 6px;
+    background: var(--gray-100);
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 8.5px;
+    line-height: 1.25;
+    text-align: center;
+    letter-spacing: -0.03em;
+  }
+  .mk-hr__cell.is-today {
+    background: var(--black);
+    color: var(--white);
+  }
+  .mk-hr__cell.is-off {
+    background: transparent;
+    border: 1px dashed var(--gray-200);
+    color: var(--gray-400);
+    font-family: var(--font-body);
+  }
+  .mk-hr__cell.is-vac {
+    background: var(--color-warn-soft);
+    color: var(--color-warn);
+    font-family: var(--font-body);
+  }
+  .mk-hr__side {
+    padding: 10px;
+    border-left: 1px solid var(--gray-200);
+    background: var(--gray-50);
+    display: grid;
+    gap: 8px;
+    align-content: start;
+  }
+  .mk-hr__clock {
+    padding: 4px 10px;
+  }
+  .mk-hr__kpi {
+    padding: 9px 10px;
+    display: grid;
+    gap: 2px;
+    background: var(--white);
+  }
+  .mk-hr__big {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+  }
+  @container (max-width: 560px) {
+    .mk-hr__body {
+      grid-template-columns: 1fr;
+    }
+    .mk-hr__side {
+      border-left: 0;
+      border-top: 1px solid var(--gray-200);
+    }
+    .mk-hr__kpi {
+      display: none;
+    }
+    /* En estrecho, de lunes a viernes */
+    .mk-hr__table {
+      grid-template-columns: 44px repeat(5, minmax(0, 1fr));
+    }
+    .mk-hr__table > :nth-child(8n + 7),
+    .mk-hr__table > :nth-child(8n + 8) {
+      display: none;
+    }
+  }
+</style>

@@ -15,9 +15,11 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:links": "node scripts/check-links.mjs",
+    "check:quote": "node scripts/check-quote.mjs",
+    "check:lead": "node scripts/check-lead.mjs",
     "build:brand": "node scripts/build-brand.mjs",
     "sync:fonts": "node scripts/sync-fonts.mjs",
-    "test": "npm run check && npm run lint && npm run build && npm run check:links",
+    "test": "npm run check && npm run lint && npm run check:quote && npm run check:lead && npm run build && npm run check:links",
     "astro": "astro"
   },
   "dependencies": {
@@ -31,12 +33,14 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
     "@eslint/js": "^10.0.1",
+    "@types/qrcode": "^1.5.6",
     "eslint": "^10.15.0",
     "eslint-plugin-astro": "^3.2.1",
     "eslint-plugin-vue": "^10.12.1",
     "globals": "^17.14.0",
     "prettier": "^3.10.1",
     "prettier-plugin-astro": "^1.1.2",
+    "qrcode": "^1.5.4",
     "sharp": "^0.35.5",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.73.0"

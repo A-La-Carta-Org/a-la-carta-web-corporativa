@@ -1,0 +1,305 @@
+---
+/**
+ * «Conectado con el resto» como diagrama radial: el producto en el centro y sus conexiones
+ * alrededor, cada una con su icono, su enlace y una frase. Las integraciones que aún no existen
+ * van con línea discontinua y chip «En camino» (docs/auditoria/01 §4 y 04 §4.5).
+ *
+ * Las piezas son HTML (texto real, que se ajusta solo) colocadas en porcentajes sobre un
+ * escenario de proporción fija; las líneas son un SVG con el mismo viewBox. En móvil
+ * (≤ 860 px) se convierte en una lista vertical legible, sin líneas cruzadas.
+ */
+import Icon from '@/components/ui/Icon.astro';
+import StatusChip from '@/components/ui/StatusChip.astro';
+import { getItem, type Solution } from '@/data/solutions';
+
+interface Props {
+  solution: Solution;
+}
+const { solution: s } = Astro.props;
+
+/* Centro y radios en % del escenario (16:10). El centro va algo alto: el texto cuelga del icono */
+const CX = 50;
+const RX = 38;
+const RY = 36;
+const n = s.connections.length;
+const VBH = 1000;
+/*
+ * Con tres conexiones, ninguna arriba del todo (su texto chocaría con el centro): dos arriba en
+ * diagonal y una abajo, con el centro algo más alto.
+ */
+const CY = n === 3 ? 40 : 45;
+const start = n === 3 ? (-150 * Math.PI) / 180 : -Math.PI / 2;
+const items = s.connections.map((c, i) => {
+  const a = start + (i * 2 * Math.PI) / n;
+  const x = CX + RX * Math.cos(a);
+  const y = CY + RY * Math.sin(a);
+  return { c, target: getItem(c.to), x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100 };
+});
+const pending = items.some((i) => i.c.status);
+---
+
+<div class="cd">
+  <div class="cd-stage" style={`--ratio:${1600 / VBH}`}>
+    <svg class="cd-lines" viewBox={`0 0 1600 ${VBH}`} preserveAspectRatio="none" aria-hidden="true">
+      {items.map((i) => (
+        <line
+          x1={CX * 16}
+          y1={(CY * VBH) / 100}
+          x2={i.x * 16}
+          y2={(i.y * VBH) / 100}
+          class:list={{ 'is-pending': i.c.status }}
+        />
+      ))}
+    </svg>
+
+    <div class="cd-center" style={`--x:${CX}%;--y:${CY}%`}>
+      <span class="cd-center__icon">
+        <Icon name={s.icon} size={30} />
+      </span>
+      <span class="cd-center__name">{s.navLabel}</span>
+    </div>
+
+    <ul role="list" class="cd-items">
+      {items.map((i) => (
+        <li
+          class:list={['cd-item', { 'is-pending': i.c.status }]}
+          style={`--x:${i.x}%;--y:${i.y}%`}
+        >
+          <span class="cd-item__icon">
+            <Icon name={i.target.icon} size={20} />
+          </span>
+          <span class="cd-item__body">
+            <a href={i.target.path} class="cd-item__title">
+              {i.c.title}
+            </a>
+            <span class="cd-item__text">{i.c.text}</span>
+            <StatusChip status={i.c.status} />
+          </span>
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <p class="cd-legend">
+    <span class="cd-key">
+      <i></i> Conectado
+    </span>
+    {pending && (
+      <span class="cd-key">
+        <i class="is-dashed"></i> En camino: la integración todavía no está hecha
+      </span>
+    )}
+  </p>
+</div>
+
+<style>
+  .cd {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .cd-stage {
+    position: relative;
+    aspect-ratio: var(--ratio);
+    margin-bottom: var(--space-8);
+  }
+  .cd-lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .cd-lines line {
+    stroke: var(--gray-300);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+  .cd-lines line.is-pending {
+    stroke: var(--gray-400);
+    stroke-dasharray: 6 7;
+  }
+  .cd-center {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    translate: -50% -3rem;
+    display: grid;
+    justify-items: center;
+    gap: var(--space-3);
+    z-index: 1;
+  }
+  .cd-center__icon {
+    width: 6rem;
+    height: 6rem;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-pill);
+    background: var(--black);
+    color: var(--white);
+    box-shadow: 0 0 0 10px var(--color-bg-soft);
+  }
+  .cd-center__name {
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-soft);
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-lg);
+    letter-spacing: var(--tracking-snug);
+    color: var(--color-text-strong);
+    white-space: nowrap;
+  }
+  .cd-item {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    translate: -50% -1.5rem;
+    width: min(15rem, 22%);
+    display: grid;
+    justify-items: center;
+    gap: var(--space-3);
+    text-align: center;
+  }
+  .cd-item__icon {
+    width: 3rem;
+    height: 3rem;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-pill);
+    background: var(--white);
+    border: 1px solid var(--color-border-strong);
+    color: var(--color-text-strong);
+  }
+  .is-pending .cd-item__icon {
+    border-style: dashed;
+    border-color: var(--gray-400);
+  }
+  .cd-item__body {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-2) var(--space-2);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-soft);
+  }
+  .cd-item__title {
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-snug);
+    color: var(--color-text-strong);
+  }
+  .cd-item__title:hover {
+    text-decoration: underline;
+  }
+  .cd-item__text {
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+    color: var(--color-text-muted);
+  }
+  .cd-item :global(.chip) {
+    margin-top: var(--space-1);
+  }
+  .cd-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2) var(--space-6);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .cd-key {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .cd-key i {
+    display: inline-block;
+    width: 1.75rem;
+    border-top: 1.5px solid var(--gray-400);
+  }
+  .cd-key i.is-dashed {
+    border-top-style: dashed;
+  }
+
+  /* Móvil y tableta estrecha: lista vertical, el producto arriba y una línea que baja */
+  @media (max-width: 860px) {
+    .cd-stage {
+      aspect-ratio: auto;
+      margin-bottom: 0;
+      display: grid;
+      gap: var(--space-5);
+    }
+    .cd-lines {
+      display: none;
+    }
+    .cd-center {
+      position: static;
+      translate: none;
+      display: flex;
+      align-items: center;
+      justify-items: start;
+    }
+    .cd-center__icon {
+      width: 3.5rem;
+      height: 3.5rem;
+      box-shadow: none;
+    }
+    .cd-center__name {
+      padding: 0;
+      white-space: normal;
+    }
+    .cd-items {
+      display: grid;
+      gap: 0;
+      margin-left: 3.5rem;
+    }
+    .cd-item {
+      position: relative;
+      left: auto;
+      top: auto;
+      translate: none;
+      width: auto;
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-4);
+      text-align: left;
+      padding: 0 0 var(--space-5) 0;
+    }
+    /* Línea vertical que une el producto con cada conexión */
+    .cd-item::before {
+      content: '';
+      position: absolute;
+      left: -1.75rem;
+      top: -1.25rem;
+      bottom: 0;
+      border-left: 1.5px solid var(--gray-300);
+    }
+    .cd-item.is-pending::before {
+      border-left-style: dashed;
+      border-left-color: var(--gray-400);
+    }
+    .cd-item::after {
+      content: '';
+      position: absolute;
+      left: -1.75rem;
+      top: 1.5rem;
+      width: 1.75rem;
+      border-top: 1.5px solid var(--gray-300);
+    }
+    .cd-item.is-pending::after {
+      border-top-style: dashed;
+      border-top-color: var(--gray-400);
+    }
+    .cd-item:last-child::before {
+      bottom: auto;
+      height: 2.75rem;
+    }
+    .cd-item__icon {
+      flex: 0 0 auto;
+    }
+    .cd-item__body {
+      justify-items: start;
+      padding: 0;
+      background: none;
+    }
+  }
+</style>

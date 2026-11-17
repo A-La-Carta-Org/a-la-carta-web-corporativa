@@ -1,41 +1,46 @@
 ---
-/** Las soluciones como tarjetas sobrias con icono de línea. */
+/**
+ * Piezas del ecosistema como tarjetas sobrias con icono de línea. El icono, el estado y el
+ * enlace salen de los datos (`solutions.ts`). Sirve para productos y para el equipamiento.
+ */
 import Icon from '@/components/ui/Icon.astro';
-import type { IconName } from '@/components/ui/Icon.astro';
-import { solutions, solutionPath, type SolutionSlug } from '@/data/solutions';
+import StatusChip from '@/components/ui/StatusChip.astro';
+import {
+  ecosystem,
+  getItem,
+  itemsByFamily,
+  type EcosystemSlug,
+  type FamilyId,
+} from '@/data/solutions';
 
 interface Props {
-  only?: SolutionSlug[];
-  columns?: 3 | 4;
+  /** Piezas concretas, en este orden */
+  only?: EcosystemSlug[];
+  /** O todas las de una familia */
+  family?: FamilyId;
+  columns?: 2 | 3 | 4;
   compact?: boolean;
 }
-const { only, columns = 3, compact = false } = Astro.props;
+const { only, family, columns = 3, compact = false } = Astro.props;
 const list = only
-  ? only.map((s) => solutions.find((x) => x.slug === s)!).filter(Boolean)
-  : solutions;
-
-const solutionIcons: Record<SolutionSlug, IconName> = {
-  tpv: 'tpv',
-  comandero: 'phone',
-  cocina: 'kitchen',
-  'carta-qr': 'qr',
-  reservas: 'calendar',
-  pedidos: 'bag',
-  gestion: 'settings',
-  informes: 'chart',
-  clientes: 'users',
-};
+  ? only.map((s) => getItem(s))
+  : family
+    ? itemsByFamily(family)
+    : ecosystem.filter((i) => i.isSolution);
 ---
 
 <ul role="list" class:list={['solution-grid', `is-${columns}`, { 'is-compact': compact }]}>
   {list.map((s) => (
     <li>
-      <a href={solutionPath(s.slug)} class="solution-card">
+      <a href={s.path} class="solution-card">
         <span class="solution-card__icon">
-          <Icon name={solutionIcons[s.slug]} size={20} />
+          <Icon name={s.icon} size={20} />
         </span>
         <span class="solution-card__body">
-          <span class="solution-card__name">{s.navLabel}</span>
+          <span class="solution-card__name">
+            {s.navLabel}
+            <StatusChip status={s.status} note={s.statusNote} />
+          </span>
           {!compact && <span class="solution-card__text">{s.tagline}</span>}
         </span>
         <Icon name="arrow-right" size={16} class="solution-card__arrow" />
@@ -52,6 +57,9 @@ const solutionIcons: Record<SolutionSlug, IconName> = {
   }
   .solution-grid.is-4 {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .solution-grid.is-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .solution-card {
     display: flex;
@@ -88,6 +96,10 @@ const solutionIcons: Record<SolutionSlug, IconName> = {
     flex: 1 1 auto;
   }
   .solution-card__name {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-2);
     font-family: var(--font-display);
     font-weight: var(--weight-semibold);
     letter-spacing: var(--tracking-snug);
@@ -98,15 +110,15 @@ const solutionIcons: Record<SolutionSlug, IconName> = {
     color: var(--color-text-muted);
     line-height: var(--leading-normal);
   }
-  .solution-card__arrow {
+  .solution-card :global(.solution-card__arrow) {
     color: var(--color-text-subtle);
     margin-top: 0.6rem;
     transition: translate var(--dur-fast) var(--ease);
   }
-  .is-compact .solution-card__arrow {
+  .is-compact :global(.solution-card__arrow) {
     margin-top: 0;
   }
-  .solution-card:hover .solution-card__arrow {
+  .solution-card:hover :global(.solution-card__arrow) {
     translate: 3px 0;
     color: var(--color-text-strong);
   }
@@ -118,6 +130,7 @@ const solutionIcons: Record<SolutionSlug, IconName> = {
   }
   @media (max-width: 640px) {
     .solution-grid,
+    .solution-grid.is-2,
     .solution-grid.is-4 {
       grid-template-columns: 1fr;
     }

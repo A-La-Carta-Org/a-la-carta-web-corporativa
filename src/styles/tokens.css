@@ -15,7 +15,7 @@
   --gray-200: #e3e3df;
   --gray-300: #cfcfca;
   --gray-400: #a4a49e;
-  --gray-500: #74746e;
+  --gray-500: #696963; /* 4,9:1 sobre gray-100, 5,5:1 sobre blanco (AA) */
   --gray-600: #55554f;
   --gray-700: #3a3a36;
   --gray-800: #242422;
@@ -47,12 +47,17 @@
   /* Estados: solo dentro del producto (maquetas) y en formularios */
   --color-ok: #1f7a4d;
   --color-ok-soft: #e6f3ec;
-  --color-warn: #a6690b;
+  --color-warn: #946009; /* 4,7:1 sobre warn-soft */
   --color-warn-soft: #f8efdc;
   --color-danger: #b42318;
   --color-danger-soft: #fbe9e7;
 
   --color-focus: var(--black);
+
+  /* Acabado «madera» de la vista previa de placas QR (/hardware/placas-qr). Solo ahí: es el
+     color de un material, no un color de marca */
+  --wood-300: #cdb08a;
+  --wood-700: #6b5137;
 
   /* ── Tipografía ────────────────────────────────────────────────── */
   --font-display: 'Manrope', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;

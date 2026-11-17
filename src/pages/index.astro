@@ -1,124 +1,347 @@
 ---
+/**
+ * Home (docs/auditoria/03). Orden: hero · lo que sustituye · simulador (D1) · familias ·
+ * un cambio, todos los canales (D2) · puesta en marcha · sectores y momentos · precio claro ·
+ * por qué (banda oscura) · locales fundadores · confianza · preguntas · cierre (banda oscura).
+ *
+ * Rendimiento: el hero es HTML y CSS. Solo hidratan dos islas, el simulador y D2, con
+ * `client:visible` y un margen amplio para que se monten antes de entrar en pantalla: así el
+ * cambio de la versión sin JavaScript a la interactiva ocurre fuera de la vista.
+ */
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import SectionHeader from '@/components/ui/SectionHeader.astro';
 import Icon from '@/components/ui/Icon.astro';
-import Steps from '@/components/blocks/Steps.astro';
-import SolutionGrid from '@/components/blocks/SolutionGrid.astro';
-import SectorGrid from '@/components/blocks/SectorGrid.astro';
+import StatusChip from '@/components/ui/StatusChip.astro';
 import FaqSection from '@/components/blocks/FaqSection.astro';
 import CtaBand from '@/components/blocks/CtaBand.astro';
-import Mockup from '@/components/mockups/Mockup.astro';
-import { hero, flow, connected, why, trust } from '@/data/home';
+import HomeHeroVisual from '@/components/blocks/HomeHeroVisual.astro';
+import KitComposition from '@/components/mockups/KitComposition.astro';
+import ServiceSimulator from '@/components/islands/ServiceSimulator.vue';
+import ChannelsDemo from '@/components/islands/ChannelsDemo.vue';
+import {
+  homeSeo,
+  hero,
+  replaces,
+  simulator,
+  ecosystemIntro,
+  oneSystem,
+  setup,
+  forYou,
+  priceIntro,
+  why,
+  founders,
+  trust,
+} from '@/data/home';
+import { familiesWithItems } from '@/data/solutions';
+import { onboardingSteps } from '@/data/onboarding';
+import { moments, momentPath } from '@/data/moments';
+import { sectors, sectorPath } from '@/data/sectors';
+import {
+  FROM_PRICE,
+  VAT_NOTE,
+  founderPerks,
+  fmtPrice,
+  startingPaths,
+  totalAsSeparate,
+} from '@/data/pricing';
 import { homeFaqs } from '@/data/faqs';
-import { SITE_DESCRIPTION } from '@/data/site';
-import { faqJsonLd } from '@/lib/seo';
+import { SITE_NAME } from '@/data/site';
+import { faqJsonLd, softwareJsonLd } from '@/lib/seo';
+import { ctaHref } from '@/lib/cta';
+
+const groups = familiesWithItems();
+const paths = startingPaths();
+
+const jsonLd = [
+  softwareJsonLd({
+    name: SITE_NAME,
+    description: homeSeo.description,
+    path: '/',
+    price: FROM_PRICE,
+    priceNote: 'Desde, por local y mes, sin IVA. Precio orientativo de lanzamiento.',
+  }),
+  faqJsonLd(homeFaqs),
+];
 ---
 
 <BaseLayout
-  title="alaCarta — Software de gestión integral para hostelería"
+  title={homeSeo.title}
   rawTitle
-  description={SITE_DESCRIPTION}
+  description={homeSeo.description}
   path="/"
-  jsonLd={faqJsonLd(homeFaqs)}
+  jsonLd={jsonLd}
 >
   <!-- 1 · Hero -->
   <section class="home-hero">
-    <div class="container home-hero__copy">
-      <span class="eyebrow fade-up">{hero.eyebrow}</span>
-      <h1 class="fade-up" style="--delay: 60ms">
-        {hero.title}
-      </h1>
-      <p class="lead fade-up" style="--delay: 120ms">
-        {hero.text}
-      </p>
-      <div class="home-hero__actions fade-up" style="--delay: 180ms">
-        <a href={hero.primary.href} class="btn is-primary is-lg">
-          {hero.primary.label}
-          <Icon name="arrow-right" size={16} class="btn-arrow" />
-        </a>
-        <a href={hero.secondary.href} class="btn is-secondary is-lg">
-          {hero.secondary.label}
-        </a>
+    <div class="container home-hero__inner">
+      <div class="home-hero__copy">
+        <span class="eyebrow fade-up">{hero.eyebrow}</span>
+        <h1 class="fade-up" style="--delay: 60ms">
+          {hero.title}
+        </h1>
+        <p class="lead fade-up" style="--delay: 120ms">
+          {hero.text}
+        </p>
+        <div class="home-hero__actions fade-up" style="--delay: 180ms">
+          <a href={hero.primary.href} class="btn is-primary is-lg">
+            {hero.primary.label}
+            <Icon name="arrow-right" size={16} class="btn-arrow" />
+          </a>
+          <a href={hero.secondary.href} class="btn is-secondary is-lg">
+            <Icon name="play" size={16} />
+            {hero.secondary.label}
+          </a>
+        </div>
+        <p class="home-hero__note muted fade-up" style="--delay: 240ms">
+          {hero.note}
+        </p>
       </div>
-      <p class="home-hero__note muted fade-up" style="--delay: 240ms">
-        {hero.note}
-      </p>
-    </div>
-    <div class="container is-wide home-hero__media fade-up" style="--delay: 200ms">
-      <div class="home-hero__stage">
-        <Mockup kind="tpv" class="home-hero__tpv" />
-        <Mockup kind="comandero" class="home-hero__phone" />
-      </div>
-    </div>
-  </section>
-
-  <!-- 2 · El flujo del servicio -->
-  <section class="section has-rule">
-    <div class="container">
-      <SectionHeader eyebrow={flow.eyebrow} title={flow.title} text={flow.text} />
-      <div style="--cols: 6">
-        <Steps steps={flow.steps} />
+      <div class="home-hero__media fade-up" style="--delay: 200ms">
+        <HomeHeroVisual />
       </div>
     </div>
   </section>
 
-  <!-- 3 · Soluciones -->
-  <section class="section is-soft">
-    <div class="container">
-      <div class="home-solutions__head">
-        <SectionHeader
-          eyebrow="Soluciones"
-          title="Los módulos, a la carta"
-          text="Empieza por lo que necesitas hoy y añade el resto cuando el local lo pida. Todos comparten carta, mesas, usuarios y datos."
-        />
-        <a href="/soluciones" class="link-arrow">
-          Todas las soluciones
-          <Icon name="arrow-right" size={14} />
-        </a>
-      </div>
-      <SolutionGrid columns={3} />
-    </div>
-  </section>
-
-  <!-- 4 · Todo conectado -->
-  <section class="section">
-    <div class="container home-connected">
-      <div class="home-connected__copy">
-        <SectionHeader eyebrow={connected.eyebrow} title={connected.title} text={connected.text} />
-        <ul role="list" class="home-connected__points">
-          {connected.points.map((p) => (
-            <li class="column">
-              <h3>{p.title}</h3>
-              <p>{p.text}</p>
+  <!-- 2 · Lo que sustituye -->
+  <section class="section is-sm has-rule" aria-labelledby="sustituye-titulo">
+    <div class="container home-replaces">
+      <div class="home-replaces__before">
+        <span class="eyebrow">{replaces.eyebrow}</span>
+        <ul role="list" class="home-replaces__list">
+          {replaces.before.map((item) => (
+            <li>
+              <s>{item}</s>
             </li>
           ))}
         </ul>
       </div>
-      <div class="home-connected__media">
-        <Mockup kind="backoffice" />
+      <div class="home-replaces__after">
+        <p class="home-replaces__brand">
+          <Icon name="arrow-right" size={16} />
+          Con {SITE_NAME}
+        </p>
+        <h2 id="sustituye-titulo">{replaces.after}</h2>
+        <p class="muted">{replaces.text}</p>
       </div>
     </div>
   </section>
 
-  <!-- 5 · Sectores -->
-  <section class="section has-rule">
+  <!-- 3 · Simulador del servicio (D1) -->
+  <section class="section has-rule home-sim" id="simulador">
     <div class="container">
-      <div class="home-solutions__head">
-        <SectionHeader
-          eyebrow="Sectores"
-          title="Una plataforma, configurada para tu tipo de local"
-          text="No es un programa distinto por sector: es el mismo sistema con los módulos y los flujos que cada negocio necesita."
-        />
-        <a href="/sectores" class="link-arrow">
-          Todos los sectores
+      <div class="home-head">
+        <SectionHeader eyebrow={simulator.eyebrow} title={simulator.title} text={simulator.text} />
+        <a href={ctaHref({ to: 'probar', origen: 'home-simulador' })} class="link-arrow">
+          Todas las demos
           <Icon name="arrow-right" size={14} />
         </a>
       </div>
-      <SectorGrid />
+      <ServiceSimulator
+        client:visible={{ rootMargin: '600px' }}
+        origen="home-simulador"
+        readUrl={false}
+      />
     </div>
   </section>
 
-  <!-- 6 · Por qué -->
+  <!-- 4 · El ecosistema por familias -->
+  <section class="section has-rule" id="ecosistema">
+    <div class="container">
+      <div class="home-head">
+        <SectionHeader
+          eyebrow={ecosystemIntro.eyebrow}
+          title={ecosystemIntro.title}
+          text={ecosystemIntro.text}
+        />
+        <a href="/soluciones" class="link-arrow">
+          Ver el ecosistema completo
+          <Icon name="arrow-right" size={14} />
+        </a>
+      </div>
+      <ul role="list" class="home-families">
+        {groups.map((f) => (
+          <li class="home-family">
+            <span class="home-family__icon">
+              <Icon name={f.icon} size={26} />
+            </span>
+            <div class="home-family__copy">
+              <p class="home-family__name">{f.name}</p>
+              <h3>{f.claim}</h3>
+              <p class="muted">{f.text}</p>
+            </div>
+            <ul role="list" class="home-family__items">
+              {f.items.map((item) => (
+                <li>
+                  <a href={item.path} class="home-family__item">
+                    <Icon name={item.icon} size={16} />
+                    <span>{item.navLabel}</span>
+                    <StatusChip status={item.status} note={item.statusNote} />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- 5 · Un cambio, todos los canales (D2) -->
+  <section class="section has-rule" id="canales">
+    <div class="container">
+      <SectionHeader eyebrow={oneSystem.eyebrow} title={oneSystem.title} text={oneSystem.text} />
+      <ChannelsDemo client:visible={{ rootMargin: '600px' }} origen="home-cambio-canales" />
+      <ul role="list" class="home-points">
+        {oneSystem.points.map((p) => (
+          <li class="column">
+            <h3>{p.title}</h3>
+            <p>{p.text}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- 6 · Te lo dejamos funcionando (la única banda gris) -->
+  <section class="section is-soft" id="puesta-en-marcha">
+    <div class="container home-setup">
+      <div class="home-setup__copy">
+        <SectionHeader eyebrow={setup.eyebrow} title={setup.title} text={setup.text} />
+        <ol role="list" class="home-setup__steps">
+          {onboardingSteps.map((s, i) => (
+            <li>
+              <span class="home-setup__n num" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <div>
+                <p class="home-setup__when">{s.when}</p>
+                <h3>{s.title}</h3>
+                <p class="muted">{s.text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <p class="home-setup__note muted">{setup.note}</p>
+        <p class="home-links">
+          <a href="/puesta-en-marcha" class="link-arrow">
+            Cómo es la puesta en marcha
+            <Icon name="arrow-right" size={14} />
+          </a>
+          <a href="/hardware" class="link-arrow">
+            Hardware y kits
+            <Icon name="arrow-right" size={14} />
+          </a>
+        </p>
+      </div>
+      <div class="home-setup__media">
+        <KitComposition />
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · Sectores y momentos -->
+  <section class="section">
+    <div class="container">
+      <SectionHeader eyebrow={forYou.eyebrow} title={forYou.title} text={forYou.text} />
+      <div class="home-foryou">
+        <div>
+          <h3 class="home-foryou__title">{forYou.sectorsTitle}</h3>
+          <ul role="list" class="home-sectors">
+            {sectors.map((s) => (
+              <li>
+                <a href={sectorPath(s.slug)} class="home-sector">
+                  <Icon name={s.icon} size={18} />
+                  <span>{s.name}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+          <a href="/sectores" class="link-arrow home-foryou__more">
+            Todos los sectores
+            <Icon name="arrow-right" size={14} />
+          </a>
+        </div>
+        <div>
+          <h3 class="home-foryou__title">{forYou.momentsTitle}</h3>
+          <ul role="list" class="home-moments">
+            {moments.map((m) => (
+              <li>
+                <a href={momentPath(m.slug)} class="card is-link home-moment">
+                  <span class="home-moment__icon">
+                    <Icon name={m.icon} size={20} />
+                  </span>
+                  <span class="home-moment__body">
+                    <span class="home-moment__name">{m.navLabel}</span>
+                    <span class="muted">{m.tagline}</span>
+                  </span>
+                  <Icon name="arrow-right" size={16} class="home-moment__arrow" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · Precio claro -->
+  <section class="section has-rule" id="precio">
+    <div class="container home-price">
+      <div class="home-price__copy">
+        <SectionHeader
+          eyebrow={priceIntro.eyebrow}
+          title={priceIntro.title}
+          text={priceIntro.text}
+        />
+        <dl class="home-price__figures">
+          {priceIntro.figures.map((f) => (
+            <div>
+              <dt class="num">
+                <small>{f.pre}</small>
+                {f.value}
+              </dt>
+              <dd>{f.label}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+      <div class="home-price__paths">
+        <ul role="list">
+          {paths.map((p) => (
+            <li class:list={['home-path', { 'is-featured': p.featured }]}>
+              <div class="home-path__name">
+                <h3>{p.name}</h3>
+                <p class="muted">{p.claim}</p>
+              </div>
+              <p class="home-path__price">
+                <b class="num">{p.amount}</b>
+                <span>/mes {VAT_NOTE}</span>
+              </p>
+            </li>
+          ))}
+        </ul>
+        <p class="home-price__anchor muted">
+          El plan Total lleva Equipo y RRHH y, cuando lleguen, la app propia, las llamadas con IA y
+          el ERP. Por separado saldría a {fmtPrice(totalAsSeparate)} al mes.
+        </p>
+        <div class="home-price__actions">
+          <a
+            href={ctaHref({ to: 'precios', origen: 'home-precio', hash: 'monta' })}
+            class="btn is-primary"
+          >
+            Monta tu alaCarta y mira el precio
+            <Icon name="arrow-right" size={16} class="btn-arrow" />
+          </a>
+          <a href={ctaHref({ to: 'calculadora', origen: 'home-precio' })} class="link-arrow">
+            Calcula lo que pagas hoy en comisiones
+            <Icon name="arrow-right" size={14} />
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · Por qué (banda oscura) -->
   <section class="section is-dark">
     <div class="container">
       <SectionHeader eyebrow={why.eyebrow} title={why.title} />
@@ -137,7 +360,39 @@ import { faqJsonLd } from '@/lib/seo';
     </div>
   </section>
 
-  <!-- 7 · Confianza -->
+  <!-- 10 · Locales fundadores -->
+  <section class="section" id="fundadores">
+    <div class="container home-founders">
+      <div class="home-founders__copy">
+        <span class="eyebrow has-icon">
+          <Icon name="award" size={16} />
+          {founders.eyebrow}
+        </span>
+        <h2>{founders.title}</h2>
+        <p class="muted">{founders.text}</p>
+        <div class="home-founders__actions">
+          <a href={founders.cta.href} class="btn is-primary is-lg">
+            {founders.cta.label}
+            <Icon name="arrow-right" size={16} class="btn-arrow" />
+          </a>
+          <a href="/locales-fundadores" class="link-arrow">
+            Cómo funciona el programa
+            <Icon name="arrow-right" size={14} />
+          </a>
+        </div>
+      </div>
+      <ul role="list" class="home-founders__perks">
+        {founderPerks.map((p) => (
+          <li class="column">
+            <h3>{p.title}</h3>
+            <p>{p.text}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- 11 · Confianza -->
   <section class="section is-sm">
     <div class="container">
       <ul role="list" class="home-trust">
@@ -154,36 +409,45 @@ import { faqJsonLd } from '@/lib/seo';
     </div>
   </section>
 
-  <!-- 8 · FAQ -->
-  <FaqSection items={homeFaqs} soft />
+  <!-- 12 · Preguntas -->
+  <FaqSection items={homeFaqs} />
 
-  <!-- 9 · Cierre -->
-  <CtaBand />
+  <!-- 13 · Cierre: probar, calcular, hablar -->
+  <CtaBand origen="home-cierre" />
 </BaseLayout>
 
 <style>
+  section[id] {
+    scroll-margin-top: var(--header-h);
+  }
+
+  /* 1 · Hero */
   .home-hero {
-    padding-top: clamp(3rem, 2rem + 4vw, 6rem);
+    padding-block: clamp(2.5rem, 1.5rem + 4vw, 5.5rem) clamp(3rem, 2rem + 3vw, 5rem);
     overflow: hidden;
+  }
+  .home-hero__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: var(--space-10);
+    align-items: center;
   }
   .home-hero__copy {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
+    align-items: flex-start;
     gap: var(--space-5);
-    max-width: 54rem;
   }
   .home-hero__copy h1 {
-    max-width: 16ch;
+    max-width: 14ch;
+    text-wrap: balance;
   }
   .home-hero__copy .lead {
-    max-width: 40rem;
+    max-width: 34rem;
   }
   .home-hero__actions {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
     gap: var(--space-3);
     margin-top: var(--space-2);
   }
@@ -191,44 +455,372 @@ import { faqJsonLd } from '@/lib/seo';
     font-size: var(--text-sm);
   }
   .home-hero__media {
-    margin-top: clamp(2.5rem, 2rem + 3vw, 5rem);
+    min-width: 0;
   }
-  .home-hero__stage {
-    position: relative;
-    max-width: 62rem;
-    margin-inline: auto;
-    padding-bottom: var(--space-12);
-  }
-  .home-hero__stage :global(.home-hero__phone) {
-    position: absolute;
-    right: -1.5rem;
-    bottom: 0;
-    width: 14rem;
-  }
-  .home-solutions__head {
+
+  /* Cabecera de sección con enlace a la derecha */
+  .home-head {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
     gap: var(--space-6);
     margin-bottom: var(--space-10);
   }
-  .home-solutions__head :global(.section-header) {
+  .home-head :global(.section-header) {
     margin-bottom: 0;
   }
-  .home-solutions__head .link-arrow {
+  .home-head .link-arrow {
     margin-bottom: var(--space-2);
     flex: 0 0 auto;
   }
-  .home-connected {
+  .home-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-8);
+  }
+
+  /* 2 · Lo que sustituye */
+  .home-replaces {
     display: grid;
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: var(--space-12);
+    align-items: center;
+  }
+  .home-replaces__before {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .home-replaces__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+  }
+  .home-replaces__list li {
+    font-size: var(--text-md);
+    color: var(--color-text-muted);
+  }
+  .home-replaces__list s {
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--gray-400);
+  }
+  .home-replaces__after {
+    display: grid;
+    gap: var(--space-2);
+    padding-left: var(--space-8);
+    border-left: 1px solid var(--color-border-strong);
+  }
+  .home-replaces__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-muted);
+  }
+  .home-replaces__after h2 {
+    font-size: var(--text-3xl);
+  }
+  .home-replaces__after .muted {
+    font-size: var(--text-sm);
+    max-width: 28rem;
+  }
+
+  /* 4 · Familias */
+  .home-families {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+  .home-family {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-4) var(--space-5);
+    align-content: start;
+    padding: var(--space-6);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+  }
+  .home-family__icon {
+    width: 3.25rem;
+    height: 3.25rem;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-muted);
+    color: var(--color-text-strong);
+  }
+  .home-family__copy {
+    display: grid;
+    gap: var(--space-1);
+  }
+  .home-family__name {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+  .home-family__copy h3 {
+    font-size: var(--text-2xl);
+  }
+  .home-family__copy .muted {
+    font-size: var(--text-sm);
+  }
+  .home-family__items {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 var(--space-6);
+    margin-top: var(--space-2);
+  }
+  .home-family__item {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-3);
+    padding-block: var(--space-3);
+    border-top: 1px solid var(--color-border);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-strong);
+  }
+  .home-family__item:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .home-family__item :global(svg) {
+    color: var(--color-text-muted);
+  }
+
+  /* 5 · D2 */
+  .home-points {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-8);
+    margin-top: var(--space-12);
+  }
+
+  /* 6 · Puesta en marcha */
+  .home-setup {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: var(--space-16);
     align-items: center;
   }
-  .home-connected__points {
+  .home-setup__copy :global(.section-header) {
+    margin-bottom: var(--space-8);
+  }
+  .home-setup__steps {
     display: grid;
+    gap: var(--space-5);
+  }
+  .home-setup__steps li {
+    display: flex;
+    gap: var(--space-4);
+  }
+  .home-setup__n {
+    flex: 0 0 auto;
+    width: 2rem;
+    padding-top: 0.15rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+  .home-setup__when {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+  .home-setup__steps h3 {
+    font-size: var(--text-lg);
+    margin-block: 0.1rem 0.25rem;
+  }
+  .home-setup__steps .muted {
+    font-size: var(--text-sm);
+    max-width: 30rem;
+  }
+  .home-setup__note {
+    font-size: var(--text-xs);
+    margin-block: var(--space-6) var(--space-5);
+  }
+  .home-setup__media {
+    min-width: 0;
+  }
+
+  /* 7 · Sectores y momentos */
+  .home-foryou {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-16);
+  }
+  .home-foryou__title {
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-4);
+  }
+  .home-sectors {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 var(--space-6);
+  }
+  .home-sector {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding-block: var(--space-3);
+    border-top: 1px solid var(--color-border);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-strong);
+  }
+  .home-sector :global(svg) {
+    color: var(--color-text-muted);
+  }
+  .home-sector:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .home-foryou__more {
+    margin-top: var(--space-5);
+  }
+  .home-moments {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .home-moment {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+  }
+  .home-moment__icon {
+    flex: 0 0 auto;
+    width: 2.75rem;
+    height: 2.75rem;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-muted);
+    color: var(--color-text-strong);
+  }
+  .home-moment__body {
+    display: grid;
+    gap: 0.15rem;
+    flex: 1 1 auto;
+    font-size: var(--text-sm);
+  }
+  .home-moment__name {
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-lg);
+    letter-spacing: var(--tracking-snug);
+    color: var(--color-text-strong);
+  }
+  .home-moment :global(.home-moment__arrow) {
+    flex: 0 0 auto;
+    color: var(--color-text-subtle);
+  }
+
+  /* 8 · Precio claro */
+  .home-price {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-16);
+    align-items: start;
+  }
+  .home-price__copy :global(.section-header) {
+    margin-bottom: var(--space-8);
+  }
+  .home-price__figures {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-6);
   }
+  .home-price__figures > div {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border-strong);
+  }
+  .home-price__figures dt {
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-4xl);
+    letter-spacing: var(--tracking-tight);
+    line-height: 1;
+    color: var(--color-text-strong);
+  }
+  .home-price__figures dt small {
+    display: block;
+    margin-bottom: var(--space-1);
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+  .home-price__figures dd {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    line-height: var(--leading-normal);
+  }
+  .home-price__paths {
+    display: grid;
+    gap: var(--space-5);
+  }
+  .home-path {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-6);
+    padding: var(--space-5) 0;
+    border-top: 1px solid var(--color-border);
+  }
+  .home-path:last-child {
+    border-bottom: 1px solid var(--color-border);
+  }
+  .home-path.is-featured {
+    border-top-color: var(--color-ink);
+  }
+  .home-path__name {
+    display: grid;
+    gap: 0.15rem;
+  }
+  .home-path__name h3 {
+    font-size: var(--text-lg);
+  }
+  .home-path__name .muted {
+    font-size: var(--text-sm);
+  }
+  .home-path__price {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .home-path__price b {
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-2xl);
+    letter-spacing: var(--tracking-snug);
+    color: var(--color-text-strong);
+  }
+  .home-price__anchor {
+    font-size: var(--text-sm);
+  }
+  .home-price__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4) var(--space-6);
+  }
+
+  /* 9 · Por qué */
   .home-why {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -238,9 +830,45 @@ import { faqJsonLd } from '@/lib/seo';
     margin-top: var(--space-10);
     color: var(--white);
   }
+
+  /* 10 · Fundadores */
+  .home-founders {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-16);
+    align-items: start;
+  }
+  .home-founders__copy {
+    display: grid;
+    gap: var(--space-4);
+    justify-items: start;
+  }
+  .home-founders__copy h2 {
+    font-size: var(--text-4xl);
+  }
+  .home-founders__copy .muted {
+    font-size: var(--text-md);
+    max-width: 32rem;
+  }
+  .home-founders__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4) var(--space-6);
+    margin-top: var(--space-2);
+  }
+  .eyebrow.has-icon::before {
+    display: none;
+  }
+  .home-founders__perks {
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  /* 11 · Confianza */
   .home-trust {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--space-8);
     padding-block: var(--space-6);
     border-block: 1px solid var(--color-border);
@@ -257,31 +885,74 @@ import { faqJsonLd } from '@/lib/seo';
   .home-trust p {
     font-size: var(--text-sm);
   }
+
   @media (max-width: 1024px) {
-    .home-connected {
+    .home-hero__inner,
+    .home-replaces,
+    .home-setup,
+    .home-foryou,
+    .home-price,
+    .home-founders {
       grid-template-columns: 1fr;
       gap: var(--space-10);
     }
-    .home-why {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+    .home-replaces__after {
+      padding-left: 0;
+      padding-top: var(--space-6);
+      border-left: 0;
+      border-top: 1px solid var(--color-border-strong);
     }
-    .home-trust {
+    .home-families {
       grid-template-columns: 1fr;
     }
-    .home-solutions__head {
+    .home-why,
+    .home-trust {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .home-head {
       flex-direction: column;
       align-items: flex-start;
     }
+    .home-setup__media {
+      max-width: 36rem;
+    }
   }
   @media (max-width: 720px) {
-    .home-hero__stage {
-      padding-bottom: 0;
+    .home-hero__copy h1 {
+      max-width: none;
     }
-    .home-hero__stage :global(.home-hero__phone) {
-      display: none;
-    }
-    .home-why {
+    .home-points,
+    .home-why,
+    .home-trust {
       grid-template-columns: 1fr;
+    }
+    .home-points {
+      gap: var(--space-6);
+      margin-top: var(--space-8);
+    }
+    .home-family {
+      padding: var(--space-5);
+    }
+    .home-price__figures {
+      grid-template-columns: 1fr;
+      gap: var(--space-4);
+    }
+    .home-price__figures > div {
+      grid-template-columns: 7.5rem minmax(0, 1fr);
+      align-items: baseline;
+      gap: var(--space-4);
+    }
+    .home-price__figures dt {
+      font-size: var(--text-3xl);
+    }
+  }
+  @media (max-width: 520px) {
+    .home-family__items,
+    .home-sectors {
+      grid-template-columns: 1fr;
+    }
+    .home-hero__actions .btn {
+      flex: 1 1 auto;
     }
   }
 </style>

@@ -1,0 +1,143 @@
+---
+/**
+ * «Pruébalo» de las páginas de sector y de momento (docs/auditoria/12 §2.5 y §4): monta la demo
+ * que mejor encaja reutilizando las islas que ya existen, nunca una copia. Una sola isla por
+ * página y siempre `client:visible`.
+ *
+ * - simulador → ServiceSimulator (D1) · carta → DemoCarta (D3) con QR · llamada → CallDemo (D4)
+ * - canales → ChannelsDemo (D2) · calculadora → CommissionCalculator (D6)
+ * - comprobador → EquipmentChecker (¿te sirve tu equipo?)
+ */
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import Icon from '@/components/ui/Icon.astro';
+import QrCode from '@/components/ui/QrCode.astro';
+import StatusChip from '@/components/ui/StatusChip.astro';
+import ServiceSimulator from '@/components/islands/ServiceSimulator.vue';
+import DemoCarta from '@/components/islands/DemoCarta.vue';
+import CallDemo from '@/components/islands/CallDemo.vue';
+import ChannelsDemo from '@/components/islands/ChannelsDemo.vue';
+import CommissionCalculator from '@/components/islands/CommissionCalculator.vue';
+import EquipmentChecker from '@/components/islands/EquipmentChecker.vue';
+import { DEMO_CARTA_URL } from '@/data/navigation';
+import { COMMISSION_RANGE } from '@/data/pricing';
+import { getSolution } from '@/data/solutions';
+import { ctaHref } from '@/lib/cta';
+import type { DemoBlockKey } from '@/data/sectors';
+
+interface Props {
+  demo: DemoBlockKey;
+  title: string;
+  text: string;
+  /** Origen de los CTA de dentro de la demo («sector-bares-demo») */
+  origen: string;
+  eyebrow?: string;
+  /** Ancla de la sección */
+  id?: string;
+  soft?: boolean;
+}
+const {
+  demo,
+  title,
+  text,
+  origen,
+  eyebrow = 'Pruébalo',
+  id = 'pruebalo',
+  soft = false,
+} = Astro.props;
+const ia = getSolution('llamadas-ia');
+---
+
+<section class:list={['section', soft ? 'is-soft' : 'has-rule']} id={id}>
+  {demo === 'carta' ? (
+    <div class="container dmb-carta">
+      <div class="dmb-carta__copy">
+        <SectionHeader eyebrow={eyebrow} title={title} text={text} />
+        <div class="dmb-carta__qr">
+          <QrCode url={DEMO_CARTA_URL} size={152} label="Código QR que abre la carta de ejemplo" />
+          <p>
+            <b>Escanéalo con tu móvil:</b> así lo verá tu cliente. O pruébala aquí al lado.
+          </p>
+        </div>
+        <a href={ctaHref({ to: 'carta', origen })} class="btn is-primary dmb-carta__btn">
+          Abrir la carta de ejemplo
+          <Icon name="arrow-right" size={16} class="btn-arrow" />
+        </a>
+      </div>
+      <div class="dmb-carta__phone">
+        <DemoCarta client:visible mode="embed" origen={origen} />
+      </div>
+    </div>
+  ) : (
+    <div class="container">
+      <SectionHeader eyebrow={eyebrow} title={title} text={text}>
+        {demo === 'llamada' && (
+          <p class="dmb-status">
+            <StatusChip status={ia.status} /> Es una demo de cómo funcionará. {ia.statusNote}
+          </p>
+        )}
+      </SectionHeader>
+      {demo === 'simulador' && <ServiceSimulator client:visible origen={origen} readUrl={false} />}
+      {demo === 'llamada' && <CallDemo client:visible origen={origen} />}
+      {demo === 'canales' && <ChannelsDemo client:visible origen={origen} />}
+      {demo === 'calculadora' && (
+        <CommissionCalculator client:visible origen={origen} range={COMMISSION_RANGE} />
+      )}
+      {demo === 'comprobador' && <EquipmentChecker client:visible origen={origen} />}
+    </div>
+  )}
+</section>
+
+<style>
+  .dmb-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+  }
+  .dmb-carta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 22rem);
+    gap: var(--space-16);
+    align-items: center;
+  }
+  .dmb-carta__copy {
+    display: grid;
+    gap: var(--space-8);
+    justify-items: start;
+  }
+  .dmb-carta__copy :global(.section-header) {
+    margin-bottom: 0;
+  }
+  .dmb-carta__qr {
+    display: flex;
+    gap: var(--space-6);
+    align-items: center;
+    padding: var(--space-6);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    max-width: 32rem;
+  }
+  .dmb-carta__qr p {
+    color: var(--color-text-muted);
+  }
+  .dmb-carta__qr b {
+    color: var(--color-text-strong);
+    font-weight: var(--weight-medium);
+  }
+  .dmb-carta__btn {
+    display: none;
+  }
+  @media (max-width: 860px) {
+    .dmb-carta {
+      grid-template-columns: 1fr;
+    }
+    .dmb-carta__qr,
+    .dmb-carta__phone {
+      display: none;
+    }
+    .dmb-carta__btn {
+      display: inline-flex;
+    }
+  }
+</style>

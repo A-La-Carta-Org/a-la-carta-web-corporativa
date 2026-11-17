@@ -1,5 +1,187 @@
 ---
-/** TPV: ticket de la mesa a la izquierda, carta a la derecha, cobro abajo. */
+/**
+ * TPV: ticket a la izquierda, carta a la derecha, cobro abajo. `mode` cambia el contenido según
+ * el tipo de local (docs/auditoria/12 §2.1): sala (por defecto), barra, mostrador, grifos y noche.
+ * El modo noche se pinta en oscuro desde `Mockup` (clase `is-night`).
+ */
+import type { TpvMode } from './modes';
+
+interface Props {
+  mode?: TpvMode;
+}
+const { mode = 'sala' } = Astro.props;
+
+interface Line {
+  q: number;
+  name: string;
+  sub?: string;
+  /** Importe de la línea en euros */
+  price: number;
+}
+interface Tile {
+  name: string;
+  price: number;
+  sel?: boolean;
+  off?: boolean;
+}
+interface ModeData {
+  tabs: string[];
+  /** Pestaña activa */
+  on: number;
+  /** Pestaña con pedidos pendientes y su número */
+  badge?: [number, number];
+  ticket: string;
+  sub: string;
+  pill: string;
+  lines: Line[];
+  pay: [string, string, string];
+  cats: string[];
+  tiles: Tile[];
+}
+
+const modes: Record<TpvMode, ModeData> = {
+  sala: {
+    tabs: ['Sala', 'Barra', 'Pedidos', 'Reservas'],
+    on: 0,
+    badge: [2, 3],
+    ticket: 'Mesa 12',
+    sub: '4 comensales · 42 min',
+    pill: 'Abierta',
+    lines: [
+      { q: 2, name: 'Ensalada de burrata', sub: 'sin cebolla', price: 25 },
+      { q: 1, name: 'Entrecot 300 g', sub: 'al punto · guarnición patata', price: 24.5 },
+      { q: 1, name: 'Arroz meloso de setas', price: 16 },
+      { q: 3, name: 'Agua 1 l', price: 8.7 },
+      { q: 1, name: 'Vino tinto crianza', price: 19 },
+    ],
+    pay: ['Dividir', 'Tarjeta', 'Cobrar'],
+    cats: ['Entrantes', 'Carnes', 'Arroces', 'Postres', 'Bebidas', 'Menú del día'],
+    tiles: [
+      { name: 'Ensalada de burrata', price: 12.5, sel: true },
+      { name: 'Croquetas de jamón', price: 9 },
+      { name: 'Pulpo a la brasa', price: 18 },
+      { name: 'Tartar de atún', price: 16.5 },
+      { name: 'Alcachofas confitadas', price: 11, off: true },
+      { name: 'Bravas de la casa', price: 7.5 },
+      { name: 'Jamón ibérico', price: 22 },
+      { name: 'Tabla de quesos', price: 14 },
+      { name: 'Pan y alioli', price: 2.5 },
+    ],
+  },
+  barra: {
+    tabs: ['Barra', 'Terraza', 'Sala', 'Pedidos'],
+    on: 0,
+    ticket: 'Barra',
+    sub: 'Cobro directo · sin abrir mesa',
+    pill: 'Rápido',
+    lines: [
+      { q: 2, name: 'Caña', price: 4.8 },
+      { q: 1, name: 'Tinto de verano', price: 3 },
+      { q: 1, name: 'Pincho de tortilla', sub: 'caliente', price: 3.2 },
+      { q: 1, name: 'Ración de bravas', price: 6.5 },
+    ],
+    pay: ['Efectivo', 'Tarjeta', 'Cobrar'],
+    cats: ['Favoritos', 'Cervezas', 'Vinos', 'Tapas', 'Raciones', 'Cafés'],
+    tiles: [
+      { name: 'Caña', price: 2.4, sel: true },
+      { name: 'Doble', price: 3.2 },
+      { name: 'Tercio', price: 2.8 },
+      { name: 'Tinto de verano', price: 3 },
+      { name: 'Vermut', price: 3.5 },
+      { name: 'Pincho de tortilla', price: 3.2 },
+      { name: 'Bravas', price: 6.5 },
+      { name: 'Boquerones', price: 8, off: true },
+      { name: 'Café solo', price: 1.4 },
+    ],
+  },
+  mostrador: {
+    tabs: ['Mostrador', 'Mesas', 'Para recoger', 'Clientes'],
+    on: 0,
+    badge: [2, 2],
+    ticket: 'Ticket 214',
+    sub: 'Para llevar · Ana, 9 de 10 cafés',
+    pill: 'Mostrador',
+    lines: [
+      { q: 1, name: 'Café con leche', sub: 'avena · grande · para llevar', price: 2.3 },
+      { q: 1, name: 'Cruasán a la plancha', sub: 'con mantequilla', price: 2.2 },
+      { q: 1, name: 'Zumo de naranja', price: 3 },
+      { q: 1, name: 'Tostada con tomate', price: 2.5 },
+    ],
+    pay: ['Efectivo', 'Tarjeta', 'Cobrar'],
+    cats: ['Cafés', 'Tés', 'Bollería', 'Tostadas', 'Zumos', 'Para llevar'],
+    tiles: [
+      { name: 'Café con leche', price: 1.8, sel: true },
+      { name: 'Cortado', price: 1.5 },
+      { name: 'Americano', price: 1.6 },
+      { name: 'Capuchino', price: 2.2 },
+      { name: 'Flat white', price: 2.6 },
+      { name: 'Matcha latte', price: 3.2, off: true },
+      { name: 'Descafeinado', price: 1.7 },
+      { name: 'Chai latte', price: 2.8 },
+      { name: 'Colacao', price: 1.9 },
+    ],
+  },
+  grifos: {
+    tabs: ['Sala', 'Barra', 'Terraza', 'Pedidos'],
+    on: 2,
+    ticket: 'Mesa T6',
+    sub: '8 personas · 3 rondas',
+    pill: 'Abierta',
+    lines: [
+      { q: 4, name: 'Pinta IPA', sub: 'ronda 3', price: 22 },
+      { q: 3, name: 'Caña rubia', sub: 'ronda 3', price: 7.5 },
+      { q: 1, name: 'Jarra tostada 1 l', price: 9 },
+      { q: 2, name: 'Patatas de la casa', price: 11 },
+      { q: 1, name: 'Tabla de embutidos', price: 13 },
+    ],
+    pay: ['Dividir', 'Tarjeta', 'Cobrar'],
+    cats: ['Grifos', 'Botellas', 'Raciones', 'Tapas', 'Sin alcohol'],
+    tiles: [
+      { name: 'Caña rubia', price: 2.5 },
+      { name: 'Pinta rubia', price: 4.5 },
+      { name: 'Pinta IPA', price: 5.5, sel: true },
+      { name: 'Caña tostada', price: 2.8 },
+      { name: 'Pinta tostada', price: 4.9 },
+      { name: 'Jarra 1 l', price: 9 },
+      { name: 'Pinta de trigo', price: 5.2 },
+      { name: 'Pinta stout', price: 5.8, off: true },
+      { name: 'Sidra', price: 4 },
+    ],
+  },
+  noche: {
+    tabs: ['Barra', 'Cuentas', 'Reservas'],
+    on: 0,
+    badge: [1, 4],
+    ticket: 'Cuenta · Laura',
+    sub: '6 personas · desde 23:40',
+    pill: 'Abierta',
+    lines: [
+      { q: 2, name: 'Gin tonic', sub: 'premium · pepino', price: 22 },
+      { q: 2, name: 'Mojito', price: 18 },
+      { q: 1, name: 'Ron cola', price: 8 },
+      { q: 1, name: 'Chupito', sub: 'invitación · cumpleaños · Marta', price: 0 },
+    ],
+    pay: ['Dividir', 'Tarjeta', 'Cobrar'],
+    cats: ['Cócteles', 'Combinados', 'Cervezas', 'Chupitos', 'Sin alcohol'],
+    tiles: [
+      { name: 'Gin tonic', price: 11, sel: true },
+      { name: 'Mojito', price: 9 },
+      { name: 'Margarita', price: 9.5 },
+      { name: 'Negroni', price: 10 },
+      { name: 'Espresso martini', price: 10 },
+      { name: 'Pisco sour', price: 10, off: true },
+      { name: 'Daiquiri', price: 9 },
+      { name: 'Moscow mule', price: 9.5 },
+      { name: 'Old fashioned', price: 11 },
+    ],
+  },
+};
+
+const d = modes[mode];
+const eur = (n: number) => n.toFixed(2).replace('.', ',');
+const total = d.lines.reduce((s, l) => s + l.price, 0);
+// IVA del 10 % incluido (hostelería), solo para que la maqueta cuadre
+const vat = total - total / 1.1;
 ---
 
 <div class="mk mk-tpv">
@@ -11,12 +193,12 @@
       <i></i>
     </span>
     <div class="mk-tabs">
-      <span class="mk-tab is-on">Sala</span>
-      <span class="mk-tab">Barra</span>
-      <span class="mk-tab">
-        Pedidos <b class="mk-pill is-dark num">3</b>
-      </span>
-      <span class="mk-tab">Reservas</span>
+      {d.tabs.map((t, i) => (
+        <span class:list={['mk-tab', { 'is-on': i === d.on }]}>
+          {t}
+          {d.badge && d.badge[0] === i && <b class="mk-pill is-dark num">{d.badge[1]}</b>}
+        </span>
+      ))}
     </div>
     <div class="mk-right">
       <span class="mk-pill is-ok">
@@ -29,99 +211,55 @@
     <aside class="mk-tpv__ticket">
       <div class="mk-tpv__head">
         <div>
-          <div class="mk-strong">Mesa 12</div>
-          <div class="mk-muted">4 comensales · 42 min</div>
+          <div class="mk-strong">{d.ticket}</div>
+          <div class="mk-muted">{d.sub}</div>
         </div>
-        <span class="mk-pill">Abierta</span>
+        <span class="mk-pill">{d.pill}</span>
       </div>
       <div class="mk-tpv__lines">
-        <div class="mk-row">
-          <span class="num mk-muted">2</span>
-          <span class="grow">
-            Ensalada de burrata<span class="sub">sin cebolla</span>
-          </span>
-          <span class="num">25,00</span>
-        </div>
-        <div class="mk-row">
-          <span class="num mk-muted">1</span>
-          <span class="grow">
-            Entrecot 300 g<span class="sub">al punto · guarnición patata</span>
-          </span>
-          <span class="num">24,50</span>
-        </div>
-        <div class="mk-row">
-          <span class="num mk-muted">1</span>
-          <span class="grow">Arroz meloso de setas</span>
-          <span class="num">16,00</span>
-        </div>
-        <div class="mk-row">
-          <span class="num mk-muted">3</span>
-          <span class="grow">Agua 1 l</span>
-          <span class="num">8,70</span>
-        </div>
-        <div class="mk-row">
-          <span class="num mk-muted">1</span>
-          <span class="grow">Vino tinto crianza</span>
-          <span class="num">19,00</span>
-        </div>
+        {d.lines.map((l) => (
+          <div class="mk-row">
+            <span class="num mk-muted">{l.q}</span>
+            <span class="grow">
+              {l.name}
+              {l.sub && <span class="sub">{l.sub}</span>}
+            </span>
+            <span class="num">{eur(l.price)}</span>
+          </div>
+        ))}
       </div>
       <div class="mk-tpv__total">
         <div class="mk-row">
           <span class="grow mk-muted">Subtotal</span>
-          <span class="num">93,20</span>
+          <span class="num">{eur(total)}</span>
         </div>
         <div class="mk-row">
           <span class="grow mk-muted">IVA incl.</span>
-          <span class="num mk-muted">8,47</span>
+          <span class="num mk-muted">{eur(vat)}</span>
         </div>
         <div class="mk-tpv__sum">
           <span>Total</span>
-          <span class="num">93,20 €</span>
+          <span class="num">{eur(total)} €</span>
         </div>
       </div>
       <div class="mk-tpv__pay">
-        <span class="mk-btn is-soft">Dividir</span>
-        <span class="mk-btn is-soft">Tarjeta</span>
-        <span class="mk-btn is-dark">Cobrar</span>
+        <span class="mk-btn is-soft">{d.pay[0]}</span>
+        <span class="mk-btn is-soft">{d.pay[1]}</span>
+        <span class="mk-btn is-dark">{d.pay[2]}</span>
       </div>
     </aside>
     <section class="mk-tpv__menu">
       <div class="mk-tpv__cats">
-        <span class="mk-tab is-on">Entrantes</span>
-        <span class="mk-tab">Carnes</span>
-        <span class="mk-tab">Arroces</span>
-        <span class="mk-tab">Postres</span>
-        <span class="mk-tab">Bebidas</span>
-        <span class="mk-tab">Menú del día</span>
+        {d.cats.map((c, i) => (
+          <span class:list={['mk-tab', { 'is-on': i === 0 }]}>{c}</span>
+        ))}
       </div>
       <div class="mk-grid mk-tpv__tiles">
-        <span class="mk-tile is-sel">
-          Ensalada de burrata <span class="num">12,50</span>
-        </span>
-        <span class="mk-tile">
-          Croquetas de jamón <span class="num">9,00</span>
-        </span>
-        <span class="mk-tile">
-          Pulpo a la brasa <span class="num">18,00</span>
-        </span>
-        <span class="mk-tile">
-          Tartar de atún <span class="num">16,50</span>
-        </span>
-        <span class="mk-tile is-off">
-          Alcachofas confitadas <span class="num">11,00</span>
-        </span>
-        <span class="mk-tile">
-          Bravas de la casa <span class="num">7,50</span>
-        </span>
-        <span class="mk-tile">
-          Jamón ibérico <span class="num">22,00</span>
-        </span>
-        <span class="mk-tile">
-          Tabla de quesos <span class="num">14,00</span>
-        </span>
-        <span class="mk-tile">
-          Pan y alioli <span class="num">2,50</span>
-        </span>
+        {d.tiles.map((t) => (
+          <span class:list={['mk-tile', { 'is-sel': t.sel, 'is-off': t.off }]}>
+            {t.name} <span class="num">{eur(t.price)}</span>
+          </span>
+        ))}
       </div>
     </section>
   </div>

@@ -1,0 +1,22 @@
+---
+/**
+ * Chip de estado de un producto o integración. Solo se pinta si NO está disponible
+ * (docs/auditoria/01 §4): «En camino», «En piloto».
+ */
+import { statusLabels, type SolutionStatus } from '@/data/solutions';
+
+interface Props {
+  status?: SolutionStatus | 'en-camino';
+  /** Matiz del estado, como texto de ayuda al pasar el ratón */
+  note?: string;
+  class?: string;
+}
+const { status, note, class: className = '' } = Astro.props;
+const show = status && status !== 'disponible';
+---
+
+{show && (
+  <span class:list={['chip', 'is-status', className]} title={note}>
+    {statusLabels[status]}
+  </span>
+)}

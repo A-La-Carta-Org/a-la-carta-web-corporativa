@@ -1,7 +1,16 @@
 ---
+/**
+ * Contacto (docs/auditoria/11 §6): lo que **no** es venta — soporte, gestorías, partners y
+ * prensa. Quien quiere contratar va a la demo (tarjeta-enlace dentro del formulario) o pide que le
+ * llamemos. Bloque para gestorías y asesorías (canal prescriptor). Sin teléfono: está pendiente.
+ */
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import LeadForm from '@/components/islands/LeadForm.vue';
+import ContactForm from '@/components/islands/ContactForm.vue';
 import CtaBand from '@/components/blocks/CtaBand.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { iconPaths } from '@/components/ui/icons';
+import { ctaHref } from '@/lib/cta';
+import { contactMotives } from '@/lib/lead';
 import { CONTACT_EMAIL, SUPPORT_EMAIL, REPLY_HOURS } from '@/data/site';
 import { breadcrumbJsonLd } from '@/lib/seo';
 
@@ -15,22 +24,46 @@ const contactJsonLd = {
   name: 'Contacto alaCarta',
   url: 'https://alacarta.com/contacto',
 };
+
+const icons = Object.fromEntries(
+  [...contactMotives.map((m) => m.icon), 'store'].map((k) => [
+    k,
+    iconPaths[k as keyof typeof iconPaths],
+  ])
+);
+const salesHref = ctaHref({ to: 'demo', origen: 'contacto-motivo' });
+
+const gestoria = [
+  {
+    title: 'Con tu propio acceso',
+    text: 'Tu cliente te da un usuario y entras a lo que necesitas, sin pedirle papeles ni esperar al final del trimestre.',
+  },
+  {
+    title: 'Ventas y cierres, hoy',
+    text: 'Desde el backoffice: ventas, cierres diarios y productos en CSV o Excel. Compras, facturas de proveedor e IVA irán en el ERP, que está en camino.',
+  },
+  {
+    title: 'El mes del equipo, cerrado',
+    text: 'Desde Equipo y RRHH: horas, extras y ausencias del mes listas para la nómina. La nómina la sigues calculando tú.',
+  },
+];
 ---
 
 <BaseLayout
   title="Contacto"
-  description={`Escribe a alaCarta: información general, grupos y cadenas, colaboraciones o soporte. Respondemos en menos de ${REPLY_HOURS} horas laborables.`}
+  description={`Escribe a alaCarta: soporte, gestorías y asesorías, partners y prensa. Para contratar, pide una demo. Respondemos en menos de ${REPLY_HOURS} horas laborables.`}
   path="/contacto"
   jsonLd={[breadcrumbJsonLd(crumbs), contactJsonLd]}
 >
-  <section class="contact">
+  <section class="contact" id="formulario">
     <div class="container contact__inner">
       <div class="contact__copy">
         <span class="eyebrow">Contacto</span>
         <h1>Hablemos</h1>
         <p class="lead">
-          Para dudas, grupos con varios locales, colaboraciones o cualquier otra cosa. Si lo que
-          quieres es ver la plataforma, pide una <a href="/solicitar-demo">demo</a>.
+          Para soporte, gestorías, partners, prensa o cualquier otra cosa. Si lo que quieres es ver
+          alaCarta o saber cuánto te costaría, el camino corto es la{' '}
+          <a href={ctaHref({ to: 'demo', origen: 'contacto' })}>demo</a>.
         </p>
         <dl class="contact__channels">
           <div>
@@ -46,29 +79,70 @@ const contactJsonLd = {
             </dd>
           </div>
           <div>
-            <dt>Horario de respuesta</dt>
+            <dt>Cuándo contestamos</dt>
             <dd>Lunes a viernes, en menos de {REPLY_HOURS} horas laborables.</dd>
           </div>
         </dl>
+        <a href={ctaHref({ to: 'llamada', origen: 'contacto' })} class="contact__call">
+          <Icon name="ai-call" size={18} />
+          <span>
+            <strong>¿Prefieres hablar?</strong>
+            <span class="muted">Déjanos tu teléfono y te llamamos.</span>
+          </span>
+          <Icon name="arrow-right" size={16} />
+        </a>
       </div>
       <div class="contact__form card">
-        <LeadForm client:load variant="contacto" />
+        <ContactForm client:load icons={icons} salesHref={salesHref} />
       </div>
     </div>
   </section>
+
+  <section class="section is-soft" aria-labelledby="gestorias">
+    <div class="container">
+      <div class="contact__band">
+        <div class="section-header">
+          <span class="eyebrow">Gestorías y asesorías</span>
+          <h2 id="gestorias">Si llevas restaurantes, alaCarta te ahorra papeles</h2>
+          <p>
+            Tus clientes de hostelería tienen las ventas, el equipo y, pronto, las compras en el
+            mismo sitio. Tú entras con tu usuario y te llevas lo que necesitas.
+          </p>
+          <a
+            href={`${ctaHref({ to: 'contacto', motivo: 'gestoria', origen: 'contacto-gestorias' })}#formulario`}
+            class="link-arrow"
+          >
+            Escríbenos como gestoría
+            <Icon name="arrow-right" size={16} />
+          </a>
+        </div>
+        <div class="contact__cols">
+          {gestoria.map((g) => (
+            <div class="column">
+              <h3>{g.title}</h3>
+              <p>{g.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
   <CtaBand
-    title="¿Prefieres verlo?"
-    text="En una videollamada corta te enseñamos la plataforma con un caso parecido al tuyo."
+    title="¿Lo que buscas es ver alaCarta?"
+    text="En una videollamada corta te enseñamos la plataforma con un caso parecido al tuyo. O pruébalo ahora, sin datos ni registro."
+    origen="contacto-cierre"
   />
 </BaseLayout>
 
 <style>
   .contact {
-    padding-block: clamp(2.5rem, 2rem + 3vw, 5rem) var(--section-y);
+    padding-block: clamp(2rem, 1.5rem + 3vw, 4.5rem) var(--section-y);
+    scroll-margin-top: var(--header-h);
   }
   .contact__inner {
     display: grid;
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
     gap: var(--space-16);
     align-items: start;
   }
@@ -103,13 +177,54 @@ const contactJsonLd = {
     font-size: var(--text-base);
     color: var(--color-text-strong);
   }
+  .contact__call {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-5);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    color: var(--color-text-strong);
+    transition: border-color var(--dur-fast) var(--ease);
+  }
+  .contact__call:hover {
+    border-color: var(--color-ink);
+    text-decoration: none;
+  }
+  .contact__call > span {
+    display: grid;
+    gap: 2px;
+    flex: 1 1 auto;
+    font-size: var(--text-sm);
+  }
+  .contact__call strong {
+    font-family: var(--font-display);
+    font-size: var(--text-base);
+  }
   .contact__form {
     padding: var(--space-8);
+  }
+  .contact__band {
+    display: grid;
+    gap: var(--space-12);
+  }
+  .contact__band .section-header {
+    margin-bottom: 0;
+  }
+  .contact__cols {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-6);
   }
   @media (max-width: 1024px) {
     .contact__inner {
       grid-template-columns: 1fr;
       gap: var(--space-10);
+    }
+  }
+  @media (max-width: 720px) {
+    .contact__cols {
+      grid-template-columns: 1fr;
     }
   }
   @media (max-width: 640px) {

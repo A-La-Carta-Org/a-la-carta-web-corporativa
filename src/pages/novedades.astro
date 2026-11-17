@@ -1,0 +1,437 @@
+---
+/**
+ * Novedades / estado del producto (docs/auditoria/13 §5): qué hay, qué está en piloto y qué está
+ * en camino, por producto; las conexiones entre piezas que faltan y las integraciones con
+ * servicios de fuera. Todo sale de `solutions.ts` (`status`, `statusNote`, `connections[].status`)
+ * y de `integrations.ts`: nada se escribe a mano y no hay fechas de lanzamiento que no existan.
+ * El registro de cambios empieza con el lanzamiento.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import Icon from '@/components/ui/Icon.astro';
+import {
+  familiesWithItems,
+  solutions,
+  getItem,
+  statusLabels,
+  type EcosystemSlug,
+  type SolutionStatus,
+} from '@/data/solutions';
+import { integrationsPending } from '@/data/integrations';
+import { STATUS_UPDATED } from '@/data/site';
+import { breadcrumbJsonLd } from '@/lib/seo';
+import { ctaHref } from '@/lib/cta';
+
+const path = '/novedades';
+const crumbs = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Novedades', path },
+];
+const groups = familiesWithItems();
+const items = groups.flatMap((g) => g.items);
+const updated = new Date(STATUS_UPDATED).toLocaleDateString('es-ES', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+const legend: { status: SolutionStatus; text: string }[] = [
+  {
+    status: 'disponible',
+    text: 'Forma parte del sistema desde el lanzamiento con los primeros locales, y te lo dejamos funcionando en la puesta en marcha.',
+  },
+  {
+    status: 'piloto',
+    text: 'Lo usan primero los locales fundadores, en su servicio, antes de abrirlo a todos.',
+  },
+  {
+    status: 'en-camino',
+    text: 'Todavía no está. Lo estamos construyendo o preparando y no tiene fecha cerrada.',
+  },
+];
+const count = (st: SolutionStatus) => items.filter((i) => i.status === st).length;
+
+/** Integraciones en camino, sin duplicar el par (A↔B) */
+const seen = new Set<string>();
+const pending: { from: EcosystemSlug; to: EcosystemSlug; text: string }[] = [];
+for (const s of solutions) {
+  for (const c of s.connections) {
+    if (c.status !== 'en-camino') continue;
+    const key = [s.slug, c.to].sort().join('|');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    pending.push({ from: s.slug, to: c.to, text: c.text });
+  }
+}
+---
+
+<BaseLayout
+  title="Novedades: qué hay, qué está en camino"
+  description="El estado real de cada pieza de alaCarta: lo que está disponible, lo que está en piloto y lo que está en camino, con las integraciones entre productos."
+  path={path}
+  jsonLd={breadcrumbJsonLd(crumbs)}
+>
+  <PageHero
+    variant="compact"
+    breadcrumbs={crumbs}
+    eyebrow="Novedades"
+    eyebrowIcon="newspaper"
+    title="Qué hay y qué está en camino"
+    text="Preferimos contarte el estado real de cada pieza a que lo descubras después. Esta lista sale de los mismos datos que el resto de la web: si algo cambia de estado, cambia aquí y en todas partes."
+  />
+
+  <section class="section is-sm">
+    <div class="container">
+      <p class="nov-updated">
+        <Icon name="refresh-cw" size={14} />
+        Última actualización: <time datetime={STATUS_UPDATED}>{updated}</time>
+      </p>
+      <ul role="list" class="nov-legend">
+        {legend.map((l) => (
+          <li class="column">
+            <span class="nov-legend__head">
+              <span class:list={['chip', l.status === 'disponible' ? 'is-soft' : 'is-status']}>
+                {statusLabels[l.status]}
+              </span>
+              <span class="nov-legend__count num">
+                {count(l.status)} {count(l.status) === 1 ? 'pieza' : 'piezas'}
+              </span>
+            </span>
+            <p class="muted">{l.text}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section has-rule">
+    <div class="container">
+      <SectionHeader eyebrow="Por producto" title="El ecosistema, pieza a pieza" />
+      <div class="table-wrap">
+        <table class="status-table">
+          <thead>
+            <tr>
+              <th scope="col">Producto</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Nota</th>
+            </tr>
+          </thead>
+          {groups.map((f) => (
+            <tbody>
+              <tr class="status-table__family">
+                <th scope="colgroup" colspan="3">
+                  <span>
+                    <Icon name={f.icon} size={16} />
+                    {f.name}
+                  </span>
+                </th>
+              </tr>
+              {f.items.map((i) => (
+                <tr>
+                  <th scope="row">
+                    <a href={i.path}>{i.name}</a>
+                  </th>
+                  <td>
+                    <span
+                      class:list={['chip', i.status === 'disponible' ? 'is-soft' : 'is-status']}
+                    >
+                      {statusLabels[i.status]}
+                    </span>
+                  </td>
+                  <td class="muted">{i.statusNote ?? i.tagline}</td>
+                </tr>
+              ))}
+            </tbody>
+          ))}
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section is-soft">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Integraciones en camino"
+        title="Conexiones que todavía no están hechas"
+        text="Son las que más valor dan al ecosistema y las que estamos construyendo. En cada página de producto aparecen marcadas «en camino»."
+      />
+      <ul role="list" class="pending">
+        {pending.map((p) => {
+          const a = getItem(p.from);
+          const b = getItem(p.to);
+          return (
+            <li class="column">
+              <p class="pending__pair">
+                <a href={a.path}>{a.navLabel}</a>
+                <Icon name="switch" size={14} />
+                <a href={b.path}>{b.navLabel}</a>
+              </p>
+              <p>{p.text}</p>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container nov-split">
+      <div>
+        <SectionHeader
+          eyebrow="Con servicios de fuera"
+          title="Integraciones en camino"
+          text="Lo que todavía no conecta con alaCarta y cómo trabajas mientras tanto."
+        />
+        <a href="/soluciones#integraciones" class="link-arrow">
+          Ver todas las integraciones
+          <Icon name="arrow-right" size={14} />
+        </a>
+      </div>
+      <ul role="list" class="nov-ext">
+        {integrationsPending.map((it) => {
+          const via = getItem(it.via);
+          return (
+            <li>
+              <p class="nov-ext__name">
+                <b>{it.name}</b>
+                <span class="chip is-status">{statusLabels['en-camino']}</span>
+              </p>
+              <p class="muted">{it.text}</p>
+              <a href={via.path} class="nov-ext__via">
+                {via.navLabel}
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section is-sm has-rule">
+    <div class="container nov-split">
+      <SectionHeader eyebrow="Registro de cambios" title="Empieza con el lanzamiento" />
+      <div class="prose nov-log">
+        <p>
+          Cuando los primeros locales empiecen a trabajar con alaCarta, aquí apuntaremos cada cambio
+          con su fecha: lo que se publica, lo que pasa de piloto a disponible y lo que deja de estar
+          en camino.
+        </p>
+        <p>
+          No ponemos fechas de lanzamiento que no tenemos. Si una pieza tiene fecha cerrada, la
+          verás en su fila; si no, pone «sin fecha cerrada».
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <CtaBand
+    title="¿Quieres probarlo antes que nadie?"
+    text="Los locales fundadores usan alaCarta primero y nos ayudan a decidir qué se construye después."
+    primary={{
+      label: 'Quiero ser local fundador',
+      href: ctaHref({ to: 'demo', motivo: 'fundador', origen: 'novedades-cierre' }),
+    }}
+    extraLink={{ label: 'Cómo funciona el programa', href: '/locales-fundadores' }}
+    origen="novedades-cierre"
+  />
+</BaseLayout>
+
+<style>
+  .nov-updated {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-8);
+  }
+  .nov-updated time {
+    color: var(--color-text-strong);
+    font-weight: var(--weight-medium);
+  }
+  .nov-legend {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-8);
+  }
+  .nov-legend .column {
+    gap: var(--space-3);
+  }
+  .nov-legend__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+  .nov-legend__count {
+    font-size: var(--text-sm);
+    color: var(--color-text-strong);
+  }
+  .nov-legend p {
+    font-size: var(--text-sm);
+  }
+  .nov-split {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: var(--space-12);
+    align-items: start;
+  }
+  .nov-ext {
+    display: grid;
+    gap: var(--space-6);
+    border-top: 1px dashed var(--color-border-strong);
+    padding-top: var(--space-6);
+  }
+  .nov-ext li {
+    display: grid;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+  }
+  .nov-ext__name {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-base);
+    color: var(--color-text-strong);
+  }
+  .nov-ext__name b {
+    font-weight: var(--weight-medium);
+  }
+  .nov-ext__via {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    justify-self: start;
+  }
+  .nov-log {
+    font-size: var(--text-base);
+  }
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+  }
+  .status-table {
+    width: 100%;
+    min-width: 36rem;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+  }
+  .status-table th,
+  .status-table td {
+    padding: var(--space-3) var(--space-5);
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: middle;
+  }
+  .status-table thead th {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+  .status-table tbody th {
+    font-weight: var(--weight-medium);
+    color: var(--color-text-strong);
+  }
+  .status-table .status-table__family th {
+    background: var(--color-bg-soft);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+  .status-table__family span {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .status-table tbody:last-child tr:last-child :is(th, td) {
+    border-bottom: 0;
+  }
+  .pending {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-8);
+  }
+  .pending .column {
+    border-top-style: dashed;
+  }
+  .pending__pair {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-strong);
+    margin-bottom: var(--space-2);
+  }
+  .pending__pair :global(svg) {
+    color: var(--color-text-subtle);
+  }
+  @media (max-width: 1024px) {
+    .nov-split {
+      grid-template-columns: 1fr;
+      gap: var(--space-8);
+    }
+    .pending {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 640px) {
+    .pending,
+    .nov-legend {
+      grid-template-columns: 1fr;
+    }
+    /* La tabla pasa a lista: nombre y estado en una línea, nota debajo. Sin scroll lateral */
+    .table-wrap {
+      overflow: hidden;
+    }
+    .status-table {
+      min-width: 0;
+    }
+    .status-table thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+    .status-table,
+    .status-table tbody {
+      display: block;
+    }
+    .status-table tbody tr {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: var(--space-1) var(--space-3);
+      align-items: center;
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .status-table tbody tr.status-table__family {
+      display: block;
+      padding: 0;
+    }
+    .status-table tbody :is(th, td) {
+      padding: 0;
+      border: 0;
+    }
+    .status-table .status-table__family th {
+      display: block;
+      padding: var(--space-3) var(--space-4);
+    }
+    .status-table tbody td.muted {
+      grid-column: 1 / -1;
+      font-size: var(--text-xs);
+    }
+    .status-table tbody:last-child tr:last-child {
+      border-bottom: 0;
+    }
+  }
+</style>

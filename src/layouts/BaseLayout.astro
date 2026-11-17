@@ -2,6 +2,7 @@
 import '@/styles/main.css';
 import SiteHeader from '@/components/layout/SiteHeader.astro';
 import SiteFooter from '@/components/layout/SiteFooter.astro';
+import MobileCtaBar from '@/components/layout/MobileCtaBar.astro';
 import JsonLd from '@/components/ui/JsonLd.astro';
 import { SITE_NAME, SITE_LOCALE } from '@/data/site';
 import { pageTitle, canonical, defaultImage, organizationJsonLd, websiteJsonLd } from '@/lib/seo';
@@ -14,7 +15,12 @@ interface Props extends SeoProps {
   headerVariant?: 'default' | 'minimal';
   /** Clase del <main> */
   mainClass?: string;
+  /** Barra fija de conversión en móvil. Por defecto, sí, salvo en las rutas excluidas */
+  mobileCta?: boolean;
 }
+
+/** Donde la barra de conversión estorba: el propio formulario, la confirmación y la demo */
+const NO_MOBILE_CTA = ['/solicitar-demo', '/gracias', '/demo/carta'];
 
 const {
   title,
@@ -27,7 +33,9 @@ const {
   jsonLd,
   headerVariant = 'default',
   mainClass = '',
+  mobileCta,
 } = Astro.props;
+const showMobileCta = mobileCta ?? !NO_MOBILE_CTA.includes(path);
 
 const fullTitle = pageTitle(title, rawTitle);
 const url = canonical(path);
@@ -81,5 +89,11 @@ const url = canonical(path);
       <slot />
     </main>
     <SiteFooter />
+    {showMobileCta && <MobileCtaBar path={path} />}
+    <script>
+      // Atribución propia (página de entrada, referrer, utm_*) en sessionStorage, sin cookies
+      import { captureAttribution } from '@/lib/attribution';
+      captureAttribution();
+    </script>
   </body>
 </html>

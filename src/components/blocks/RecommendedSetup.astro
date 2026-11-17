@@ -1,0 +1,353 @@
+---
+/**
+ * «Configuración recomendada» (docs/auditoria/12 §2.4): plan, complementos y equipo para un tipo
+ * de local o un momento, con su precio orientativo calculado por `quote()` (src/lib/quote.ts) y
+ * el botón que abre el configurador con esa misma configuración precargada.
+ *
+ * No escribe ningún precio: el plan y los complementos salen de `sectorPresets` (o de la
+ * configuración que se le pase) y las cifras, de src/data/pricing.ts.
+ */
+import Icon from '@/components/ui/Icon.astro';
+import StatusChip from '@/components/ui/StatusChip.astro';
+import { quote, type QuoteConfig } from '@/lib/quote';
+import { fmtPrice, VAT_NOTE } from '@/data/pricing';
+import { HARDWARE_PRICE_LABEL, hardwareKits, type HardwareKit } from '@/data/hardware';
+import { getItem, isSolutionSlug, type EcosystemSlug } from '@/data/solutions';
+
+interface Props {
+  config: Partial<QuoteConfig>;
+  kits: HardwareKit['id'][];
+  /** Lo que se suele añadir después */
+  later?: EcosystemSlug[];
+  /** Por qué esta configuración, una o dos frases */
+  text: string;
+  /** Enlace al configurador con la configuración precargada */
+  href: string;
+  /** Titular del ticket («Tu bar, de partida») */
+  label: string;
+}
+const { config, kits, later = [], text, href, label } = Astro.props;
+
+const q = quote(config);
+const annual = Math.round(q.monthly - q.annualSaving / 12);
+const kitList = kits.map((id) => hardwareKits.find((k) => k.id === id)!).filter(Boolean);
+const laterItems = later.map((slug) => getItem(slug));
+const locales = config.locales ?? 1;
+/** Estado del producto de una línea («mod-…», «addon-…»): los «en camino» llevan su chip */
+const lineStatus = (id: string) => {
+  const slug = id.replace(/^(mod|addon)-/, '');
+  return slug !== id && isSolutionSlug(slug) ? getItem(slug).status : undefined;
+};
+---
+
+<div class="rec">
+  <div class="rec__ticket" aria-labelledby="rec-ticket-title">
+    <p class="rec__label" id="rec-ticket-title">
+      {label}
+    </p>
+    <ul role="list" class="rec__lines">
+      {q.lines.map((l) => (
+        <li class="rec__line">
+          <span class="rec__name">
+            <span class="rec__label-line">
+              {l.label}
+              <StatusChip status={lineStatus(l.id)} />
+            </span>
+            {l.detail && <span class="rec__detail">{l.detail}</span>}
+          </span>
+          <span class="rec__amount num">{l.amount !== null ? fmtPrice(l.amount) : l.text}</span>
+        </li>
+      ))}
+    </ul>
+    <p class="rec__always">
+      <Icon name="check" size={14} />
+      TPV, carta QR con pago y backoffice van en todos los planes.
+    </p>
+    <div class="rec__total">
+      <span>Al mes{locales > 1 ? `, ${locales} locales` : ''}</span>
+      <span class="rec__sum">
+        <span class="num">{fmtPrice(q.monthly)}</span>
+        <small>{VAT_NOTE}</small>
+      </span>
+    </div>
+    {q.annualSaving > 0 && (
+      <p class="rec__note">
+        o <b class="num">{fmtPrice(annual)}/mes</b> pagando el año · sin permanencia · 0 % de
+        comisión
+      </p>
+    )}
+    <ul role="list" class="rec__once">
+      {q.once.map((l) => (
+        <li>
+          <span>{l.label}</span>
+          <span class="num">{l.amount !== null && !l.text ? fmtPrice(l.amount) : l.text}</span>
+        </li>
+      ))}
+    </ul>
+    {q.notices.map((n) => (
+      <p class="rec__notice">{n}</p>
+    ))}
+    <p class="rec__estimate">
+      Precio orientativo de lanzamiento. La cifra cerrada va en tu propuesta.
+    </p>
+  </div>
+
+  <div class="rec__side">
+    <p class="rec__text">{text}</p>
+
+    {kitList.length > 0 && (
+      <div class="rec__block">
+        <h3 class="rec__h">Si te falta equipo</h3>
+        <ul role="list" class="rec__kits">
+          {kitList.map((k) => (
+            <li class="rec__kit">
+              <span class="rec__kit-icons" aria-hidden="true">
+                {k.icons.slice(0, 3).map((i) => (
+                  <Icon name={i} size={16} />
+                ))}
+              </span>
+              <span class="rec__kit-body">
+                <b>
+                  {k.name}
+                  {locales > 1 ? ' en cada local' : ''}
+                </b>
+                <span>{k.contents.join(' · ')}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p class="rec__small">
+          {HARDWARE_PRICE_LABEL}, o usa el que ya tienes. <a href="/hardware">Ver el equipo</a>
+        </p>
+      </div>
+    )}
+
+    {laterItems.length > 0 && (
+      <div class="rec__block">
+        <h3 class="rec__h">Cuando lo pida el local</h3>
+        <ul role="list" class="rec__later">
+          {laterItems.map((it) => (
+            <li>
+              <a href={it.path} class="rec__later-link">
+                <Icon name={it.icon} size={16} />
+                <span>{it.navLabel}</span>
+              </a>
+              <StatusChip status={it.status} />
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+
+    <a href={href} class="btn is-primary rec__btn">
+      Ajustarla en el configurador
+      <Icon name="arrow-right" size={16} class="btn-arrow" />
+    </a>
+  </div>
+</div>
+
+<style>
+  .rec {
+    display: grid;
+    grid-template-columns: minmax(0, 26rem) minmax(0, 1fr);
+    gap: var(--space-16);
+    align-items: start;
+  }
+  /* El ticket, en el mismo lenguaje que el del configurador: papel blanco, monoespaciada */
+  .rec__ticket {
+    padding: var(--space-6);
+    background: var(--white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    display: grid;
+    gap: var(--space-4);
+  }
+  .rec__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px dashed var(--color-border-strong);
+  }
+  .rec__lines {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .rec__line {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+    font-size: var(--text-sm);
+  }
+  .rec__name {
+    display: grid;
+    gap: 0.1rem;
+    color: var(--color-text-strong);
+  }
+  .rec__detail {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+  .rec__amount {
+    font-family: var(--font-mono);
+    white-space: nowrap;
+  }
+  .rec__always {
+    display: flex;
+    gap: var(--space-2);
+    align-items: baseline;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+  .rec__total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px dashed var(--color-border-strong);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-strong);
+  }
+  .rec__sum {
+    display: grid;
+    justify-items: end;
+    gap: 0.1rem;
+  }
+  .rec__label-line {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .rec__total .num {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xl);
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+  .rec__total small {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-regular);
+    color: var(--color-text-muted);
+    letter-spacing: 0;
+  }
+  .rec__note {
+    margin-top: calc(var(--space-2) * -1);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+  .rec__note b {
+    font-family: var(--font-mono);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-strong);
+  }
+  .rec__once {
+    display: grid;
+    gap: var(--space-2);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+  .rec__once li {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+  .rec__once .num {
+    font-family: var(--font-mono);
+    color: var(--color-text);
+  }
+  .rec__notice,
+  .rec__estimate {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+  .rec__side {
+    display: grid;
+    gap: var(--space-8);
+    justify-items: start;
+  }
+  .rec__text {
+    font-size: var(--text-lg);
+    color: var(--color-text);
+    max-width: 38rem;
+  }
+  .rec__block {
+    display: grid;
+    gap: var(--space-3);
+    width: 100%;
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-border);
+  }
+  .rec__h {
+    font-size: var(--text-base);
+  }
+  .rec__kits {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .rec__kit {
+    display: flex;
+    gap: var(--space-4);
+    align-items: flex-start;
+  }
+  .rec__kit-icons {
+    display: inline-flex;
+    justify-content: center;
+    min-width: 4.5rem;
+    gap: var(--space-1);
+    padding: var(--space-2);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-muted);
+    color: var(--color-text-strong);
+    flex: 0 0 auto;
+  }
+  .rec__kit-body {
+    display: grid;
+    gap: 0.1rem;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .rec__kit-body b {
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-strong);
+  }
+  .rec__small {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .rec__later {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-6);
+  }
+  .rec__later li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .rec__later-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-strong);
+  }
+
+  @media (max-width: 1024px) {
+    .rec {
+      grid-template-columns: 1fr;
+      gap: var(--space-10);
+    }
+    .rec__ticket {
+      max-width: 30rem;
+      width: 100%;
+    }
+  }
+</style>

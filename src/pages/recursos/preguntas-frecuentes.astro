@@ -1,9 +1,13 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import { ctaHref } from '@/lib/cta';
 import PageHero from '@/components/blocks/PageHero.astro';
 import FaqList from '@/components/blocks/FaqList.astro';
 import CtaBand from '@/components/blocks/CtaBand.astro';
-import { faqGroups } from '@/data/faqs';
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+import { faqGroups, type FaqGroup } from '@/data/faqs';
+import { getFamily } from '@/data/solutions';
 import { breadcrumbJsonLd, faqJsonLd } from '@/lib/seo';
 
 const crumbs = [
@@ -12,11 +16,14 @@ const crumbs = [
   { name: 'Preguntas frecuentes', path: '/recursos/preguntas-frecuentes' },
 ];
 const all = faqGroups.flatMap((g) => g.items);
+/* El icono de cada grupo: el de su familia; precios y empresa, el suyo */
+const groupIcon = (id: FaqGroup['id']): IconName =>
+  id === 'precios' ? 'receipt' : id === 'empresa' ? 'building' : getFamily(id).icon;
 ---
 
 <BaseLayout
   title="Preguntas frecuentes sobre alaCarta"
-  description="Respuestas directas sobre la plataforma alaCarta: hardware, internet, VeriFactu, varios locales, precios sin comisiones, permanencia, prueba, puesta en marcha y soporte."
+  description="Respuestas directas sobre alaCarta: sala y cocina, canales propios, gestión y equipo, equipamiento, precios sin comisiones y en qué punto estamos."
   path="/recursos/preguntas-frecuentes"
   jsonLd={[breadcrumbJsonLd(crumbs), faqJsonLd(all)]}
 >
@@ -34,15 +41,26 @@ const all = faqGroups.flatMap((g) => g.items);
         <ul role="list">
           {faqGroups.map((g) => (
             <li>
-              <a href={`#${g.id}`}>{g.title}</a>
+              <a href={`#${g.id}`}>
+                <Icon name={groupIcon(g.id)} size={16} />
+                {g.title}
+              </a>
             </li>
           ))}
         </ul>
       </nav>
       <div class="faq-page__groups">
         {faqGroups.map((g) => (
-          <section id={g.id} class="faq-page__group">
-            <h2>{g.title}</h2>
+          <section id={g.id} class="faq-page__group" aria-labelledby={`${g.id}-title`}>
+            <header class="faq-page__group-head">
+              <span class="faq-page__icon">
+                <Icon name={groupIcon(g.id)} size={20} />
+              </span>
+              <div>
+                <h2 id={`${g.id}-title`}>{g.title}</h2>
+                {g.text && <p class="muted">{g.text}</p>}
+              </div>
+            </header>
             <FaqList items={g.items} />
           </section>
         ))}
@@ -53,8 +71,11 @@ const all = faqGroups.flatMap((g) => g.items);
   <CtaBand
     title="¿Otra pregunta?"
     text="Cuéntanos tu caso y te respondemos con detalle, sin guion comercial."
-    primary={{ label: 'Escribirnos', href: '/contacto' }}
-    secondary={{ label: 'Solicitar demo', href: '/solicitar-demo' }}
+    origen="faq-cierre"
+    extraLink={{
+      label: 'O escríbenos tu pregunta',
+      href: ctaHref({ to: 'contacto', origen: 'faq-cierre' }),
+    }}
   />
 </BaseLayout>
 
@@ -76,6 +97,9 @@ const all = faqGroups.flatMap((g) => g.items);
   }
   .faq-page__nav a {
     color: var(--color-text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
   }
   .faq-page__nav a:hover {
     color: var(--color-text-strong);
@@ -84,9 +108,32 @@ const all = faqGroups.flatMap((g) => g.items);
     display: grid;
     gap: var(--space-16);
   }
+  .faq-page__group {
+    scroll-margin-top: calc(var(--header-h) + var(--space-6));
+  }
+  .faq-page__group-head {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: start;
+    margin-bottom: var(--space-6);
+  }
+  .faq-page__group-head p {
+    font-size: var(--text-sm);
+    margin-top: var(--space-1);
+  }
+  .faq-page__icon {
+    display: inline-flex;
+    width: 2.5rem;
+    height: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-strong);
+  }
   .faq-page__group h2 {
     font-size: var(--text-2xl);
-    margin-bottom: var(--space-6);
   }
   @media (max-width: 1024px) {
     .faq-page {
@@ -99,7 +146,7 @@ const all = faqGroups.flatMap((g) => g.items);
     .faq-page__nav ul {
       display: flex;
       flex-wrap: wrap;
-      gap: var(--space-4);
+      gap: var(--space-3) var(--space-5);
     }
   }
 </style>

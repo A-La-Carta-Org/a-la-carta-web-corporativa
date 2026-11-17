@@ -1,5 +1,6 @@
 ---
 /** Tres o cuatro cosas en paralelo, con filete arriba. Sin tarjetas. */
+import StatusChip from '@/components/ui/StatusChip.astro';
 import type { Feature } from '@/data/solutions';
 
 interface Props {
@@ -13,12 +14,16 @@ const { items, columns = 3 } = Astro.props;
   {items.map((f) => (
     <li class="column">
       <h3>{f.title}</h3>
+      <StatusChip status={f.status} />
       <p>{f.text}</p>
     </li>
   ))}
 </ul>
 
 <style>
+  .feature-columns :global(.chip) {
+    align-self: flex-start;
+  }
   .feature-columns {
     display: grid;
     grid-template-columns: repeat(var(--cols), minmax(0, 1fr));

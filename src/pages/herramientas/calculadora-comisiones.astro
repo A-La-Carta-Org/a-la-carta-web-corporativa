@@ -1,0 +1,177 @@
+---
+/**
+ * Calculadora de comisiones (D6, docs/auditoria/09, 10 y 13): pedidos por agregadores, reservas
+ * que pagan por comensal y pagos con QR con comisión → lo que se paga al año y lo que costaría
+ * el canal propio con alaCarta. Isla `CommissionCalculator`; sin JavaScript enseña el ejemplo con
+ * los valores de partida.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import Icon from '@/components/ui/Icon.astro';
+import CommissionCalculator from '@/components/islands/CommissionCalculator.vue';
+import { COMMISSION_RANGE, addonModules, fmtPrice, getPlan } from '@/data/pricing';
+import { breadcrumbJsonLd } from '@/lib/seo';
+import { ctaHref } from '@/lib/cta';
+
+const path = '/herramientas/calculadora-comisiones';
+const crumbs = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Recursos', path: '/recursos' },
+  { name: 'Calculadora de comisiones', path },
+];
+const pedidos = addonModules.find((m) => m.module === 'pedidos-online')!;
+const reservas = addonModules.find((m) => m.module === 'reservas')!;
+const completo = getPlan('completo');
+const steps = [
+  {
+    title: 'Pedidos × ticket medio × comisión',
+    text: 'Lo que se queda el agregador cada mes, multiplicado por doce. Si usas su reparto, la comisión suele ser más alta.',
+  },
+  {
+    title: 'Comensales × coste por comensal',
+    text: 'Algunos portales de reservas cobran por cada persona que se sienta. Pon lo que diga tu factura.',
+  },
+  {
+    title: 'Pagos con QR × (porcentaje + fijo)',
+    text: 'Lo que cobra la plataforma del QR por cada pago, aparte de la pasarela. La pasarela la pagas igual con cualquier sistema.',
+  },
+  {
+    title: 'Lo que pasa a tu canal, menos su cuota',
+    text: `Con alaCarta, Pedidos online cuesta ${fmtPrice(pedidos.monthly)}/mes y Reservas ${fmtPrice(reservas.monthly)}/mes sobre el plan Esencial, o van dentro del ${completo.name}. La carta QR con pago va en todos los planes.`,
+  },
+];
+---
+
+<BaseLayout
+  title="Calculadora de comisiones de delivery y reservas"
+  description="Cuánto pagas al año en comisiones a agregadores y plataformas de reservas, y cuánto dejarías de pagar si una parte de tus pedidos pasa a tu canal propio."
+  path={path}
+  jsonLd={breadcrumbJsonLd(crumbs)}
+>
+  <PageHero
+    variant="compact"
+    breadcrumbs={crumbs}
+    eyebrow="Herramientas"
+    eyebrowIcon="calculator"
+    title="¿Cuánto pagas al año en comisiones?"
+    text="La mayoría de locales sabe lo que paga al mes por su TPV, pero no lo que se le va en comisiones por pedido y por reserva. La cuenta es sencilla y conviene hacerla con tus números."
+    primary={{ label: 'Hacer la cuenta', href: '#calculadora' }}
+    secondary={{
+      label: 'Monta tu alaCarta',
+      href: ctaHref({ to: 'precios', add: 'pedidos-online', origen: 'calculadora', hash: 'monta' }),
+    }}
+  />
+
+  <section class="section is-sm" id="calculadora">
+    <div class="container">
+      <CommissionCalculator client:visible origen="calculadora" range={COMMISSION_RANGE} />
+    </div>
+  </section>
+
+  <section class="section has-rule">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Cómo se calcula"
+        title="Cuatro cuentas, sin trucos"
+        text="La calculadora no guarda nada ni te pide datos. Hace las mismas cuentas que harías con la factura delante."
+      />
+      <ol class="calc-steps">
+        {steps.map((st, i) => (
+          <li class="column">
+            <span class="calc-steps__n num">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{st.title}</h3>
+            <p>{st.text}</p>
+          </li>
+        ))}
+      </ol>
+      <p class="muted calc-source">
+        Las comisiones de los agregadores suelen ir del {COMMISSION_RANGE.min} % al{' '}
+        {COMMISSION_RANGE.max} % por pedido, según el plan y si usan su reparto. Fuente:{' '}
+        {COMMISSION_RANGE.source}. Es un rango orientativo: tu contrato manda. Los precios de
+        alaCarta son orientativos de lanzamiento y sin IVA.
+      </p>
+    </div>
+  </section>
+
+  <section class="section is-soft">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Lo sensato"
+        title="Agregadores para que te conozcan, tu canal para que vuelvan"
+        text="No se trata de dejar los agregadores, sino de que quien ya te conoce pida y reserve directo, sin comisión."
+      />
+      <p class="calc-more">
+        <a href="/momentos/dejar-las-comisiones" class="link-arrow">
+          Cómo dejar de pagar comisiones
+          <Icon name="arrow-right" size={14} />
+        </a>
+        <a href="/recursos/guias/canal-propio-o-agregadores" class="link-arrow">
+          Guía: canal propio o agregadores, las cuentas reales
+          <Icon name="arrow-right" size={14} />
+        </a>
+      </p>
+    </div>
+  </section>
+
+  <CtaBand
+    origen="calculadora-cierre"
+    calcLink={{
+      label: 'Monta tu canal propio',
+      href: ctaHref({
+        to: 'precios',
+        add: 'pedidos-online',
+        origen: 'calculadora-cierre',
+        hash: 'monta',
+      }),
+      text: 'Pedidos online sin comisiones: mira cuánto te cuesta al mes.',
+    }}
+  />
+</BaseLayout>
+
+<style>
+  section[id] {
+    scroll-margin-top: var(--header-h);
+  }
+  .calc-more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-8);
+  }
+  .calc-steps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-8);
+    margin-top: var(--space-10);
+  }
+  .calc-steps h3 {
+    font-size: var(--text-lg);
+    margin-top: var(--space-2);
+  }
+  .calc-steps p {
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .calc-steps__n {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+  .calc-source {
+    font-size: var(--text-xs);
+    max-width: 48rem;
+    margin-top: var(--space-8);
+  }
+  @media (max-width: 1024px) {
+    .calc-steps {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 640px) {
+    .calc-steps {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

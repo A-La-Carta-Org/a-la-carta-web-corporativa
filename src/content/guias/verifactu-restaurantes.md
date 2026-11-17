@@ -2,8 +2,12 @@
 title: 'VeriFactu para restaurantes y bares: lo esencial'
 description: 'Qué es VeriFactu, a quién afecta, qué plazos están vigentes a noviembre de 2026 y qué tiene que hacer un negocio de hostelería con su TPV y su facturación.'
 publishedAt: 2026-11-16
+reviewedAt: 2026-11-16
 readingMinutes: 6
-related: ['tpv', 'gestion']
+related: ['tpv', 'backoffice']
+moments: ['cambiar-de-tpv']
+cta:
+  modulo: 'tpv'
 ---
 
 Esta guía resume la normativa tal y como está publicada a 16 de noviembre de 2026. Los plazos pueden cambiar: la actualizaremos cuando haya novedades oficiales en el Boletín Oficial del Estado.

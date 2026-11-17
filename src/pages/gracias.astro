@@ -1,0 +1,513 @@
+---
+/**
+ * Confirmación tras enviar un formulario (docs/auditoria/11 §5). `noindex`.
+ *
+ * La variante sale de la URL: `?tipo=demo|llamada|propuesta|fundador|contacto`, `momento=` (para
+ * la guía de «mientras tanto») y `via=correo` (si se envió por correo porque no hay endpoint). El
+ * nombre, el correo y la franja **no** viajan en la URL: el formulario los deja en sessionStorage
+ * (`alacarta:solicitud`) y aquí se leen con try/catch. Sin JavaScript se ve la variante «demo».
+ *
+ * Evento de conversión: se dispara aquí (`alacarta:conversion`), no en el clic, para cuando haya
+ * analítica (docs/TODO.md). Hoy no lo escucha nadie.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+import { CONTACT_EMAIL, DEMO_MINUTES, REPLY_HOURS, SUPPORT_EMAIL } from '@/data/site';
+import { TRIAL_DAYS, ONSITE_TRAINING_FROM } from '@/data/pricing';
+import { ctaHref } from '@/lib/cta';
+
+type V = 'demo' | 'llamada' | 'propuesta' | 'fundador' | 'contacto';
+const ALL = 'demo llamada propuesta fundador contacto';
+const SALES = 'demo llamada propuesta fundador';
+
+const heads: { v: V; title: string; lead: string }[] = [
+  {
+    v: 'demo',
+    title: 'Gracias. Ya lo tenemos.',
+    lead: `Te escribimos a {email} en menos de ${REPLY_HOURS} horas laborables para buscar un hueco para la videollamada.`,
+  },
+  {
+    v: 'llamada',
+    title: 'Hecho. Te llamamos.',
+    lead: `Te llamamos en menos de ${REPLY_HOURS} horas laborables, {franja}.`,
+  },
+  {
+    v: 'propuesta',
+    title: 'Gracias. Nos ponemos con tu propuesta.',
+    lead: `Te escribimos a {email} en menos de ${REPLY_HOURS} horas laborables para confirmar lo que has montado y mandarte la propuesta por escrito.`,
+  },
+  {
+    v: 'fundador',
+    title: 'Gracias por querer ser de los primeros.',
+    lead: `Revisamos tu solicitud y te escribimos a {email} en menos de ${REPLY_HOURS} horas laborables con las condiciones de local fundador por escrito.`,
+  },
+  {
+    v: 'contacto',
+    title: 'Mensaje recibido.',
+    lead: `Lo lee una persona del equipo y te contestamos a {email} en menos de ${REPLY_HOURS} horas laborables.`,
+  },
+];
+
+const steps: { v: string; title: string; text: string }[] = [
+  {
+    v: 'demo propuesta',
+    title: 'Te escribimos',
+    text: 'Para buscar un hueco que te venga bien a ti, no a nosotros.',
+  },
+  {
+    v: 'fundador',
+    title: 'Revisamos tu local',
+    text: 'Miramos si encaja con lo que podemos acompañar bien ahora mismo.',
+  },
+  {
+    v: 'demo fundador',
+    title: `${DEMO_MINUTES} minutos con tu caso`,
+    text: 'Una videollamada con tu carta y tu forma de trabajar delante, no una presentación.',
+  },
+  {
+    v: 'propuesta',
+    title: 'Repasamos tu configuración',
+    text: 'Te confirmamos lo que necesitas y lo que sobra, y te preguntamos lo que falte.',
+  },
+  {
+    v: 'demo propuesta',
+    title: 'Propuesta por escrito',
+    text: `Módulos, equipo y precio cerrado. Si quieres seguir, ${TRIAL_DAYS} días de prueba sin tarjeta.`,
+  },
+  {
+    v: 'llamada',
+    title: 'Te llamamos',
+    text: 'En la franja que nos has dicho, al teléfono que nos has dejado.',
+  },
+  {
+    v: 'llamada',
+    title: 'Resolvemos tus dudas',
+    text: 'Qué necesitas, cuánto cuesta y cómo se cambia sin cerrar el local.',
+  },
+  {
+    v: 'llamada',
+    title: 'Si encaja, el siguiente paso',
+    text: 'Una demo con pantalla o la propuesta por escrito. Tú decides.',
+  },
+  {
+    v: 'fundador',
+    title: 'Condiciones por escrito',
+    text: `Precio bloqueado y puesta en marcha presencial incluida, que normalmente cuesta desde ${ONSITE_TRAINING_FROM} €.`,
+  },
+  {
+    v: 'contacto',
+    title: 'Lo lee una persona',
+    text: 'Alguien del equipo lo lee y, si no es suyo, lo pasa a quien lo lleva.',
+  },
+  {
+    v: 'contacto',
+    title: 'Te contestamos',
+    text: `En menos de ${REPLY_HOURS} horas laborables, por correo.`,
+  },
+];
+
+const prepare = [
+  'Tu carta actual, en PDF o una foto',
+  'Cuántas mesas tienes y cómo se reparten (sala, terraza, barra)',
+  'El equipo que usáis hoy: TPV, impresoras, datáfono',
+  'Lo que más te molesta de cómo trabajáis ahora',
+];
+
+interface Link {
+  v: string;
+  /** Momento con el que se enseña (`none` = sin momento) */
+  m?: string;
+  href: string;
+  icon: IconName;
+  title: string;
+  text: string;
+}
+const meanwhile: Link[] = [
+  {
+    v: SALES,
+    href: ctaHref({ to: 'probar', origen: 'gracias', hash: 'simulador' }),
+    icon: 'play',
+    title: 'Mira cómo viaja una comanda',
+    text: 'Del comandero a la cocina y a la caja, en el simulador.',
+  },
+  {
+    v: SALES,
+    href: ctaHref({ to: 'carta', origen: 'gracias' }),
+    icon: 'qr',
+    title: 'Abre la carta de ejemplo',
+    text: 'Lo que verá tu cliente al escanear el QR de la mesa.',
+  },
+  {
+    v: SALES,
+    m: 'abrir',
+    href: '/momentos/abrir-un-local',
+    icon: 'flag',
+    title: 'Si vas a abrir',
+    text: 'Qué decidir antes del primer servicio y en qué orden.',
+  },
+  {
+    v: SALES,
+    m: 'cambiar',
+    href: '/momentos/cambiar-de-tpv',
+    icon: 'refresh-cw',
+    title: 'Si cambias de TPV',
+    text: 'Cómo se hace el cambio sin cerrar el local ni perder datos.',
+  },
+  {
+    v: SALES,
+    m: 'anadir',
+    href: '/soluciones',
+    icon: 'layers',
+    title: 'Todo lo que se conecta',
+    text: 'Las piezas del ecosistema y cómo pasan los datos de una a otra.',
+  },
+  {
+    v: SALES,
+    m: 'mirar',
+    href: ctaHref({ to: 'precios', origen: 'gracias', hash: 'monta' }),
+    icon: 'receipt',
+    title: 'Monta tu alaCarta',
+    text: 'Elige piezas y mira el precio orientativo al momento.',
+  },
+  {
+    v: SALES,
+    m: 'none',
+    href: '/puesta-en-marcha',
+    icon: 'wrench',
+    title: 'Cómo es la puesta en marcha',
+    text: 'Qué hacemos nosotros y qué necesitamos de ti.',
+  },
+  {
+    v: 'contacto',
+    href: '/recursos/guias',
+    icon: 'book',
+    title: 'Guías',
+    text: 'TPV, carta QR, VeriFactu: lo que conviene saber, sin letra pequeña.',
+  },
+  {
+    v: 'contacto',
+    href: '/novedades',
+    icon: 'newspaper',
+    title: 'Novedades',
+    text: 'Lo que ya funciona, lo que está en piloto y lo que viene.',
+  },
+  {
+    v: 'contacto',
+    href: ctaHref({ to: 'probar', origen: 'gracias-contacto' }),
+    icon: 'play',
+    title: 'Pruébalo',
+    text: 'Las demos de alaCarta, sin datos ni registro.',
+  },
+];
+---
+
+<BaseLayout
+  title="Gracias, te escribimos enseguida"
+  description={`Hemos recibido tu solicitud. Te contestamos en menos de ${REPLY_HOURS} horas laborables.`}
+  path="/gracias"
+  noindex
+>
+  <div class="thanks" data-variant="demo" data-momento="none">
+    <script is:inline>
+      (function () {
+        const el = document.currentScript && document.currentScript.parentElement;
+        if (!el) return;
+        const q = new URLSearchParams(window.location.search);
+        const tipos = ['demo', 'llamada', 'propuesta', 'fundador', 'contacto'];
+        const tipo = tipos.indexOf(q.get('tipo')) >= 0 ? q.get('tipo') : 'demo';
+        const momentos = ['abrir', 'cambiar', 'anadir', 'mirar'];
+        el.setAttribute('data-variant', tipo);
+        el.setAttribute(
+          'data-momento',
+          momentos.indexOf(q.get('momento')) >= 0 ? q.get('momento') : 'none'
+        );
+        if (q.get('via') === 'correo') el.setAttribute('data-via', 'correo');
+        if (tipo === 'contacto' && q.get('motivo') === 'soporte')
+          el.setAttribute('data-soporte', '');
+      })();
+    </script>
+
+    <section class="section thanks__hero">
+      <div class="container is-narrow thanks__inner">
+        <span class="thanks__icon">
+          <Icon name="check" size={24} />
+        </span>
+        <div class="thanks__head">
+          {/* Un solo h1 en el HTML: las variantes son spans y el CSS deja visible la activa */}
+          <h1>
+            {heads.map((h) => (
+              <span data-v={h.v}>{h.title}</span>
+            ))}
+          </h1>
+          {heads.map((h) => (
+            <p data-v={h.v} class="lead">
+              {h.lead
+                .split(/(\{email\}|\{franja\})/)
+                .map((part) =>
+                  part === '{email}' ? (
+                    <strong data-slot="email">tu correo</strong>
+                  ) : part === '{franja}' ? (
+                    <strong data-slot="franja">en la franja que nos has dicho</strong>
+                  ) : (
+                    part
+                  )
+                )}
+            </p>
+          ))}
+        </div>
+        <p class="thanks__mail muted" data-v={ALL}>
+          ¿No te llega nada? Mira en la carpeta de correo no deseado o escríbenos a{' '}
+          <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+        </p>
+        <p class="notice thanks__via">
+          Si se te ha abierto el correo con tu solicitud, solo queda darle a enviar. Si no se ha
+          abierto, escríbenos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> y lo vemos
+          igual.
+        </p>
+        <p class="notice thanks__support">
+          Si es urgente y ya trabajas con alaCarta, el soporte está en{' '}
+          <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>.
+        </p>
+      </div>
+    </section>
+
+    <section class="section is-soft thanks__next" aria-labelledby="thanks-next">
+      <div class="container is-narrow">
+        <div class="section-header">
+          <span class="eyebrow">Qué pasa ahora</span>
+          <h2 id="thanks-next">Los siguientes pasos</h2>
+        </div>
+        <ol role="list" class="thanks__steps">
+          {steps.map((s) => (
+            <li data-v={s.v}>
+              <span class="thanks__dot" aria-hidden="true" />
+              <div>
+                <h3>{s.title}</h3>
+                <p class="muted">{s.text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+
+    <section class="section thanks__prepare" data-v={SALES} aria-labelledby="thanks-prepare">
+      <div class="container is-narrow">
+        <div class="section-header">
+          <span class="eyebrow" data-v="demo propuesta fundador">
+            Para la demo
+          </span>
+          <span class="eyebrow" data-v="llamada">
+            Para la llamada
+          </span>
+          <h2 id="thanks-prepare">Si lo tienes a mano, mejor</h2>
+          <p>
+            No es obligatorio, pero con esto vemos tu caso desde el primer minuto, no uno de
+            ejemplo.
+          </p>
+        </div>
+        <ul role="list" class="check-list">
+          {prepare.map((p) => (
+            <li>{p}</li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <section class="section has-rule" aria-labelledby="thanks-meanwhile">
+      <div class="container">
+        <div class="section-header">
+          <span class="eyebrow">Mientras tanto</span>
+          <h2 id="thanks-meanwhile">Échale un vistazo</h2>
+        </div>
+        <ul role="list" class="thanks__links">
+          {meanwhile.map((m) => (
+            <li data-v={m.v} data-m={m.m}>
+              <a href={m.href} class="card is-link thanks__link">
+                <Icon name={m.icon} size={20} />
+                <span>
+                  <strong>{m.title}</strong>
+                  <span class="muted">{m.text}</span>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <script>
+      import { readLastLead } from '@/lib/attribution';
+
+      const root = document.querySelector<HTMLElement>('.thanks');
+      const last = readLastLead();
+      const tipo = root?.dataset.variant;
+      if (root && last && last.tipo === tipo) {
+        if (last.email) {
+          root.querySelectorAll<HTMLElement>('[data-slot="email"]').forEach((el) => {
+            el.textContent = last.email!;
+          });
+        }
+        if (last.franja && last.franja !== 'Me da igual') {
+          root.querySelectorAll<HTMLElement>('[data-slot="franja"]').forEach((el) => {
+            el.textContent = last.franja!.toLowerCase();
+          });
+        }
+        const name = last.nombre;
+        if (name) {
+          root.querySelectorAll<HTMLElement>('.thanks__head h1 > span').forEach((h) => {
+            h.textContent = h.textContent!.replace(/^(Gracias|Hecho|Mensaje recibido)/, (m) =>
+              m === 'Mensaje recibido' ? m : `${m}, ${name}`
+            );
+          });
+        }
+      }
+      // Enviado por correo (sin endpoint): aún no lo tenemos, falta darle a enviar
+      if (root?.dataset.via === 'correo') {
+        root.querySelectorAll<HTMLElement>('.thanks__head h1 > span').forEach((h) => {
+          h.textContent = h.textContent!.replace('Ya lo tenemos.', 'Solo falta enviar el correo.');
+        });
+      }
+      // Evento de conversión: aquí, al llegar a /gracias, no en el clic (docs/auditoria/11 §5)
+      window.dispatchEvent(new CustomEvent('alacarta:conversion', { detail: { tipo } }));
+    </script>
+  </div>
+</BaseLayout>
+
+<style>
+  /* Variantes: solo se ve lo de la variante activa */
+  .thanks[data-variant='demo'] [data-v]:not([data-v~='demo']),
+  .thanks[data-variant='llamada'] [data-v]:not([data-v~='llamada']),
+  .thanks[data-variant='propuesta'] [data-v]:not([data-v~='propuesta']),
+  .thanks[data-variant='fundador'] [data-v]:not([data-v~='fundador']),
+  .thanks[data-variant='contacto'] [data-v]:not([data-v~='contacto']) {
+    display: none;
+  }
+  /* «Mientras tanto»: la guía según el momento */
+  .thanks[data-momento='none'] [data-m]:not([data-m='none']),
+  .thanks[data-momento='abrir'] [data-m]:not([data-m='abrir']),
+  .thanks[data-momento='cambiar'] [data-m]:not([data-m='cambiar']),
+  .thanks[data-momento='anadir'] [data-m]:not([data-m='anadir']),
+  .thanks[data-momento='mirar'] [data-m]:not([data-m='mirar']) {
+    display: none;
+  }
+  .thanks__via,
+  .thanks__support {
+    display: none;
+  }
+  .thanks[data-via='correo'] .thanks__via,
+  .thanks[data-soporte] .thanks__support {
+    display: block;
+  }
+
+  .thanks__hero {
+    padding-bottom: var(--space-16);
+  }
+  .thanks__inner {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    gap: var(--space-5);
+  }
+  .thanks__head {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .thanks__icon {
+    width: 3rem;
+    height: 3rem;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-pill);
+    background: var(--black);
+    color: var(--white);
+  }
+  .thanks__inner .lead strong {
+    color: var(--color-text-strong);
+    font-weight: var(--weight-medium);
+  }
+  .thanks__inner a {
+    color: var(--color-text-strong);
+    text-decoration: underline;
+  }
+  .thanks__mail {
+    font-size: var(--text-sm);
+  }
+  .thanks__via,
+  .thanks__support {
+    text-align: left;
+    max-width: 36rem;
+  }
+  .thanks__next .section-header,
+  .thanks__prepare .section-header {
+    margin-bottom: var(--space-8);
+  }
+  .thanks__steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-8);
+    counter-reset: paso;
+  }
+  .thanks__steps li {
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-border);
+    counter-increment: paso;
+  }
+  .thanks__dot {
+    width: 1.75rem;
+    height: 1.75rem;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-pill);
+    background: var(--black);
+    color: var(--white);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+  }
+  .thanks__dot::before {
+    content: counter(paso);
+  }
+  .thanks__steps h3 {
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-1);
+  }
+  .thanks__steps p {
+    font-size: var(--text-sm);
+  }
+  .thanks__links {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+  .thanks__link {
+    display: flex;
+    gap: var(--space-4);
+    align-items: flex-start;
+    height: 100%;
+  }
+  .thanks__link > span {
+    display: grid;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+  }
+  .thanks__link strong {
+    font-family: var(--font-display);
+    font-size: var(--text-base);
+    color: var(--color-text-strong);
+  }
+  @media (max-width: 860px) {
+    .thanks__steps {
+      grid-template-columns: 1fr;
+      gap: var(--space-5);
+    }
+  }
+  @media (max-width: 720px) {
+    .thanks__links {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

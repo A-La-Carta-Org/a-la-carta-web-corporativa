@@ -1,0 +1,25 @@
+---
+/**
+ * Carta QR de ejemplo de «La Plaza» (restaurante ficticio), D3 de docs/auditoria/10. Es la página
+ * que abren los QR de la web (placas, megamenú, carta QR, /demo). La isla `DemoCarta` lee la
+ * carta de `src/data/demo.ts`: categorías, alérgenos y filtros, idiomas, menú del día por
+ * horario, pedido desde la mesa y pago simulado. Sin JavaScript se ve la carta completa.
+ *
+ * `noindex` (no es contenido para buscadores) y fuera del sitemap, pero enlazable y compartible.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import DemoCarta from '@/components/islands/DemoCarta.vue';
+
+const path = '/demo/carta';
+---
+
+<BaseLayout
+  title="Carta de ejemplo: La Plaza"
+  description="Carta digital QR de ejemplo de alaCarta: un restaurante ficticio con categorías, alérgenos, idiomas, pedido desde la mesa y pago simulado."
+  path={path}
+  noindex
+  headerVariant="minimal"
+>
+  <h1 class="sr-only">Carta de ejemplo de La Plaza, un restaurante ficticio</h1>
+  <DemoCarta client:idle mode="page" origen="demo-carta" />
+</BaseLayout>

@@ -1,0 +1,254 @@
+---
+/**
+ * Índice de demos (docs/auditoria/10). Todas con el mismo restaurante ficticio, La Plaza
+ * (`src/data/demo.ts`):
+ *
+ *  - D1 · Simulador del servicio, aquí a pantalla completa (`#simulador`). Lee `?comanda=` (viene
+ *    de la carta QR) y `?pantalla=` (viene de TPV, comandero o cocina).
+ *  - D2 · «Un cambio, todos los canales» (`#canales`).
+ *  - El resto, enlazadas: carta QR (D3, con QR), llamada con IA (D4), mapa del ecosistema (D7),
+ *    placa QR (D8), comprobador de equipo y calculadora de comisiones.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import QrCode from '@/components/ui/QrCode.astro';
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+import ServiceSimulator from '@/components/islands/ServiceSimulator.vue';
+import ChannelsDemo from '@/components/islands/ChannelsDemo.vue';
+import { DEMO_CARTA_URL } from '@/data/navigation';
+import { breadcrumbJsonLd } from '@/lib/seo';
+import { ctaHref } from '@/lib/cta';
+
+const path = '/demo';
+const crumbs = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Demo', path },
+];
+
+const more: {
+  icon: IconName;
+  title: string;
+  text: string;
+  href: string;
+  label: string;
+  soon?: boolean;
+}[] = [
+  {
+    icon: 'ai-call',
+    title: 'Una llamada con IA',
+    text: 'Tres llamadas de ejemplo: una reserva que queda por confirmar, un pedido para recoger y una alergia que pasa al local.',
+    href: '/soluciones/llamadas-ia#pruebalo',
+    label: 'Ver la llamada',
+    soon: true,
+  },
+  {
+    icon: 'layers',
+    title: 'El mapa del ecosistema',
+    text: 'Toca un producto y mira con qué se conecta y qué gana con ello.',
+    href: '/soluciones',
+    label: 'Abrir el mapa',
+  },
+  {
+    icon: 'qr-plate',
+    title: 'Diseña tu placa QR',
+    text: 'Acabado, formato, nombre del local y número de mesa. El QR de la vista previa funciona.',
+    href: '/hardware/placas-qr#disena',
+    label: 'Diseñar la placa',
+  },
+  {
+    icon: 'printer',
+    title: '¿Te sirve tu equipo?',
+    text: 'Cuatro preguntas y te decimos qué aprovechas y qué te falta.',
+    href: '/hardware#comprobador',
+    label: 'Comprobar mi equipo',
+  },
+  {
+    icon: 'calculator',
+    title: 'Lo que pagas en comisiones',
+    text: 'Calcula lo que se llevan al año los agregadores y las plataformas de reservas.',
+    href: ctaHref({ to: 'calculadora', origen: 'demo-indice' }),
+    label: 'Calcular',
+  },
+];
+---
+
+<BaseLayout
+  title="Demo de alaCarta: pruébalo sin registrarte"
+  description="Toma una comanda y síguela hasta la caja, cambia un precio y míralo en todos los canales, abre la carta QR de ejemplo. Sin registrarte ni dejar tus datos."
+  path={path}
+  jsonLd={breadcrumbJsonLd(crumbs)}
+>
+  <PageHero
+    variant="compact"
+    breadcrumbs={crumbs}
+    eyebrow="Pruébalo"
+    eyebrowIcon="play"
+    title="Pruébalo sin registrarte"
+    text="Sin formularios ni comerciales. La Plaza es un restaurante ficticio: toma una comanda y síguela hasta la caja, cambia un precio y míralo en todos los canales o abre su carta en tu móvil."
+  />
+
+  <section class="section is-sm demo-sim" id="simulador">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Simulador del servicio"
+        title="Una comanda, de la mesa a la caja"
+        text="Haces de camarero, de cocina y de caja. Son tres pantallas del mismo sistema: lo que tocas en una aparece en las otras, sin copiar nada."
+      />
+      <ServiceSimulator client:visible origen="demo-simulador" />
+    </div>
+  </section>
+
+  <section class="section is-soft" id="canales">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Un cambio, todos los canales"
+        title="Cambia un precio. Mira dónde cambia."
+        text="Un backoffice reducido con tres platos. Sube un precio o marca un plato como agotado: el TPV, la carta QR, la tienda online y la app lo ven a la vez."
+      />
+      <ChannelsDemo client:visible origen="demo-cambio-canales" />
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Más demos"
+        title="Todo lo que puedes tocar"
+        text="Con el mismo restaurante de ejemplo. Ninguna pide tus datos."
+      />
+      <div class="card demo-carta">
+        <div class="demo-carta__copy">
+          <span class="eyebrow has-icon">
+            <Icon name="qr" size={16} /> Carta QR de ejemplo
+          </span>
+          <h3>La carta de La Plaza, en tu móvil</h3>
+          <p class="muted">
+            Lo que ve tu cliente al sentarse: idiomas, alérgenos y filtros, menú del día por
+            horario, pedido desde la mesa y pago de su parte (simulado). Si estás en el móvil,
+            ábrela directamente.
+          </p>
+          <a href={ctaHref({ to: 'carta', origen: 'demo-indice' })} class="btn is-primary">
+            Abrir la carta de ejemplo
+            <Icon name="arrow-right" size={16} class="btn-arrow" />
+          </a>
+        </div>
+        <div class="demo-carta__qr">
+          <QrCode url={DEMO_CARTA_URL} size={152} label="Código QR que abre la carta de ejemplo" />
+          <p>Escanéalo</p>
+        </div>
+      </div>
+
+      <ul role="list" class="demo-more">
+        {more.map((d) => (
+          <li>
+            <a href={d.href} class="card is-link demo-more__card">
+              <span class="demo-more__icon">
+                <Icon name={d.icon} size={20} />
+              </span>
+              <span class="demo-more__title">
+                {d.title}
+                {d.soon && <span class="chip is-status">En camino</span>}
+              </span>
+              <span class="muted demo-more__text">{d.text}</span>
+              <span class="link-arrow">
+                {d.label}
+                <Icon name="arrow-right" size={14} />
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <CtaBand
+    title="¿Lo vemos con tu carta?"
+    text="En una videollamada corta montamos un caso como el tuyo y te enseñamos el sistema funcionando."
+    origen="demo-cierre"
+    tryLink={{
+      label: 'Abrir la carta de ejemplo',
+      href: ctaHref({ to: 'carta', origen: 'demo-cierre' }),
+      text: 'Pide desde el móvil como lo haría tu cliente y mira la comanda en cocina.',
+    }}
+  />
+</BaseLayout>
+
+<style>
+  .demo-carta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-10);
+    align-items: center;
+    padding: var(--space-10);
+    margin-bottom: var(--space-8);
+  }
+  .demo-carta__copy {
+    display: grid;
+    gap: var(--space-4);
+    justify-items: start;
+    max-width: 36rem;
+  }
+  .demo-carta__copy h3 {
+    font-size: var(--text-2xl);
+  }
+  .demo-carta__qr {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+  .demo-more {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
+    gap: var(--space-4);
+  }
+  .demo-more__card {
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    color: var(--color-text);
+  }
+  .demo-more__card:hover {
+    text-decoration: none;
+  }
+  .demo-more__icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-pill);
+    background: var(--color-bg-muted);
+    color: var(--color-text-strong);
+  }
+  .demo-more__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-strong);
+  }
+  .demo-more__text {
+    font-size: var(--text-sm);
+  }
+  @media (max-width: 720px) {
+    .demo-carta {
+      grid-template-columns: 1fr;
+      padding: var(--space-6);
+    }
+    .demo-carta__qr {
+      display: none;
+    }
+  }
+</style>

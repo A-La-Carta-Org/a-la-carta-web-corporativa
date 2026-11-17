@@ -1,4 +1,10 @@
 ---
+/**
+ * Por qué alaCarta (docs/auditoria/13 §3): reorientada al ecosistema. «Por qué un solo sistema y
+ * no siete herramientas»: comparativa por necesidad del local (con estado de lo que está en
+ * camino), las tres ideas (un sistema, sin comisiones, te lo dejamos funcionando), diseño,
+ * compromisos, en qué punto estamos y, solo si hay datos aprobados, quién hay detrás (`TEAM`).
+ */
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHero from '@/components/blocks/PageHero.astro';
 import SectionHeader from '@/components/ui/SectionHeader.astro';
@@ -6,44 +12,116 @@ import FeatureColumns from '@/components/blocks/FeatureColumns.astro';
 import CtaBand from '@/components/blocks/CtaBand.astro';
 import Mockup from '@/components/mockups/Mockup.astro';
 import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+import StatusChip from '@/components/ui/StatusChip.astro';
 import { breadcrumbJsonLd } from '@/lib/seo';
+import { ctaHref } from '@/lib/cta';
 import { TRIAL_DAYS } from '@/data/pricing';
+import { REPLY_HOURS, TEAM } from '@/data/site';
+import { getItem, type EcosystemSlug } from '@/data/solutions';
 
+const path = '/por-que-alacarta';
+const origen = 'por-que';
 const crumbs = [
   { name: 'Inicio', path: '/' },
-  { name: 'Por qué alaCarta', path: '/por-que-alacarta' },
+  { name: 'Por qué alaCarta', path },
 ];
 
-const compare = [
+interface Row {
+  topic: string;
+  typical: string;
+  ours: string;
+  /** Pieza que lo resuelve: su estado se pinta al lado si no está disponible */
+  piece?: EcosystemSlug;
+}
+const compare: Row[] = [
   {
     topic: 'Proveedores',
-    typical: 'TPV de uno, reservas de otro, QR de un tercero, agregadores aparte.',
-    ours: 'Un proveedor, una cuota, un soporte.',
+    typical:
+      'TPV de uno, reservas de otro, QR de un tercero, fichaje en otra app y agregadores aparte.',
+    ours: 'Un sistema, una cuota y un solo interlocutor.',
   },
   {
     topic: 'Carta y precios',
-    typical: 'Se mantienen por duplicado en cada herramienta.',
-    ours: 'Una carta maestra que se publica en todos los canales.',
+    typical: 'Se cambian a mano en cada herramienta, y alguna siempre se queda atrás.',
+    ours: 'Una carta maestra que llega al TPV, a la carta QR, a la tienda y a la web.',
+    piece: 'backoffice',
   },
   {
     topic: 'Comisiones',
     typical: 'Por reserva, por pedido, por pago con QR.',
-    ours: 'Cuota fija. 0 % de comisión.',
+    ours: 'Cuota fija. 0 % de comisión por lo que vendes en tus canales.',
+  },
+  {
+    topic: 'Teléfono',
+    typical: 'Llamadas sin coger en pleno servicio, y reservas apuntadas en un papel.',
+    ours: 'Un asistente que coge el teléfono y deja la reserva en tu libro, por confirmar.',
+    piece: 'llamadas-ia',
+  },
+  {
+    topic: 'App',
+    typical: 'La app del agregador, con su marca y sus clientes.',
+    ours: 'Tu app, con tu icono, para pedir, reservar y sumar puntos.',
+    piece: 'app-propia',
+  },
+  {
+    topic: 'Web y Google',
+    typical: 'Una web que nadie actualiza y un horario distinto en Google.',
+    ours: 'Tu web con la carta del sistema y tu ficha de Google cuidada, hecha por nosotros.',
+    piece: 'web-para-restaurantes',
+  },
+  {
+    topic: 'Compras y facturas',
+    typical: 'Albaranes en una caja y la gestoría pidiéndolos a fin de mes.',
+    ours: 'Proveedores, compras, almacén y facturas en el mismo sistema, con acceso para tu gestoría.',
+    piece: 'erp',
+  },
+  {
+    topic: 'Equipo',
+    typical: 'El cuadrante en un grupo de WhatsApp y las firmas en una hoja.',
+    ours: 'Fichaje, turnos y vacaciones, y el mes cerrado para la gestoría.',
+    piece: 'rrhh',
   },
   {
     topic: 'Hardware',
     typical: 'Terminales propietarios con permanencia.',
-    ours: 'Tablets y equipos estándar. Sin permanencia.',
+    ours: 'Equipos estándar o el que ya tienes si sirve. Sin permanencia.',
+    piece: 'hardware',
   },
   {
     topic: 'Datos',
-    typical: 'Exportar de tres sitios y cruzar en una hoja.',
-    ours: 'Un registro. Los informes se hacen solos.',
+    typical: 'Exportar de tres sitios y cruzarlo en una hoja.',
+    ours: 'Un solo registro: ventas, clientes y horas en el mismo sitio.',
   },
   {
     topic: 'Varios locales',
     typical: 'Una cuenta por local, sin vista de grupo.',
-    ours: 'Multiempresa y multilocal desde el primer día.',
+    ours: 'Multilocal desde el primer día; varias sociedades con el ERP, que está en camino.',
+  },
+];
+const rows = compare.map((r) => ({ ...r, item: r.piece ? getItem(r.piece) : null }));
+
+const ideas: { icon: IconName; title: string; text: string; href: string; label: string }[] = [
+  {
+    icon: 'layers',
+    title: 'Un solo sistema',
+    text: 'La carta, las mesas, los clientes, las ventas y las horas del equipo son el mismo dato en todas las piezas. Lo que apuntas una vez llega a todas partes, sin integraciones que se rompan.',
+    href: '/soluciones',
+    label: 'Ver el ecosistema',
+  },
+  {
+    icon: 'percent-off',
+    title: 'Sin comisiones',
+    text: 'Pagas una cuota fija por local. No cobramos por reserva, por pedido ni por pago con QR. Los minutos de las llamadas con IA son coste de uso, no comisión, y se dicen así.',
+    href: ctaHref({ to: 'calculadora', origen }),
+    label: 'Calcula lo que pagas hoy',
+  },
+  {
+    icon: 'wrench',
+    title: 'Te lo dejamos funcionando',
+    text: 'Equipo configurado, placas QR, carta montada, migración desde tu TPV y formación. Un solo interlocutor desde la demo hasta el primer servicio.',
+    href: '/puesta-en-marcha',
+    label: 'Cómo es la puesta en marcha',
   },
 ];
 
@@ -57,7 +135,7 @@ const principles = [
     text: 'Contraste alto, tipografía legible, botones grandes y pocos colores. Cansa menos a las dos de la mañana.',
   },
   {
-    title: 'Lo mismo en cada módulo',
+    title: 'Lo mismo en cada pieza',
     text: 'Quien sabe usar el TPV sabe usar el comandero. La lógica, los nombres y los gestos se repiten.',
   },
   {
@@ -65,41 +143,79 @@ const principles = [
     text: 'Un camarero nuevo toma su primera comanda en el primer turno. La carta se parece a la carta.',
   },
 ];
+
+const commitments: { icon: IconName; title: string; text: string }[] = [
+  {
+    icon: 'shield',
+    title: 'Transparencia en el precio',
+    text: 'Lo que ves en la web es lo que se factura, por escrito en tu propuesta. Sin comisiones escondidas ni piezas sorpresa.',
+  },
+  {
+    icon: 'lock',
+    title: 'Tus datos son tuyos',
+    text: 'Exportación completa en cualquier momento. Alojamiento en la Unión Europea.',
+  },
+  {
+    icon: 'clock',
+    title: `Respuesta en ${REPLY_HOURS} h laborables`,
+    text: 'Por correo y chat en todos los planes. Prioritario en Completo y Grupos.',
+  },
+  {
+    icon: 'newspaper',
+    title: 'Lo que no existe, se dice',
+    text: 'Cada pieza lleva su estado. Lo que está en camino se marca así en todas las páginas.',
+  },
+];
 ---
 
 <BaseLayout
-  title="Por qué alaCarta: una plataforma, sin comisiones, con tu hardware"
-  description="Qué hace distinta a alaCarta: un solo proveedor para sala, cocina y gestión, precio fijo sin comisiones, hardware estándar, multilocal desde el inicio y una interfaz hecha para usarse muchas horas."
-  path="/por-que-alacarta"
+  title="Por qué alaCarta: un sistema, no siete herramientas"
+  description="Por qué un solo sistema para sala, canales, gestión y equipo: una carta, una cuota sin comisiones y quien te lo deja funcionando. Y en qué punto estamos."
+  path={path}
   jsonLd={breadcrumbJsonLd(crumbs)}
 >
   <PageHero
     variant="compact"
     breadcrumbs={crumbs}
     eyebrow="Por qué alaCarta"
-    title="Menos piezas. Menos fricción. Más control."
-    text="La mayoría de locales trabaja con tres o cuatro programas que no se hablan y pagan comisiones por cosas que ya eran suyas. alaCarta nace para resolver eso desde el diseño, no con integraciones."
+    eyebrowIcon="layers"
+    title="Por qué un solo sistema y no siete herramientas"
+    text="La mayoría de locales trabaja con varias herramientas que no se hablan: el TPV de uno, las reservas de otro, la carta QR de un tercero, el fichaje en otra app y los agregadores aparte. Cada una cobra, cada una tiene su carta y ninguna ve el negocio entero. alaCarta es el ecosistema que lo junta."
+    primary={{ label: 'Solicitar demo', href: ctaHref({ to: 'demo', origen: `${origen}-hero` }) }}
+    secondary={{ label: 'Ver qué hay y qué viene', href: '/novedades' }}
   />
 
   <section class="section is-sm">
     <div class="container">
-      <SectionHeader eyebrow="Comparado" title="Lo habitual y lo nuestro" />
-      <div class="table-wrap">
+      <SectionHeader
+        eyebrow="Comparado"
+        title="Lo habitual y lo nuestro"
+        text="Necesidad por necesidad. Lo que todavía está en camino lleva su chip: preferimos que lo sepas ahora."
+      />
+      <div class="cmp-wrap">
         <table class="cmp">
           <thead>
             <tr>
-              <th scope="col"></th>
+              <th scope="col">Necesidad</th>
               <th scope="col">Lo habitual</th>
               <th scope="col">Con alaCarta</th>
             </tr>
           </thead>
           <tbody>
-            {compare.map((r) => (
+            {rows.map((r) => (
               <tr>
                 <th scope="row">{r.topic}</th>
-                <td class="muted">{r.typical}</td>
-                <td>
+                <td class="muted" data-label="Lo habitual">
+                  {r.typical}
+                </td>
+                <td data-label="Con alaCarta">
                   <strong>{r.ours}</strong>
+                  {r.item && (
+                    <span class="cmp__piece">
+                      <a href={r.item.path}>{r.item.navLabel}</a>
+                      <StatusChip status={r.item.status} note={r.item.statusNote} />
+                    </span>
+                  )}
                 </td>
               </tr>
             ))}
@@ -109,18 +225,37 @@ const principles = [
     </div>
   </section>
 
+  <section class="section has-rule">
+    <div class="container">
+      <SectionHeader eyebrow="Tres ideas" title="Lo que hace distinto a alaCarta" />
+      <ul role="list" class="ideas">
+        {ideas.map((i) => (
+          <li class="column idea">
+            <Icon name={i.icon} size={22} />
+            <h3>{i.title}</h3>
+            <p>{i.text}</p>
+            <a href={i.href} class="link-arrow">
+              {i.label}
+              <Icon name="arrow-right" size={14} />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
   <section class="section is-soft">
     <div class="container why-split">
       <div>
         <SectionHeader
           eyebrow="Diseño del producto"
           title="Una interfaz que no estorba"
-          text="El TPV, el comandero y el backoffice comparten un mismo lenguaje: fondo blanco, negro para lo importante, gris para lo secundario y color solo para avisar."
+          text="Todas las piezas comparten un mismo lenguaje: fondo blanco, negro para lo importante, gris para lo secundario y color solo para avisar."
         />
         <FeatureColumns items={principles} columns={2} />
       </div>
       <div class="why-split__media">
-        <Mockup kind="informes" />
+        <Mockup kind="panel-ventas" />
       </div>
     </div>
   </section>
@@ -133,35 +268,13 @@ const principles = [
         align="center"
       />
       <ul role="list" class="commit-grid">
-        <li>
-          <Icon name="shield" size={22} />
-          <h3>Transparencia en el precio</h3>
-          <p class="muted">
-            Lo que ves en la web es lo que se factura. Sin comisiones escondidas ni módulos
-            sorpresa.
-          </p>
-        </li>
-        <li>
-          <Icon name="lock" size={22} />
-          <h3>Tus datos son tuyos</h3>
-          <p class="muted">
-            Exportación completa en cualquier momento. Alojamiento en la Unión Europea.
-          </p>
-        </li>
-        <li>
-          <Icon name="clock" size={22} />
-          <h3>Respuesta en 24 h laborables</h3>
-          <p class="muted">
-            Por correo y chat en todos los planes. Prioritario en Completo y Grupos.
-          </p>
-        </li>
-        <li>
-          <Icon name="layers" size={22} />
-          <h3>Producto en evolución</h3>
-          <p class="muted">
-            Publicamos las novedades y lo que viene. Lo que aún no existe se dice que no existe.
-          </p>
-        </li>
+        {commitments.map((c) => (
+          <li>
+            <Icon name={c.icon} size={22} />
+            <h3>{c.title}</h3>
+            <p class="muted">{c.text}</p>
+          </li>
+        ))}
       </ul>
     </div>
   </section>
@@ -170,39 +283,79 @@ const principles = [
     <div class="container why-honest">
       <SectionHeader
         eyebrow="En qué punto estamos"
-        title="Una plataforma nueva, contada con honestidad"
+        title="Una empresa nueva, contada con honestidad"
       />
       <div class="prose">
         <p>
-          alaCarta es una empresa nueva. No tenemos todavía cientos de clientes que enseñar ni
-          premios que colgar, y no vamos a inventarlos. Lo que sí tenemos es un producto diseñado
-          desde cero para que la sala, la cocina y la gestión trabajen sobre los mismos datos, y un
-          modelo de precios que no depende de cobrar por cada reserva o cada pedido.
+          alaCarta es una empresa nueva. No tenemos todavía clientes que enseñarte ni premios que
+          colgar, y no vamos a inventarlos. Lo que sí tenemos es un ecosistema diseñado desde cero
+          para que la sala, la cocina, los canales, la gestión y el equipo trabajen sobre los mismos
+          datos, y un modelo de precios que no depende de cobrar por cada reserva o cada pedido.
         </p>
         <p>
-          Algunas integraciones, como las plataformas de reparto externas o los programas de
-          contabilidad, están en nuestro plan de producto y así lo decimos en cada página. Si algo
-          que necesitas no está, te lo diremos en la demo antes de que firmes nada.
+          Parte del ecosistema está en camino: la app propia, las llamadas con IA, el ERP y algunas
+          conexiones, como los agregadores o la contabilidad. Cada pieza lleva su estado en la web,
+          y si algo que necesitas no está, te lo diremos en la demo antes de que firmes nada.
         </p>
-        <p>Si quieres probarlo, tienes {TRIAL_DAYS} días con todo activado y sin tarjeta.</p>
+        <p>
+          Los primeros locales que lo usen serán{' '}
+          <a href="/locales-fundadores">locales fundadores</a>: condiciones especiales a cambio de
+          contarnos qué falla. Y si quieres probarlo, tienes {TRIAL_DAYS} días con todo activado y
+          sin tarjeta.
+        </p>
+        <p>
+          <a href="/novedades" class="link-arrow">
+            Ver qué hay y qué está en camino
+            <Icon name="arrow-right" size={14} />
+          </a>
+        </p>
       </div>
     </div>
   </section>
 
-  <CtaBand />
+  {TEAM.length > 0 && (
+    <section class="section has-rule" id="equipo">
+      <div class="container">
+        <SectionHeader
+          eyebrow="Quién hay detrás"
+          title="Las personas que te van a atender"
+          text="Sin centralita: quien te enseña la demo es quien te acompaña después."
+        />
+        <ul role="list" class="team">
+          {TEAM.map((p) => (
+            <li class="team__person">
+              {p.photo && (
+                <img
+                  src={p.photo}
+                  alt={`${p.name}, ${p.role}`}
+                  width="240"
+                  height="240"
+                  loading="lazy"
+                />
+              )}
+              <h3>{p.name}</h3>
+              <p class="muted team__role">{p.role}</p>
+              <p>{p.bio}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )}
+
+  <CtaBand origen="por-que-cierre" />
 </BaseLayout>
 
 <style>
-  .table-wrap {
-    overflow-x: auto;
+  .cmp-wrap {
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);
+    overflow: hidden;
   }
   .cmp {
     width: 100%;
     border-collapse: collapse;
     font-size: var(--text-sm);
-    min-width: 40rem;
   }
   .cmp th,
   .cmp td {
@@ -222,10 +375,38 @@ const principles = [
   .cmp tbody th {
     font-weight: var(--weight-medium);
     color: var(--color-text-strong);
-    width: 12rem;
+    width: 11rem;
   }
   .cmp tbody tr:last-child :is(td, th) {
     border-bottom: 0;
+  }
+  .cmp td strong {
+    font-weight: var(--weight-medium);
+    color: var(--color-text-strong);
+  }
+  .cmp__piece {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+    font-size: var(--text-xs);
+  }
+  .cmp__piece a {
+    color: var(--color-text-muted);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .ideas {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-10) var(--space-8);
+  }
+  .idea {
+    gap: var(--space-3);
+  }
+  .idea h3 {
+    font-size: var(--text-xl);
   }
   .why-split {
     display: grid;
@@ -243,6 +424,7 @@ const principles = [
     gap: var(--space-3);
     padding-top: var(--space-5);
     border-top: 1px solid var(--color-border);
+    align-content: start;
   }
   .commit-grid h3 {
     font-size: var(--text-lg);
@@ -255,6 +437,32 @@ const principles = [
     grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
     gap: var(--space-12);
   }
+  .why-honest .prose a:not(.link-arrow) {
+    text-decoration: underline;
+  }
+  .team {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+    gap: var(--space-10) var(--space-8);
+  }
+  .team__person {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+  }
+  .team__person img {
+    width: 100%;
+    max-width: 15rem;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    filter: grayscale(1);
+    margin-bottom: var(--space-2);
+  }
+  .team__role {
+    font-size: var(--text-sm);
+  }
   @media (max-width: 1024px) {
     .why-split,
     .why-honest {
@@ -262,6 +470,58 @@ const principles = [
     }
     .commit-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .ideas {
+      grid-template-columns: 1fr;
+    }
+  }
+  /* En móvil la tabla pasa a fichas: necesidad arriba, lo habitual y lo nuestro debajo */
+  @media (max-width: 720px) {
+    .cmp thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+    .cmp,
+    .cmp tbody,
+    .cmp tr,
+    .cmp th,
+    .cmp td {
+      display: block;
+      width: 100%;
+    }
+    .cmp tr {
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cmp tbody tr:last-child {
+      border-bottom: 0;
+    }
+    .cmp th,
+    .cmp td {
+      padding: 0;
+      border: 0;
+    }
+    .cmp tbody th {
+      width: auto;
+      font-family: var(--font-display);
+      font-weight: var(--weight-semibold);
+      font-size: var(--text-md);
+      margin-bottom: var(--space-2);
+    }
+    .cmp td {
+      margin-top: var(--space-2);
+    }
+    .cmp td::before {
+      content: attr(data-label);
+      display: block;
+      font-size: var(--text-xs);
+      letter-spacing: var(--tracking-wide);
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-1);
     }
   }
   @media (max-width: 640px) {

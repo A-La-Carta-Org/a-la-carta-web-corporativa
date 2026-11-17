@@ -1,0 +1,454 @@
+---
+/**
+ * Hardware (docs/auditoria/08). Dos caminos (usa tu equipo / te lo enviamos configurado), kits
+ * por tipo de local, dispositivos sueltos, comprobador de equipo (isla Vue), instalación y
+ * garantía, y FAQ. Todo el copy sale de `src/data/hardware.ts`; ningún precio de hardware
+ * hasta que se publique (HARDWARE_PRICE_LABEL). Los de servicios salen de pricing.ts.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import FaqSection from '@/components/blocks/FaqSection.astro';
+import Icon from '@/components/ui/Icon.astro';
+import StatusChip from '@/components/ui/StatusChip.astro';
+import KitComposition from '@/components/mockups/KitComposition.astro';
+import EquipmentChecker from '@/components/islands/EquipmentChecker.vue';
+import {
+  hardwareDevices,
+  hardwareKits,
+  hardwareDelivery,
+  hardwareFaqs,
+  ownEquipmentRequirements,
+  HARDWARE_PRICE_LABEL,
+} from '@/data/hardware';
+import { ONSITE_TRAINING_FROM, CURRENCY } from '@/data/pricing';
+import { breadcrumbJsonLd, faqJsonLd, serviceJsonLd } from '@/lib/seo';
+import { ctaHref } from '@/lib/cta';
+
+const path = '/hardware';
+const crumbs = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Hardware', path },
+];
+const description =
+  'Terminal táctil, impresora de tickets, cajón, comanderos y pantalla de cocina configurados y listos. O usa el equipo que ya tienes: lo comprobamos contigo.';
+
+const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
+
+const install = [
+  {
+    icon: 'settings' as const,
+    title: 'Instalación remota',
+    price: 'Incluida',
+    text: 'Por videollamada dejamos cada equipo conectado, imprimiendo donde toca y cobrando. Con tu equipo o con el nuestro.',
+  },
+  {
+    icon: 'wrench' as const,
+    title: 'En tu local',
+    price: `desde ${ONSITE_TRAINING_FROM} ${CURRENCY}`,
+    text: 'Una jornada en el local para instalar y formar a tu equipo. Desplazamiento aparte. Para locales fundadores, incluida.',
+    link: { label: 'Locales fundadores', href: '/locales-fundadores' },
+  },
+  {
+    icon: 'shield-check' as const,
+    title: 'Garantía y sustitución',
+    price: 'En tu propuesta',
+    text: 'Dependen del proveedor que estamos cerrando. Te las damos por escrito, junto al precio, antes de que firmes.',
+  },
+];
+---
+
+<BaseLayout
+  title="Hardware para hostelería: kits TPV o tu equipo"
+  description={description}
+  path={path}
+  jsonLd={[
+    breadcrumbJsonLd(crumbs),
+    serviceJsonLd({
+      name: 'Hardware para hostelería configurado por alaCarta',
+      description,
+      path,
+      serviceType: 'Suministro y configuración de equipos TPV para hostelería',
+    }),
+    faqJsonLd(hardwareFaqs),
+  ]}
+>
+  <PageHero
+    breadcrumbs={crumbs}
+    eyebrow="Equipamiento"
+    eyebrowIcon="printer"
+    title="El equipo para tu local, configurado y listo. O usa el que ya tienes."
+    text="alaCarta funciona en el navegador, sin hardware propietario. Si ya tienes tablets, un ordenador o una impresora de tickets estándar, lo normal es que te sirvan. Si prefieres que llegue todo listo para enchufar, te lo enviamos con tu carta cargada."
+    primary={{
+      label: 'Pedir propuesta con equipo',
+      href: ctaHref({ to: 'demo', modulo: 'hardware', origen: 'hardware-hero' }),
+    }}
+    secondary={{ label: 'Comprobar mi equipo', href: '#comprobador' }}
+  >
+    <KitComposition />
+  </PageHero>
+
+  <section class="section is-sm has-rule">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Dos caminos"
+        title="Con tu equipo o con el nuestro, el mismo sistema"
+        text="Puedes mezclar: aprovechar la tablet que ya tienes y pedirnos solo la impresora o la pantalla de cocina."
+      />
+      <div class="hw-paths">
+        <article class="card hw-path">
+          <span class="hw-icon">
+            <Icon name="check" size={20} />
+          </span>
+          <h3>Usa tu equipo</h3>
+          <p class="muted">Lo mínimo para empezar sin comprar nada:</p>
+          <ul role="list" class="check-list">
+            {ownEquipmentRequirements.map((r) => (
+              <li>{r}</li>
+            ))}
+          </ul>
+          <a href="#comprobador" class="link-arrow hw-path__foot">
+            Comprueba si te sirve en cuatro preguntas
+            <Icon name="arrow-right" size={14} />
+          </a>
+        </article>
+        <article class="card hw-path">
+          <span class="hw-icon">
+            <Icon name="package" size={20} />
+          </span>
+          <h3>Te lo enviamos configurado</h3>
+          <ol role="list" class="hw-delivery">
+            {hardwareDelivery.map((d) => (
+              <li>
+                <Icon name={d.icon} size={16} />
+                <span>
+                  <strong>{d.title}</strong>
+                  <span class="muted">{d.text}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+          <a href="#kits" class="link-arrow hw-path__foot">
+            Ver los kits
+            <Icon name="arrow-right" size={14} />
+          </a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section is-soft" id="kits">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Kits"
+        title="Un kit por tipo de local"
+        text="Composición orientativa. Ajustamos cada kit a tu sala, quitamos lo que ya tengas y te damos el precio en la propuesta."
+      />
+      <ul role="list" class="hw-kits">
+        {hardwareKits.map((k) => (
+          <li class="card hw-kit">
+            <span class="hw-kit__icons" aria-hidden="true">
+              {k.icons.map((ic) => (
+                <span class="hw-icon is-sm">
+                  <Icon name={ic} size={16} />
+                </span>
+              ))}
+            </span>
+            <h3>{k.name}</h3>
+            <p class="muted">{k.forWho}</p>
+            <ul role="list" class="check-list">
+              {k.contents.map((c) => (
+                <li>{c}</li>
+              ))}
+            </ul>
+            <p class="hw-kit__price">{HARDWARE_PRICE_LABEL}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Dispositivos"
+        title="También por separado"
+        text="Si solo te falta una pieza, te la enviamos configurada. Y si ya la tienes, te decimos cuándo te sirve la tuya."
+      />
+      <ul role="list" class="hw-devices">
+        {hardwareDevices.map((d) => (
+          <li class="column hw-device">
+            <span class="hw-icon">
+              <Icon name={d.icon} size={20} />
+            </span>
+            <h3>
+              {d.name} <StatusChip status={d.status} />
+            </h3>
+            <p>{d.text}</p>
+            {d.ownOk && (
+              <p class="hw-device__own">
+                <span>{d.slug === 'placas-qr' ? 'Sin placas' : 'Con el tuyo'}:</span>{' '}
+                {lowerFirst(d.ownOk)}
+              </p>
+            )}
+            {d.slug === 'placas-qr' && (
+              <a href="/hardware/placas-qr" class="link-arrow">
+                Diseña tu placa
+                <Icon name="arrow-right" size={14} />
+              </a>
+            )}
+          </li>
+        ))}
+      </ul>
+      <p class="hw-note muted">
+        Equipamiento: {HARDWARE_PRICE_LABEL.toLowerCase()}. Estamos cerrando proveedor y fórmula
+        (compra o renting); no publicamos cifras ni marcas hasta tenerlas confirmadas.
+      </p>
+    </div>
+  </section>
+
+  <section class="section is-soft" id="comprobador">
+    <div class="container hw-check">
+      <div class="hw-check__copy">
+        <SectionHeader
+          eyebrow="Comprobador de equipo"
+          title="¿Te sirve lo que ya tienes?"
+          text="Cuatro preguntas y te decimos qué aprovechas y qué te falta. Con el resultado pides la propuesta y no tienes que contarlo dos veces."
+        />
+        <ul role="list" class="check-list hw-check__points">
+          <li>Sin registrarte y sin dejar datos hasta el final</li>
+          <li>Lo que no se puede asegurar sin ver el modelo te lo decimos claro</li>
+          <li>Si te falta algo, solo te proponemos eso</li>
+        </ul>
+      </div>
+      <EquipmentChecker client:visible={{ rootMargin: '300px' }} />
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Instalación y garantía"
+        title="Lo dejamos funcionando, y lo decimos por escrito"
+      />
+      <ul role="list" class="hw-install">
+        {install.map((it) => (
+          <li class="column hw-install__item">
+            <span class="hw-icon">
+              <Icon name={it.icon} size={20} />
+            </span>
+            <h3>{it.title}</h3>
+            <p class="hw-install__price">{it.price}</p>
+            <p>{it.text}</p>
+            {it.link && (
+              <a href={it.link.href} class="link-arrow">
+                {it.link.label}
+                <Icon name="arrow-right" size={14} />
+              </a>
+            )}
+          </li>
+        ))}
+      </ul>
+      <p class="hw-note">
+        <a href="/puesta-en-marcha" class="link-arrow">
+          Cómo es la puesta en marcha, paso a paso
+          <Icon name="arrow-right" size={14} />
+        </a>
+      </p>
+    </div>
+  </section>
+
+  <FaqSection items={hardwareFaqs} soft title="Preguntas sobre el equipo" />
+
+  <CtaBand
+    title="Cuéntanos qué tienes y qué te falta"
+    text="En la demo revisamos tu equipo actual y te proponemos solo lo que necesitas, con el precio por escrito."
+    modulo="hardware"
+    origen="hardware-cierre"
+    calcLink={{
+      label: 'Súmalo en Monta tu alaCarta',
+      href: ctaHref({ to: 'precios', add: 'hardware', origen: 'hardware-cierre', hash: 'monta' }),
+      text: 'Añade el equipo a tu configuración: el precio va en tu propuesta.',
+    }}
+  />
+</BaseLayout>
+
+<style>
+  .hw-paths {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+  }
+  .hw-path {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+  .hw-path h3 {
+    font-size: var(--text-2xl);
+  }
+  .hw-path__foot {
+    margin-top: auto;
+  }
+  .hw-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-muted);
+    color: var(--color-text-strong);
+  }
+  .hw-icon.is-sm {
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-soft);
+    border: 1px solid var(--color-border);
+  }
+  .hw-delivery {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .hw-delivery li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-3);
+    align-items: start;
+    font-size: var(--text-sm);
+  }
+  .hw-delivery li > :global(svg) {
+    margin-top: 0.2rem;
+    color: var(--color-text-strong);
+  }
+  .hw-delivery li > span {
+    display: grid;
+    gap: var(--space-1);
+  }
+  .hw-delivery strong {
+    font-weight: var(--weight-medium);
+    color: var(--color-text-strong);
+  }
+  .hw-kits {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+  .hw-kit {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .hw-kit__icons {
+    display: flex;
+    gap: var(--space-2);
+    margin-bottom: var(--space-1);
+  }
+  .hw-kit h3 {
+    font-size: var(--text-xl);
+  }
+  .hw-kit p,
+  .hw-kit .check-list {
+    font-size: var(--text-sm);
+  }
+  .hw-kit__price {
+    margin-top: auto;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-strong);
+  }
+  .hw-devices {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-10) var(--space-6);
+  }
+  .hw-device {
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+    justify-items: start;
+  }
+  .hw-device h3 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .hw-device__own {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .hw-device__own span {
+    font-weight: var(--weight-medium);
+    color: var(--color-text-strong);
+  }
+  .hw-note {
+    margin-top: var(--space-10);
+    font-size: var(--text-sm);
+    max-width: 44rem;
+  }
+  .hw-check {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: var(--space-12);
+    align-items: start;
+  }
+  .hw-check__points {
+    font-size: var(--text-sm);
+  }
+  .hw-install {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-8);
+  }
+  .hw-install__item {
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+    justify-items: start;
+  }
+  .hw-install__price {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-strong);
+    font-variant-numeric: tabular-nums;
+  }
+  @media (max-width: 1024px) {
+    .hw-kits,
+    .hw-devices {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .hw-check {
+      grid-template-columns: 1fr;
+      gap: var(--space-8);
+    }
+  }
+  @media (max-width: 720px) {
+    .hw-paths,
+    .hw-kits,
+    .hw-devices,
+    .hw-install {
+      grid-template-columns: 1fr;
+    }
+    /* En móvil, icono a la izquierda: la lista de dispositivos ocupa la mitad */
+    .hw-devices {
+      gap: var(--space-6);
+    }
+    .hw-device {
+      grid-template-columns: 2.5rem minmax(0, 1fr);
+      column-gap: var(--space-4);
+      row-gap: var(--space-2);
+    }
+    .hw-device > .hw-icon {
+      grid-row: 1 / span 4;
+    }
+    .hw-device > :not(.hw-icon) {
+      grid-column: 2;
+    }
+  }
+</style>

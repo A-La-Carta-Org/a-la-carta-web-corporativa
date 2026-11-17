@@ -1,0 +1,175 @@
+---
+/**
+ * Banda de precio de una página de producto (docs/auditoria/04 §4.8): en qué planes se incluye,
+ * cuánto cuesta suelto y el enlace para montarlo en el configurador con el producto
+ * preseleccionado. Lee de `solutionPricing()` (src/data/pricing.ts).
+ */
+import Icon from '@/components/ui/Icon.astro';
+import { NO_PRICE_LABEL, VAT_NOTE, solutionPricing, plans } from '@/data/pricing';
+import type { Solution } from '@/data/solutions';
+import { ctaHref } from '@/lib/cta';
+
+interface Props {
+  solution: Solution;
+  origen: string;
+}
+const { solution: s, origen } = Astro.props;
+const p = solutionPricing(s.slug);
+/** Complemento con precio propio: se puede añadir a cualquier plan, no se tacha ninguno */
+const isAddon = p.label.startsWith('Complemento');
+const configHref = ctaHref({ to: 'precios', add: s.slug, origen, hash: 'monta' });
+---
+
+<section class="section is-sm has-rule" id="precio">
+  <div class="container price-band">
+    <div class="price-band__head">
+      <span class="eyebrow">Precio · {s.navLabel}</span>
+      <h2>Lo que cuesta, sin letra pequeña</h2>
+    </div>
+
+    <dl class="price-band__facts">
+      <div>
+        <dt>Se incluye en</dt>
+        <dd>
+          {p.plans.length > 0 && isAddon ? (
+            <span class="price-band__plans">
+              {p.plans.map((plan) => (
+                <span class="chip is-dark">{plan.name}</span>
+              ))}
+              <span class="price-band__alt">y se añade a cualquier otro plan</span>
+            </span>
+          ) : p.plans.length > 0 ? (
+            <span class="price-band__plans">
+              {plans.map((plan) => (
+                <span
+                  class:list={[
+                    'chip',
+                    { 'is-dark': p.plans.includes(plan), 'is-off': !p.plans.includes(plan) },
+                  ]}
+                >
+                  {plan.name}
+                </span>
+              ))}
+            </span>
+          ) : (
+            <span>Se añade a cualquier plan</span>
+          )}
+        </dd>
+      </div>
+      <div>
+        <dt>{p.amount ? p.label : 'Precio'}</dt>
+        <dd>
+          {p.amount ? (
+            <span class="price-band__amount">
+              <b class="num">{p.amount}</b> {p.period} {VAT_NOTE}
+            </span>
+          ) : (
+            <span class="price-band__amount">
+              <b>{NO_PRICE_LABEL}</b>
+            </span>
+          )}
+          {(p.alt || p.unit) && <span class="price-band__alt">{p.alt ?? p.unit}</span>}
+        </dd>
+      </div>
+      <div class="price-band__actions">
+        <a href={configHref} class="btn is-primary">
+          Móntalo con el resto
+          <Icon name="arrow-right" size={16} class="btn-arrow" />
+        </a>
+        <a href="/precios" class="link-arrow">
+          Ver todos los precios
+          <Icon name="arrow-right" size={14} />
+        </a>
+      </div>
+    </dl>
+    <p class="price-band__note muted">
+      Precios orientativos por local y mes, sin IVA. Sin permanencia y sin comisión por reserva,
+      pedido o QR.
+    </p>
+  </div>
+</section>
+
+<style>
+  .price-band {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .price-band__head {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .price-band__head h2 {
+    font-size: var(--text-2xl);
+  }
+  .price-band__facts {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr auto;
+    gap: var(--space-8);
+    align-items: start;
+    padding: var(--space-6);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+  }
+  .price-band__facts > div {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .price-band__facts dt {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+  .price-band__facts dd {
+    display: grid;
+    gap: var(--space-1);
+  }
+  .price-band__plans {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: center;
+  }
+  .price-band__plans .chip.is-off {
+    color: var(--color-text-muted);
+    text-decoration: line-through;
+  }
+  .price-band__amount {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+  .price-band__amount b {
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-2xl);
+    letter-spacing: var(--tracking-snug);
+    color: var(--color-text-strong);
+  }
+  .price-band__alt {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .price-band__actions {
+    justify-items: start;
+    align-self: center;
+  }
+  .price-band__note {
+    font-size: var(--text-xs);
+  }
+  @media (max-width: 1024px) {
+    .price-band__facts {
+      grid-template-columns: 1fr 1fr;
+    }
+    .price-band__actions {
+      grid-column: 1 / -1;
+    }
+  }
+  @media (max-width: 640px) {
+    .price-band__facts {
+      grid-template-columns: 1fr;
+      gap: var(--space-5);
+      padding: var(--space-5);
+    }
+  }
+</style>

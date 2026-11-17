@@ -1,0 +1,211 @@
+---
+/**
+ * Placas QR para mesas (docs/auditoria/08). Hero compacto y, justo debajo, la vista previa
+ * configurable D8 con un QR real a la carta de ejemplo (isla Vue con el QR generado en build por el slot),
+ * por qué placas, cómo se piden y FAQ. Sin precio: «en tu propuesta».
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import FaqSection from '@/components/blocks/FaqSection.astro';
+import FeatureColumns from '@/components/blocks/FeatureColumns.astro';
+import Icon from '@/components/ui/Icon.astro';
+import QrCode from '@/components/ui/QrCode.astro';
+import PlatePreview from '@/components/islands/PlatePreview.vue';
+import { HARDWARE_PRICE_LABEL, plateFaqs } from '@/data/hardware';
+import { DEMO_CARTA_URL } from '@/data/navigation';
+import { breadcrumbJsonLd, faqJsonLd, serviceJsonLd } from '@/lib/seo';
+import { ctaHref } from '@/lib/cta';
+
+const path = '/hardware/placas-qr';
+const crumbs = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Hardware', path: '/hardware' },
+  { name: 'Placas QR', path },
+];
+const description =
+  'Placas QR para las mesas de tu restaurante o bar, con número de mesa y NFC opcional. El QR no cambia aunque cambies la carta. Diseña la tuya.';
+
+const points = [
+  {
+    title: 'El QR no cambia nunca',
+    text: 'La placa apunta a la mesa, no a un PDF. Cambias la carta, los precios o el menú del día y la placa sigue valiendo.',
+  },
+  {
+    title: 'Cada placa sabe su mesa',
+    text: 'El pedido y el pago desde el móvil llegan identificados con su mesa, sin que el cliente tenga que decir el número.',
+  },
+  {
+    title: 'NFC opcional',
+    text: 'Acercar el móvil a la placa abre la carta sin usar la cámara. Útil para quien no se apaña con los QR.',
+  },
+  {
+    title: 'Hechas para durar',
+    text: 'Pensadas para la mesa y la terraza: que no se despeguen, no se borren con la bayeta ni se las lleve el viento.',
+  },
+  {
+    title: 'O imprímelas tú',
+    text: 'Si no quieres placas, puedes descargar los códigos de cada mesa desde el backoffice e imprimirlos.',
+  },
+  {
+    title: 'Conectadas con la carta QR',
+    text: 'Se usan con la carta digital QR, incluida en todos los planes: consulta, pedido y pago desde la mesa.',
+  },
+];
+
+const howTo = [
+  {
+    icon: 'qr-plate' as const,
+    title: 'Eliges acabado y formato',
+    text: 'Aquí arriba o en la demo. Puedes mezclar: de sobremesa en sala y para terraza fuera.',
+  },
+  {
+    icon: 'list-checks' as const,
+    title: 'Nos dices cuántas mesas',
+    text: 'Con el plano de sala de la puesta en marcha numeramos cada placa con su mesa.',
+  },
+  {
+    icon: 'truck' as const,
+    title: 'Llegan listas para poner',
+    text: 'Con el resto del equipo, antes del primer servicio, cada una con su QR ya enlazado.',
+  },
+];
+const cartaHref = ctaHref({ to: 'carta', origen: 'placas' });
+---
+
+<BaseLayout
+  title="Placas QR para mesas de restaurante, con NFC"
+  description={description}
+  path={path}
+  jsonLd={[
+    breadcrumbJsonLd(crumbs),
+    serviceJsonLd({
+      name: 'Placas QR para mesas de alaCarta',
+      description,
+      path,
+      serviceType: 'Placas QR y NFC personalizadas para mesas de hostelería',
+    }),
+    faqJsonLd(plateFaqs),
+  ]}
+>
+  <PageHero
+    variant="compact"
+    breadcrumbs={crumbs}
+    eyebrow="Equipamiento"
+    eyebrowIcon="qr-plate"
+    title="Placas QR para tus mesas, que no se despegan ni caducan"
+    text="La forma más sencilla de empezar con alaCarta: tu carta digital en cada mesa, con su número, lista para consultar, pedir y pagar desde el móvil."
+    primary={{
+      label: 'Las quiero con mi alta',
+      href: ctaHref({ to: 'demo', modulo: 'placas-qr', origen: 'placas' }),
+    }}
+    secondary={{ label: 'Diseñar la mía', href: '#disena' }}
+  />
+
+  <section class="section is-soft" id="disena">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Diseña tu placa"
+        title="Así quedaría en tu mesa"
+        text="Cambia el nombre, el número, el acabado y el formato. El código de la vista previa abre la carta de ejemplo de verdad."
+      />
+      <PlatePreview client:visible={{ rootMargin: '300px' }} cartaHref={cartaHref}>
+        <QrCode url={DEMO_CARTA_URL} size={148} label="Código QR que abre la carta de ejemplo" />
+      </PlatePreview>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <SectionHeader eyebrow="Por qué placas" title="Un objeto pequeño que hace mucho" />
+      <FeatureColumns items={points} columns={3} />
+    </div>
+  </section>
+
+  <section class="section has-rule">
+    <div class="container plates-how">
+      <SectionHeader
+        eyebrow="Cómo se piden"
+        title="Con tu alta, sin gestiones aparte"
+        text="Las placas forman parte de la puesta en marcha: no tienes que diseñarlas ni encargarlas tú."
+      />
+      <ol role="list" class="plates-steps">
+        {howTo.map((h) => (
+          <li class="column">
+            <span class="plates-icon">
+              <Icon name={h.icon} size={20} />
+            </span>
+            <h3>{h.title}</h3>
+            <p>{h.text}</p>
+          </li>
+        ))}
+      </ol>
+      <p class="plates-price">
+        <strong>{HARDWARE_PRICE_LABEL}</strong>{' '}
+        <span class="muted">
+          según el número de mesas, el acabado y el formato. Imprimir los códigos tú mismo desde el
+          backoffice no cuesta nada.
+        </span>
+      </p>
+    </div>
+  </section>
+
+  <FaqSection items={plateFaqs} soft title="Preguntas sobre las placas" />
+
+  <CtaBand
+    title="Tus mesas, listas para pedir"
+    text="Te preparamos las placas con el nombre de tu local y el número de cada mesa, junto con la carta QR."
+    modulo="placas-qr"
+    origen="placas-cierre"
+    tryLink={{
+      label: 'Abrir la carta de ejemplo',
+      href: ctaHref({ to: 'carta', origen: 'placas-cierre' }),
+      text: 'Lo que abre el QR de la placa: la carta, el pedido y el pago.',
+    }}
+    calcLink={{
+      label: 'Súmalo en Monta tu alaCarta',
+      href: ctaHref({ to: 'precios', add: 'placas-qr', origen: 'placas-cierre', hash: 'monta' }),
+      text: 'Añade las placas a tu configuración y pídelas con tu alta.',
+    }}
+  />
+</BaseLayout>
+
+<style>
+  .plates-steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-8);
+  }
+  .plates-steps li {
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+    justify-items: start;
+  }
+  .plates-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-muted);
+    color: var(--color-text-strong);
+  }
+  .plates-price {
+    margin-top: var(--space-10);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-border);
+    font-size: var(--text-sm);
+    max-width: 44rem;
+  }
+  .plates-price strong {
+    font-weight: var(--weight-medium);
+    color: var(--color-text-strong);
+  }
+  @media (max-width: 720px) {
+    .plates-steps {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

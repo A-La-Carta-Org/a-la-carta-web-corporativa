@@ -1,7 +1,13 @@
 ---
+/**
+ * Cabecera: logo, megamenús (Soluciones, Sectores, Recursos), enlaces directos (Hardware,
+ * Precios) y dos acciones: «Pruébalo» y «Solicitar demo». En móvil, menú a pantalla completa con
+ * las acciones arriba y los grupos como acordeones. Modelo y contenido: docs/auditoria/02.
+ */
 import Logo from '@/components/ui/Logo.astro';
 import Icon from '@/components/ui/Icon.astro';
-import { mainNav } from '@/data/navigation';
+import QrCode from '@/components/ui/QrCode.astro';
+import { mainNav, headerActions, badgeLabels } from '@/data/navigation';
 
 interface Props {
   variant?: 'default' | 'minimal';
@@ -9,6 +15,9 @@ interface Props {
 const { variant = 'default' } = Astro.props;
 const current = Astro.url.pathname.replace(/\/$/, '') || '/';
 const isActive = (href: string) => (href === '/' ? current === '/' : current.startsWith(href));
+const groupActive = (g: (typeof mainNav)[number]) =>
+  isActive(g.href) ||
+  (g.columns ?? []).some((c) => c.links.some((l) => current === l.href.split(/[?#]/)[0]));
 ---
 
 <header class:list={['site-header', { 'is-minimal': variant === 'minimal' }]} data-header>
@@ -21,38 +30,102 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
       <nav class="site-nav" aria-label="Principal">
         <ul role="list" class="site-nav__list">
           {mainNav.map((item) =>
-            item.children ? (
-              <li class="site-nav__item has-children" data-dropdown>
+            item.columns ? (
+              <li
+                class:list={['site-nav__item has-children', { 'is-wide': item.wide }]}
+                data-dropdown
+              >
                 <button
                   type="button"
-                  class:list={['site-nav__link', { 'is-active': isActive(item.href) }]}
+                  class:list={['site-nav__link', { 'is-active': groupActive(item) }]}
                   aria-expanded="false"
-                  aria-haspopup="true"
+                  aria-controls={`mega-${item.id}`}
                   data-dropdown-toggle
                 >
                   {item.label}
                   <Icon name="chevron-down" size={14} class="site-nav__chevron" />
                 </button>
-                <div class="dropdown" data-dropdown-panel>
-                  <ul role="list" class="dropdown__list">
-                    {item.children.map((child) => (
-                      <li>
-                        <a
-                          href={child.href}
-                          class:list={['dropdown__link', { 'is-active': current === child.href }]}
-                        >
-                          <span class="dropdown__label">{child.label}</span>
-                          {child.description && (
-                            <span class="dropdown__desc">{child.description}</span>
-                          )}
+                <div
+                  class="mega"
+                  id={`mega-${item.id}`}
+                  style={`--mega-w:${item.columns.length * 14 + (item.featured ? 17 : 0) + 3}rem`}
+                  data-dropdown-panel
+                >
+                  <div class:list={['mega__body', { 'has-featured': item.featured }]}>
+                    <div class="mega__cols" style={`--cols:${item.columns.length}`}>
+                      {item.columns.map((col) => (
+                        <div class="mega__col">
+                          <p class="mega__title">{col.title}</p>
+                          <ul role="list" class="mega__list">
+                            {col.links.map((l) => (
+                              <li>
+                                <a
+                                  href={l.href}
+                                  class:list={[
+                                    'mega__link',
+                                    { 'is-active': current === l.href.split(/[?#]/)[0] },
+                                    { 'has-desc': l.description },
+                                  ]}
+                                >
+                                  {l.icon && (
+                                    <span class="mega__icon">
+                                      <Icon name={l.icon} size={18} />
+                                    </span>
+                                  )}
+                                  <span class="mega__text">
+                                    <span class="mega__label">
+                                      {l.label}
+                                      {l.badge && (
+                                        <span class="chip is-status">{badgeLabels[l.badge]}</span>
+                                      )}
+                                    </span>
+                                    {l.description && (
+                                      <span class="mega__desc">{l.description}</span>
+                                    )}
+                                  </span>
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                    {item.featured && (
+                      <aside class="mega__featured">
+                        {item.featured.icon && (
+                          <span class="mega__featured-icon">
+                            <Icon name={item.featured.icon} size={20} />
+                          </span>
+                        )}
+                        <p class="mega__featured-title">{item.featured.title}</p>
+                        <p class="mega__featured-text">{item.featured.text}</p>
+                        <a href={item.featured.href} class="link-arrow">
+                          {item.featured.label}
+                          <Icon name="arrow-right" size={14} />
                         </a>
-                      </li>
-                    ))}
-                  </ul>
-                  <a href={item.href} class="dropdown__all link-arrow">
-                    {item.allLabel}
-                    <Icon name="arrow-right" size={14} />
-                  </a>
+                        {item.featured.qr && (
+                          <a href={item.featured.qr.href} class="mega__qr">
+                            <QrCode
+                              url={item.featured.qr.url}
+                              size={72}
+                              label="Código QR de la carta de ejemplo"
+                            />
+                            <span>{item.featured.qr.label}</span>
+                          </a>
+                        )}
+                      </aside>
+                    )}
+                  </div>
+                  {item.footerLinks && (
+                    <div class="mega__foot">
+                      {item.footerLinks.map((l) => (
+                        <a href={l.href} class="link-arrow">
+                          {l.label}
+                          <Icon name="arrow-right" size={14} />
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </li>
             ) : (
@@ -71,12 +144,15 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
     )}
 
     <div class="site-header__actions">
-      <a href="/contacto" class="btn is-ghost is-sm site-header__secondary">
-        Contacto
+      <a href={headerActions.try.href} class="btn is-ghost is-sm site-header__try">
+        <Icon name="play" size={16} />
+        {headerActions.try.label}
       </a>
-      <a href="/solicitar-demo" class="btn is-primary is-sm">
-        Solicitar demo
-      </a>
+      {variant === 'default' && (
+        <a href={headerActions.demo.href} class="btn is-primary is-sm site-header__demo">
+          {headerActions.demo.label}
+        </a>
+      )}
       {variant === 'default' && (
         <button
           type="button"
@@ -96,99 +172,152 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
   {variant === 'default' && (
     <div class="mobile-menu" id="menu-movil" data-mobile-menu hidden>
       <div class="container">
+        <div class="mobile-menu__actions">
+          <a href={headerActions.try.href} class="btn is-secondary is-lg">
+            <Icon name="play" size={18} />
+            {headerActions.try.label}
+          </a>
+          <a href={headerActions.demo.href} class="btn is-primary is-lg">
+            {headerActions.demo.label}
+          </a>
+        </div>
         <nav aria-label="Principal (móvil)">
           <ul role="list" class="mobile-menu__list">
             {mainNav.map((item) =>
-              item.children ? (
+              item.columns ? (
                 <li>
-                  <details class="mobile-menu__group" open={isActive(item.href)}>
+                  <details class="mobile-menu__group" open={groupActive(item)}>
                     <summary class="mobile-menu__summary">
                       {item.label}
                       <Icon name="chevron-down" size={16} />
                     </summary>
-                    <ul role="list" class="mobile-menu__sub">
-                      <li>
-                        <a href={item.href} class="mobile-menu__sublink is-all">
-                          {item.allLabel}
-                        </a>
-                      </li>
-                      {item.children.map((child) => (
-                        <li>
-                          <a href={child.href} class="mobile-menu__sublink">
-                            {child.label}
-                          </a>
-                        </li>
+                    <div class="mobile-menu__panel">
+                      {item.columns.map((col) => (
+                        <div class="mobile-menu__col">
+                          <p class="mobile-menu__title">{col.title}</p>
+                          <ul role="list" class="mobile-menu__sub">
+                            {col.links.map((l) => (
+                              <li>
+                                <a href={l.href} class="mobile-menu__sublink">
+                                  {l.icon && (
+                                    <span class="mobile-menu__icon">
+                                      <Icon name={l.icon} size={18} />
+                                    </span>
+                                  )}
+                                  <span>{l.label}</span>
+                                  {l.badge && (
+                                    <span class="chip is-status">{badgeLabels[l.badge]}</span>
+                                  )}
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       ))}
-                    </ul>
+                      {item.footerLinks && (
+                        <div class="mobile-menu__foot">
+                          {item.footerLinks.map((l) => (
+                            <a href={l.href} class="link-arrow">
+                              {l.label}
+                              <Icon name="arrow-right" size={14} />
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </details>
                 </li>
               ) : (
                 <li>
                   <a href={item.href} class="mobile-menu__link">
                     {item.label}
+                    <Icon name="arrow-right" size={16} />
                   </a>
                 </li>
               )
             )}
           </ul>
         </nav>
-        <div class="mobile-menu__actions">
-          <a href="/solicitar-demo" class="btn is-primary is-lg">
-            Solicitar demo
-          </a>
-          <a href="/contacto" class="btn is-secondary is-lg">
-            Contacto
-          </a>
-        </div>
       </div>
     </div>
   )}
 </header>
 
 <script>
-  // Menú: desplegables de escritorio (clic y teclado) y menú móvil. Sin dependencias.
+  // Megamenús (clic, intención de hover y teclado) y menú móvil. Sin dependencias.
   const header = document.querySelector<HTMLElement>('[data-header]');
   if (header) {
-    const dropdowns = header.querySelectorAll<HTMLElement>('[data-dropdown]');
-    const closeAll = (except?: HTMLElement) => {
-      dropdowns.forEach((d) => {
-        if (d === except) return;
-        d.classList.remove('is-open');
-        d.querySelector('[data-dropdown-toggle]')?.setAttribute('aria-expanded', 'false');
-      });
+    const OPEN_DELAY = 120;
+    const CLOSE_DELAY = 250;
+    const canHover = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    const dropdowns = Array.from(header.querySelectorAll<HTMLElement>('[data-dropdown]'));
+    const timers = new WeakMap<HTMLElement, number>();
+    const toggleOf = (d: HTMLElement) =>
+      d.querySelector<HTMLButtonElement>('[data-dropdown-toggle]');
+
+    const setOpen = (d: HTMLElement, open: boolean) => {
+      d.classList.toggle('is-open', open);
+      toggleOf(d)?.setAttribute('aria-expanded', String(open));
     };
+    const closeAll = (except?: HTMLElement) =>
+      dropdowns.forEach((d) => d !== except && setOpen(d, false));
+    const clearTimer = (d: HTMLElement) => {
+      const t = timers.get(d);
+      if (t) window.clearTimeout(t);
+    };
+
     dropdowns.forEach((d) => {
-      const toggle = d.querySelector<HTMLButtonElement>('[data-dropdown-toggle]');
+      const toggle = toggleOf(d);
       toggle?.addEventListener('click', () => {
-        // Con ratón, el hover ya lo abre: el clic lo mantiene abierto. Sin hover, alterna.
-        const open = d.dataset.hover === '1' ? true : !d.classList.contains('is-open');
-        d.classList.toggle('is-open', open);
-        toggle.setAttribute('aria-expanded', String(open));
+        clearTimer(d);
+        const open = !d.classList.contains('is-open') || d.dataset.hoverOpened === '1';
+        delete d.dataset.hoverOpened;
         closeAll(d);
+        setOpen(d, open);
       });
       d.addEventListener('mouseenter', () => {
-        if (window.matchMedia('(hover: hover)').matches) {
-          d.dataset.hover = '1';
-          closeAll(d);
-          d.classList.add('is-open');
-          toggle?.setAttribute('aria-expanded', 'true');
-        }
+        if (!canHover()) return;
+        clearTimer(d);
+        timers.set(
+          d,
+          window.setTimeout(() => {
+            if (!d.classList.contains('is-open')) d.dataset.hoverOpened = '1';
+            closeAll(d);
+            setOpen(d, true);
+          }, OPEN_DELAY)
+        );
       });
       d.addEventListener('mouseleave', () => {
-        delete d.dataset.hover;
-        if (window.matchMedia('(hover: hover)').matches) {
-          d.classList.remove('is-open');
-          toggle?.setAttribute('aria-expanded', 'false');
-        }
+        if (!canHover()) return;
+        clearTimer(d);
+        timers.set(
+          d,
+          window.setTimeout(() => {
+            delete d.dataset.hoverOpened;
+            setOpen(d, false);
+          }, CLOSE_DELAY)
+        );
+      });
+      // Al salir con el tabulador del panel, se cierra
+      d.addEventListener('focusout', (e) => {
+        const next = (e as FocusEvent).relatedTarget as Node | null;
+        if (next && !d.contains(next)) setOpen(d, false);
       });
     });
+
     document.addEventListener('click', (e) => {
       if (!(e.target as HTMLElement).closest('[data-dropdown]')) closeAll();
     });
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        closeAll();
+      if (e.key !== 'Escape') return;
+      const open = dropdowns.find((d) => d.classList.contains('is-open'));
+      if (open) {
+        setOpen(open, false);
+        toggleOf(open)?.focus();
+      }
+      if (mobile && !mobile.hidden) {
         closeMobile();
+        burger?.focus();
       }
     });
 
@@ -225,7 +354,7 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
     position: sticky;
     top: 0;
     z-index: var(--z-header);
-    background: rgb(255 255 255 / 0.88);
+    background: rgb(255 255 255 / 0.92);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid transparent;
@@ -248,6 +377,7 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
     text-decoration: none;
   }
 
+  /* ── Navegación de escritorio ─────────────────────────────────── */
   .site-nav {
     flex: 1 1 auto;
     display: flex;
@@ -260,6 +390,10 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
   }
   .site-nav__item {
     position: relative;
+  }
+  /* El megamenú ancho se ancla a la cabecera, no al botón */
+  .site-nav__item.is-wide {
+    position: static;
   }
   .site-nav__link {
     display: inline-flex;
@@ -281,82 +415,196 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
     color: var(--color-text-strong);
     text-decoration: none;
   }
-  .site-nav__chevron {
+  .site-nav__link :global(.site-nav__chevron) {
     transition: rotate var(--dur-fast) var(--ease);
     color: var(--color-text-muted);
   }
-  .has-children.is-open .site-nav__chevron {
+  .has-children.is-open :global(.site-nav__chevron) {
     rotate: 180deg;
   }
 
-  .dropdown {
+  /* ── Megamenú ─────────────────────────────────────────────────── */
+  /* Solo `transform` (no `translate`): el minificador fusiona ambas y perdería el centrado */
+  .mega {
     position: absolute;
     top: calc(100% + 8px);
     left: 50%;
-    translate: -50% 0;
-    min-width: 20rem;
-    padding: var(--space-3);
+    width: min(var(--mega-w), calc(100vw - 2 * var(--gutter)));
     background: var(--white);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-4px);
+    transform: translate(-50%, -4px);
     transition:
       opacity var(--dur-fast) var(--ease),
       transform var(--dur-fast) var(--ease),
       visibility var(--dur-fast);
   }
-  .has-children.is-open .dropdown {
+  .is-wide .mega {
+    top: calc(100% - 4px);
+    width: min(calc(var(--container-wide) - 2 * var(--gutter)), calc(100vw - 2 * var(--gutter)));
+  }
+  .has-children.is-open .mega {
     opacity: 1;
     visibility: visible;
-    transform: translateY(0);
+    transform: translate(-50%, 0);
   }
-  .dropdown__list {
+  .mega__body {
+    display: grid;
+    gap: var(--space-6);
+    padding: var(--space-6);
+  }
+  .mega__body.has-featured {
+    grid-template-columns: minmax(0, 1fr) 14rem;
+  }
+  .mega__cols {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+    gap: var(--space-6);
+  }
+  .is-wide .mega__cols {
+    gap: var(--space-4);
+  }
+  .mega__col {
+    min-width: 0;
+  }
+  .mega__title {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    padding: 0 var(--space-2) var(--space-3);
+  }
+  .mega__list {
     display: grid;
     gap: 2px;
   }
-  .site-nav__item:first-child .dropdown__list,
-  .site-nav__item:nth-child(2) .dropdown__list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    min-width: 34rem;
-  }
-  .dropdown__link {
+  .mega__link {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: var(--space-2) var(--space-3);
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2);
     border-radius: var(--radius-md);
     transition: background-color var(--dur-fast) var(--ease);
   }
-  .dropdown__link:hover,
-  .dropdown__link.is-active {
+  .mega__link.has-desc {
+    align-items: flex-start;
+  }
+  .mega__link:hover,
+  .mega__link.is-active {
     background: var(--color-bg-muted);
     text-decoration: none;
   }
-  .dropdown__label {
+  .mega__icon {
+    flex: 0 0 auto;
+    width: 2.25rem;
+    height: 2.25rem;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-muted);
+    color: var(--color-text-strong);
+    transition: background-color var(--dur-fast) var(--ease);
+  }
+  .mega__link:hover .mega__icon,
+  .mega__link.is-active .mega__icon {
+    background: var(--white);
+  }
+  .mega__text {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+  .mega__label {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-2);
     font-size: var(--text-sm);
     font-weight: var(--weight-medium);
     color: var(--color-text-strong);
+    line-height: var(--leading-snug);
   }
-  .dropdown__desc {
+  .mega__desc {
     font-size: var(--text-xs);
     color: var(--color-text-muted);
     line-height: var(--leading-normal);
   }
-  .dropdown__all {
+  .mega__featured {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    align-self: start;
+    padding: var(--space-5);
+    background: var(--gray-50);
+    border-radius: var(--radius-lg);
+  }
+  .mega__featured-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-md);
+    background: var(--white);
+    border: 1px solid var(--color-border);
+  }
+  .mega__featured-title {
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-snug);
+    color: var(--color-text-strong);
+    line-height: var(--leading-snug);
+  }
+  .mega__featured-text {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .mega__featured .link-arrow {
+    font-size: var(--text-sm);
+  }
+  .mega__qr {
     margin-top: var(--space-2);
-    padding: var(--space-2) var(--space-3);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding-top: var(--space-4);
     border-top: 1px solid var(--color-border);
-    padding-top: var(--space-3);
+    width: 100%;
     font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    line-height: var(--leading-normal);
+  }
+  .mega__qr:hover {
+    text-decoration: none;
+    color: var(--color-text-strong);
+  }
+  .mega__qr :global(.qr-code) {
+    padding: 6px;
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    box-sizing: content-box;
+  }
+  .mega__foot {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-6);
+    border-top: 1px solid var(--color-border);
+    font-size: var(--text-sm);
   }
 
+  /* ── Acciones ─────────────────────────────────────────────────── */
   .site-header__actions {
     margin-left: auto;
     display: flex;
     align-items: center;
+    gap: var(--space-2);
+  }
+  .site-header__try {
     gap: var(--space-2);
   }
   .site-header__burger {
@@ -370,24 +618,36 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
   .site-header__burger:hover {
     background: var(--color-bg-muted);
   }
-  .site-header__burger .icon-close {
+  .site-header__burger :global(.icon-close) {
     display: none;
   }
-  .site-header__burger[aria-expanded='true'] .icon-open {
+  .site-header__burger[aria-expanded='true'] :global(.icon-open) {
     display: none;
   }
-  .site-header__burger[aria-expanded='true'] .icon-close {
+  .site-header__burger[aria-expanded='true'] :global(.icon-close) {
     display: block;
   }
 
+  /* ── Menú móvil ───────────────────────────────────────────────── */
   .mobile-menu {
     position: fixed;
     inset: var(--header-h) 0 0 0;
     z-index: var(--z-menu);
     background: var(--white);
     overflow-y: auto;
-    padding-block: var(--space-4) var(--space-10);
+    overscroll-behavior: contain;
+    padding-block: var(--space-4) var(--space-12);
     border-top: 1px solid var(--color-border);
+  }
+  .mobile-menu__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+  .mobile-menu__actions .btn {
+    gap: var(--space-2);
+    padding-inline: var(--space-3);
   }
   .mobile-menu__list > li + li {
     border-top: 1px solid var(--color-border);
@@ -405,38 +665,79 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
     cursor: pointer;
     list-style: none;
   }
+  .mobile-menu__link:hover {
+    text-decoration: none;
+  }
+  .mobile-menu__link :global(svg) {
+    color: var(--color-text-subtle);
+  }
   .mobile-menu__summary::-webkit-details-marker {
     display: none;
   }
-  .mobile-menu__group[open] .mobile-menu__summary svg {
+  .mobile-menu__summary :global(svg) {
+    transition: rotate var(--dur-fast) var(--ease);
+  }
+  .mobile-menu__group[open] .mobile-menu__summary :global(svg) {
     rotate: 180deg;
   }
+  .mobile-menu__panel {
+    display: grid;
+    gap: var(--space-5);
+    padding-bottom: var(--space-5);
+  }
+  .mobile-menu__title {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-2);
+  }
   .mobile-menu__sub {
-    padding-bottom: var(--space-4);
     display: grid;
     gap: 2px;
   }
   .mobile-menu__sublink {
-    display: block;
-    padding: var(--space-2) var(--space-3);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-1);
     border-radius: var(--radius-md);
-    color: var(--color-text-muted);
+    color: var(--color-text);
     font-size: var(--text-base);
   }
-  .mobile-menu__sublink.is-all {
-    color: var(--color-text-strong);
-    font-weight: var(--weight-medium);
+  .mobile-menu__sublink:hover {
+    background: var(--color-bg-muted);
+    text-decoration: none;
   }
-  .mobile-menu__actions {
+  .mobile-menu__icon {
+    flex: 0 0 auto;
+    width: 2rem;
+    height: 2rem;
     display: grid;
-    gap: var(--space-3);
-    margin-top: var(--space-8);
+    place-items: center;
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-muted);
+    color: var(--color-text-strong);
+  }
+  .mobile-menu__foot {
+    display: grid;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
   }
 
   :global(html.menu-open) {
     overflow: hidden;
   }
 
+  @media (max-width: 1180px) {
+    .site-header__inner {
+      gap: var(--space-4);
+    }
+    .site-header__try {
+      display: none;
+    }
+  }
   @media (max-width: 1024px) {
     .site-nav {
       display: none;
@@ -444,13 +745,14 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
     .site-header__burger {
       display: inline-flex;
     }
-    .site-header__secondary {
+  }
+  @media (max-width: 480px) {
+    .site-header__demo {
       display: none;
     }
   }
-  @media (max-width: 480px) {
-    .site-header__actions .btn.is-primary {
-      display: none;
-    }
+  /* En la cabecera mínima (formulario de demo) «Pruébalo» se queda siempre */
+  .is-minimal .site-header__try {
+    display: inline-flex;
   }
 </style>

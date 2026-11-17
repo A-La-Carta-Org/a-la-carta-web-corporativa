@@ -1,7 +1,7 @@
 ---
-/** Pasos numerados en columnas con filete. */
+/** Pasos numerados en columnas con filete. Si un paso trae `when` (plazo), se pinta en vez del número. */
 interface Props {
-  steps: { title: string; text: string }[];
+  steps: { title: string; text: string; when?: string }[];
 }
 const { steps } = Astro.props;
 ---
@@ -9,7 +9,7 @@ const { steps } = Astro.props;
 <ol role="list" class="steps">
   {steps.map((s, i) => (
     <li class="column">
-      <span class="steps__num num">{String(i + 1).padStart(2, '0')}</span>
+      <span class="steps__num num">{s.when ?? String(i + 1).padStart(2, '0')}</span>
       <h3>{s.title}</h3>
       <p>{s.text}</p>
     </li>

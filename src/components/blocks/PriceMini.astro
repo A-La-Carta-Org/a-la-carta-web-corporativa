@@ -1,0 +1,98 @@
+---
+/**
+ * Mini-tarjeta de precio bajo los botones del hero de producto (docs/auditoria/04 §4.1): dónde
+ * se incluye, cuánto cuesta y, si no está disponible, el chip de estado con su matiz. Lee el
+ * precio de `solutionPricing()` (src/data/pricing.ts), la única lectura de precios por producto.
+ */
+import StatusChip from '@/components/ui/StatusChip.astro';
+import { NO_PRICE_LABEL, solutionPricing } from '@/data/pricing';
+import type { Solution } from '@/data/solutions';
+
+interface Props {
+  solution: Solution;
+  /** Ancla de la banda de precio de la página */
+  href?: string;
+}
+const { solution: s, href = '#precio' } = Astro.props;
+const p = solutionPricing(s.slug);
+const showStatus = s.status !== 'disponible';
+---
+
+<div class="price-mini">
+  <div class="price-mini__row">
+    <span class="price-mini__label">{p.label}</span>
+    {showStatus && <StatusChip status={s.status} note={s.statusNote} />}
+  </div>
+  <p class="price-mini__amount">
+    {p.amount ? (
+      <>
+        <b class="num">{p.amount}</b>
+        <span>{p.period}</span>
+      </>
+    ) : (
+      <b>{NO_PRICE_LABEL}</b>
+    )}
+  </p>
+  {(p.alt || p.unit) && <p class="price-mini__alt">{p.alt ?? p.unit}</p>}
+  {showStatus && s.statusNote && <p class="price-mini__alt">{s.statusNote}</p>}
+  <a href={href} class="price-mini__link">
+    Ver el detalle del precio
+  </a>
+</div>
+
+<style>
+  .price-mini {
+    display: grid;
+    gap: var(--space-1);
+    width: 100%;
+    max-width: 26rem;
+    padding: var(--space-4) var(--space-5);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--white);
+  }
+  .price-mini__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+  .price-mini__label {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+  .price-mini__amount {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-2);
+    color: var(--color-text-strong);
+  }
+  .price-mini__amount b {
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-xl);
+    letter-spacing: var(--tracking-snug);
+  }
+  .price-mini__amount span {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .price-mini__alt {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    line-height: var(--leading-normal);
+  }
+  .price-mini__link {
+    margin-top: var(--space-1);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-strong);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+</style>

@@ -1,5 +1,202 @@
 ---
-/** Pantalla de cocina: comandas en columnas, tiempos, un retraso marcado. */
+/**
+ * Pantalla de cocina: comandas en columnas, tiempos, un retraso marcado. `mode` cambia el
+ * contenido según el tipo de local (docs/auditoria/12 §2.1): restaurante (por defecto), pizzería
+ * (una cola por hora de salida con el canal de cada pedido), hamburguesería y take away.
+ */
+import type { KdsMode } from './modes';
+
+interface Props {
+  mode?: KdsMode;
+}
+const { mode = 'restaurante' } = Astro.props;
+
+interface Card {
+  title: string;
+  time: string;
+  pill?: 'danger' | 'ok';
+  state?: 'late' | 'new';
+  items: { text: string; sub?: string; done?: boolean }[];
+  /** Botón (oscuro o claro) o texto al pie */
+  foot: { btn?: 'dark' | 'light'; text: string };
+}
+interface ModeData {
+  tabs: string[];
+  summary: string;
+  value: string;
+  cards: Card[];
+}
+
+const modes: Record<KdsMode, ModeData> = {
+  restaurante: {
+    tabs: ['Pase', 'Calientes', 'Fríos', 'Postres'],
+    summary: '6 comandas · media',
+    value: '11 min',
+    cards: [
+      {
+        title: 'Mesa 4',
+        time: '18:42',
+        pill: 'danger',
+        state: 'late',
+        items: [
+          { text: '2 Croquetas', done: true },
+          { text: '1 Pulpo brasa', done: true },
+          { text: '1 Arroz meloso', sub: 'sin setas' },
+        ],
+        foot: { btn: 'dark', text: 'Marchar' },
+      },
+      {
+        title: 'Mesa 12',
+        time: '07:15',
+        items: [
+          { text: '2 Burrata', sub: 'sin cebolla', done: true },
+          { text: '1 Entrecot', sub: 'al punto' },
+          { text: '1 Arroz meloso' },
+        ],
+        foot: { btn: 'light', text: 'Listo' },
+      },
+      {
+        title: 'Recogida #214',
+        time: '03:50',
+        items: [
+          { text: '1 Pizza margarita' },
+          { text: '1 Pizza 4 quesos', sub: 'mitad sin cebolla' },
+        ],
+        foot: { text: 'Entrega 21:15' },
+      },
+      {
+        title: 'Mesa 2 · QR',
+        time: '00:40',
+        pill: 'ok',
+        state: 'new',
+        items: [{ text: '1 Tartar de atún' }, { text: '2 Bravas' }],
+        foot: { text: 'Pedido desde la mesa' },
+      },
+    ],
+  },
+  pizzeria: {
+    tabs: ['Horno', 'Mostrador', 'Reparto'],
+    summary: '9 pedidos · próxima salida',
+    value: '21:15',
+    cards: [
+      {
+        title: 'Teléfono · 21:15',
+        time: '12:30',
+        pill: 'danger',
+        state: 'late',
+        items: [
+          { text: '1 Barbacoa familiar', done: true },
+          { text: '1 Mitad 4 quesos', sub: 'mitad prosciutto · masa fina' },
+        ],
+        foot: { btn: 'dark', text: 'Al horno' },
+      },
+      {
+        title: 'Tienda online · 21:15',
+        time: '08:05',
+        items: [
+          { text: '2 Margarita', sub: 'extra de albahaca', done: true },
+          { text: '1 Diávola', sub: 'sin aceitunas' },
+        ],
+        foot: { btn: 'light', text: 'Lista' },
+      },
+      {
+        title: 'Mostrador · 21:20',
+        time: '04:10',
+        items: [{ text: '1 Carbonara', sub: 'masa integral' }, { text: '1 Calzone' }],
+        foot: { text: 'Recoge Pablo' },
+      },
+      {
+        title: 'Reparto · 21:30',
+        time: '01:05',
+        pill: 'ok',
+        state: 'new',
+        items: [{ text: '2 Cuatro estaciones' }, { text: '1 Tiramisú' }],
+        foot: { text: 'Zona Centro · Iván' },
+      },
+    ],
+  },
+  hamburgueseria: {
+    tabs: ['Plancha', 'Freidora', 'Recogida'],
+    summary: '7 pedidos · media',
+    value: '9 min',
+    cards: [
+      {
+        title: '#45 · Mesa 6 QR',
+        time: '11:20',
+        pill: 'danger',
+        state: 'late',
+        items: [
+          { text: '1 Clásica', sub: 'al punto · sin pepinillo', done: true },
+          { text: '1 Menú doble', sub: 'patatas grandes · cola' },
+        ],
+        foot: { btn: 'dark', text: 'Listo' },
+      },
+      {
+        title: '#46 · Mostrador',
+        time: '06:40',
+        items: [
+          { text: '2 Smash', sub: 'extra de bacon', done: true },
+          { text: '2 Patatas', sub: 'salsa trufada' },
+        ],
+        foot: { btn: 'light', text: 'Listo' },
+      },
+      {
+        title: '#47 · Recoger 21:30',
+        time: '02:15',
+        items: [{ text: '1 Pollo crujiente' }, { text: '1 Veggie', sub: 'sin cebolla' }],
+        foot: { text: 'Pedido online' },
+      },
+      {
+        title: '#48 · Mesa 2 QR',
+        time: '00:35',
+        pill: 'ok',
+        state: 'new',
+        items: [{ text: '1 Menú infantil' }, { text: '1 Clásica', sub: 'muy hecha' }],
+        foot: { text: 'Pedido desde la mesa' },
+      },
+    ],
+  },
+  takeaway: {
+    tabs: ['Cocina', 'Para recoger', 'Reparto'],
+    summary: '11 pedidos · próxima salida',
+    value: '20:45',
+    cards: [
+      {
+        title: 'App · Recoger 20:45',
+        time: '14:10',
+        pill: 'danger',
+        state: 'late',
+        items: [
+          { text: '2 Poke salmón', done: true },
+          { text: '1 Gyozas', sub: 'salsa aparte' },
+        ],
+        foot: { btn: 'dark', text: 'Listo' },
+      },
+      {
+        title: 'Tienda · Reparto 20:50',
+        time: '09:30',
+        items: [{ text: '1 Ramen tonkotsu', done: true }, { text: '2 Bao de cerdo' }],
+        foot: { text: 'Zona Norte · 2,4 km' },
+      },
+      {
+        title: 'Mostrador · 20:55',
+        time: '03:20',
+        items: [{ text: '1 Yakisoba', sub: 'sin cacahuete' }, { text: '1 Mochi' }],
+        foot: { btn: 'light', text: 'Listo' },
+      },
+      {
+        title: 'Tienda · Recoger 21:00',
+        time: '00:50',
+        pill: 'ok',
+        state: 'new',
+        items: [{ text: '3 Poke pollo' }, { text: '3 Agua' }],
+        foot: { text: 'Pagado online' },
+      },
+    ],
+  },
+};
+
+const d = modes[mode];
 ---
 
 <div class="mk mk-kds">
@@ -11,102 +208,48 @@
       <i></i>
     </span>
     <div class="mk-tabs">
-      <span class="mk-tab is-on">Pase</span>
-      <span class="mk-tab">Calientes</span>
-      <span class="mk-tab">Fríos</span>
-      <span class="mk-tab">Postres</span>
+      {d.tabs.map((t, i) => (
+        <span class:list={['mk-tab', { 'is-on': i === 0 }]}>{t}</span>
+      ))}
     </div>
     <div class="mk-right">
       <span class="mk-muted">
-        6 comandas · media <b class="num mk-strong">11 min</b>
+        {d.summary} <b class="num mk-strong">{d.value}</b>
       </span>
     </div>
   </div>
   <div class="mk-kds__board">
-    <article class="mk-kds__card is-late">
-      <header>
-        <span class="mk-strong">Mesa 4</span>
-        <span class="num mk-pill is-danger">18:42</span>
-      </header>
-      <div class="mk-row">
-        <span class="mk-check is-on"></span>
-        <span class="grow">2 Croquetas</span>
-      </div>
-      <div class="mk-row">
-        <span class="mk-check is-on"></span>
-        <span class="grow">1 Pulpo brasa</span>
-      </div>
-      <div class="mk-row">
-        <span class="mk-check"></span>
-        <span class="grow">
-          1 Arroz meloso<span class="sub">sin setas</span>
-        </span>
-      </div>
-      <footer>
-        <span class="mk-btn is-dark is-block">Marchar</span>
-      </footer>
-    </article>
-    <article class="mk-kds__card">
-      <header>
-        <span class="mk-strong">Mesa 12</span>
-        <span class="num mk-pill">07:15</span>
-      </header>
-      <div class="mk-row">
-        <span class="mk-check is-on"></span>
-        <span class="grow">
-          2 Burrata<span class="sub">sin cebolla</span>
-        </span>
-      </div>
-      <div class="mk-row">
-        <span class="mk-check"></span>
-        <span class="grow">
-          1 Entrecot<span class="sub">al punto</span>
-        </span>
-      </div>
-      <div class="mk-row">
-        <span class="mk-check"></span>
-        <span class="grow">1 Arroz meloso</span>
-      </div>
-      <footer>
-        <span class="mk-btn is-block">Listo</span>
-      </footer>
-    </article>
-    <article class="mk-kds__card">
-      <header>
-        <span class="mk-strong">Recogida #214</span>
-        <span class="num mk-pill">03:50</span>
-      </header>
-      <div class="mk-row">
-        <span class="mk-check"></span>
-        <span class="grow">1 Pizza margarita</span>
-      </div>
-      <div class="mk-row">
-        <span class="mk-check"></span>
-        <span class="grow">
-          1 Pizza 4 quesos<span class="sub">mitad sin cebolla</span>
-        </span>
-      </div>
-      <footer>
-        <span class="mk-muted">Entrega 21:15</span>
-      </footer>
-    </article>
-    <article class="mk-kds__card is-new">
-      <header>
-        <span class="mk-strong">Mesa 2 · QR</span>
-        <span class="num mk-pill is-ok">00:40</span>
-      </header>
-      <div class="mk-row">
-        <span class="mk-check"></span>
-        <span class="grow">1 Tartar de atún</span>
-      </div>
-      <div class="mk-row">
-        <span class="mk-check"></span>
-        <span class="grow">2 Bravas</span>
-      </div>
-      <footer>
-        <span class="mk-muted">Pedido desde la mesa</span>
-      </footer>
-    </article>
+    {d.cards.map((c) => (
+      <article
+        class:list={[
+          'mk-kds__card',
+          { 'is-late': c.state === 'late', 'is-new': c.state === 'new' },
+        ]}
+      >
+        <header>
+          <span class="mk-strong">{c.title}</span>
+          <span class:list={['num', 'mk-pill', c.pill && `is-${c.pill}`]}>{c.time}</span>
+        </header>
+        {c.items.map((it) => (
+          <div class="mk-row">
+            <span class:list={['mk-check', { 'is-on': it.done }]}></span>
+            <span class="grow">
+              {it.text}
+              {it.sub && <span class="sub">{it.sub}</span>}
+            </span>
+          </div>
+        ))}
+        <footer>
+          {c.foot.btn ? (
+            <span class:list={['mk-btn', 'is-block', { 'is-dark': c.foot.btn === 'dark' }]}>
+              {c.foot.text}
+            </span>
+          ) : (
+            <span class="mk-muted">{c.foot.text}</span>
+          )}
+        </footer>
+      </article>
+    ))}
   </div>
 </div>
 

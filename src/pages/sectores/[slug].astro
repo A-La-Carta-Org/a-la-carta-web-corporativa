@@ -1,16 +1,25 @@
 ---
+/**
+ * Plantilla de sector (docs/auditoria/12 §2): hero con visual propio, problemas → soluciones,
+ * «un día en tu local», configuración recomendada con su precio orientativo (quote.ts) y enlace
+ * al configurador precargado, la demo que mejor encaja, FAQ, otros sectores y cierre.
+ * Una sola isla por página (la demo), con `client:visible`.
+ */
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHero from '@/components/blocks/PageHero.astro';
 import SectionHeader from '@/components/ui/SectionHeader.astro';
 import FaqSection from '@/components/blocks/FaqSection.astro';
 import CtaBand from '@/components/blocks/CtaBand.astro';
-import SolutionGrid from '@/components/blocks/SolutionGrid.astro';
 import SectorGrid from '@/components/blocks/SectorGrid.astro';
-import Mockup from '@/components/mockups/Mockup.astro';
+import SectorHeroVisual from '@/components/blocks/SectorHeroVisual.astro';
+import DayTimeline from '@/components/blocks/DayTimeline.astro';
+import RecommendedSetup from '@/components/blocks/RecommendedSetup.astro';
+import DemoBlock from '@/components/blocks/DemoBlock.astro';
 import { sectors, sectorPath, type Sector } from '@/data/sectors';
-import { getSolution } from '@/data/solutions';
 import { fromLabel } from '@/data/pricing';
+import { sectorPresets } from '@/lib/quote';
 import { breadcrumbJsonLd, faqJsonLd } from '@/lib/seo';
+import { ctaHref } from '@/lib/cta';
 
 export function getStaticPaths() {
   return sectors.map((s) => ({ params: { slug: s.slug }, props: { sector: s } }));
@@ -26,11 +35,26 @@ const crumbs = [
   { name: 'Sectores', path: '/sectores' },
   { name: s.name, path },
 ];
-const heroMockup = getSolution(s.modules[0]!).mockup;
-const others = sectors
-  .filter((x) => x.slug !== s.slug)
-  .slice(0, 3)
-  .map((x) => x.slug);
+const origen = `sector-${s.slug}`;
+const isGroup = s.slug === 'grupos-y-cadenas';
+const yourPlace = isGroup ? 'tu grupo' : 'tu local';
+const configHref = ctaHref({
+  to: 'precios',
+  sector: s.slug,
+  origen: `${origen}-config`,
+  hash: 'monta',
+});
+// Otros sectores: los tres siguientes en la lista, dando la vuelta
+const idx = sectors.findIndex((x) => x.slug === s.slug);
+const others = [1, 2, 3].map((n) => sectors[(idx + n) % sectors.length]!.slug);
+const demoTry = {
+  simulador: 'Toma una comanda y mira cómo llega a cocina y a caja.',
+  carta: 'Abre la carta de ejemplo como la verá tu cliente.',
+  llamada: 'Mira cómo se atiende una llamada de ejemplo.',
+  canales: 'Cambia un precio y míralo cambiar en todos los canales.',
+  calculadora: 'Haz la cuenta de lo que se te va en comisiones.',
+  comprobador: 'Comprueba si te sirve el equipo que ya tienes.',
+}[s.demo.key];
 ---
 
 <BaseLayout
@@ -42,15 +66,17 @@ const others = sectors
   <PageHero
     breadcrumbs={crumbs}
     eyebrow={`Software para ${s.name.toLowerCase()}`}
+    eyebrowIcon={s.icon}
     title={s.title}
     text={s.intro}
-    primary={{ label: 'Solicitar demo', href: `/solicitar-demo?sector=${s.slug}` }}
-    secondary={{ label: 'Ver precios', href: '/precios' }}
+    primary={{
+      label: 'Solicitar demo',
+      href: ctaHref({ to: 'demo', sector: s.slug, origen: `${origen}-hero` }),
+    }}
+    secondary={{ label: 'Ver mi configuración', href: '#configuracion' }}
     note={`Sin permanencia · ${fromLabel}`}
   >
-    <div class="sec-hero-media">
-      <Mockup kind={heroMockup} />
-    </div>
+    <SectorHeroVisual hero={s.hero} />
   </PageHero>
 
   <section class="section has-rule">
@@ -78,16 +104,36 @@ const others = sectors
     </div>
   </section>
 
-  <section class="section is-soft">
+  <section class="section is-soft" id="un-dia">
     <div class="container">
       <SectionHeader
-        eyebrow="Módulos recomendados"
-        title={`Lo que suele llevar un ${s.name.toLowerCase().replace(/s$/, '').replace('grupos y cadena', 'grupo')}`}
-        text="Empieza por los primeros y añade el resto cuando el servicio lo pida."
+        eyebrow={`Un día en ${yourPlace}`}
+        title="De la apertura al cierre, qué pieza trabaja en cada momento"
+        text="Un día normal, contado hora a hora. Lo marcado «en camino» todavía no está disponible: te lo decimos para que sepas qué tendrás hoy y qué vendrá."
       />
-      <SolutionGrid only={s.modules} columns={s.modules.length > 4 ? 3 : 4} />
+      <DayTimeline items={s.day} />
     </div>
   </section>
+
+  <section class="section" id="configuracion">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Configuración recomendada"
+        title={`Lo que suele llevar ${s.singular}`}
+        text="Un punto de partida, no una obligación. Ábrelo en el configurador y quita o añade lo que quieras: el precio cambia al momento."
+      />
+      <RecommendedSetup
+        config={sectorPresets[s.slug] ?? {}}
+        kits={s.recommended.kits}
+        later={s.recommended.later}
+        text={s.recommended.text}
+        href={configHref}
+        label={`${s.name} · de partida`}
+      />
+    </div>
+  </section>
+
+  <DemoBlock demo={s.demo.key} title={s.demo.title} text={s.demo.text} origen={`${origen}-demo`} />
 
   <FaqSection items={s.faqs} title={`Preguntas de ${s.name.toLowerCase()}`} />
 
@@ -98,17 +144,20 @@ const others = sectors
     </div>
   </section>
 
-  <CtaBand title={`Vamos a ver tu ${s.slug === 'grupos-y-cadenas' ? 'grupo' : 'local'}`} />
+  <CtaBand
+    title={`Vamos a ver ${yourPlace}`}
+    sector={s.slug}
+    origen={origen}
+    tryLink={{ label: 'Probar la demo', href: '#pruebalo', text: demoTry }}
+    calcLink={{
+      label: 'Monta tu alaCarta',
+      href: ctaHref({ to: 'precios', sector: s.slug, origen, hash: 'monta' }),
+      text: 'Parte de la configuración de este sector y ajústala con tus números.',
+    }}
+  />
 </BaseLayout>
 
 <style>
-  .sec-hero-media {
-    display: flex;
-    justify-content: center;
-  }
-  .sec-hero-media :global(.device.is-phone) {
-    max-width: 16rem;
-  }
   .sec-pairs {
     display: grid;
     gap: var(--space-4);

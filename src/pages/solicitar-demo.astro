@@ -1,118 +1,279 @@
 ---
+/**
+ * Solicitar demo (docs/auditoria/11 §3). Formulario en tres pasos (`LeadForm`) y columna con qué
+ * pasa después. La misma página sirve para «Te llamamos» (`?modo=llamada`), la propuesta del
+ * configurador (`?motivo=propuesta`) y los locales fundadores (`?motivo=fundador`): un script
+ * corto elige la variante del titular antes de pintar, y el formulario avisa si se cambia de modo.
+ */
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import LeadForm from '@/components/islands/LeadForm.vue';
 import Icon from '@/components/ui/Icon.astro';
-import { DEMO_MINUTES, REPLY_HOURS } from '@/data/site';
-import { TRIAL_DAYS } from '@/data/pricing';
+import { iconPaths } from '@/components/ui/icons';
+import { CONTACT_EMAIL, DEMO_MINUTES, REPLY_HOURS } from '@/data/site';
+import { FOUNDER_SPOTS, TRIAL_DAYS } from '@/data/pricing';
+import { ecosystem, families, statusLabels } from '@/data/solutions';
+import { sectors } from '@/data/sectors';
+import { ctaHref } from '@/lib/cta';
 import { breadcrumbJsonLd } from '@/lib/seo';
 
 const crumbs = [
   { name: 'Inicio', path: '/' },
   { name: 'Solicitar demo', path: '/solicitar-demo' },
 ];
-const steps = [
+
+/* Catálogos ligeros para la isla (no se mete solutions.ts en el cliente) */
+const products = ecosystem.map((i) => ({
+  slug: i.slug,
+  label: i.navLabel,
+  family: i.family,
+  status: i.status === 'disponible' ? undefined : statusLabels[i.status],
+}));
+const familyOptions = [...families]
+  .sort((a, b) => a.order - b.order)
+  .map((f) => ({ id: f.id, name: f.name }));
+const sectorOptions = sectors.map((s) => ({ slug: s.slug, name: s.name, icon: iconPaths[s.icon] }));
+
+/* Variantes del titular: demo (por defecto), llamada, propuesta, fundador */
+const heads = [
   {
-    title: 'Nos cuentas tu local',
-    text: 'Rellenas el formulario: tipo de local, cuántos sois, qué usas ahora.',
+    v: 'demo',
+    eyebrow: 'Solicitar demo',
+    title: 'Vamos a ver tu local',
+    lead: `Una videollamada de ${DEMO_MINUTES} minutos, sin guion comercial: miramos cómo trabajas y te enseñamos cómo quedaría con alaCarta.`,
   },
   {
-    title: 'Fijamos la videollamada',
-    text: `Te escribimos en menos de ${REPLY_HOURS} horas laborables para buscar un hueco.`,
+    v: 'llamada',
+    eyebrow: 'Te llamamos',
+    title: 'Te llamamos cuando te venga bien',
+    lead: 'Déjanos tu teléfono y la franja que prefieras. Resolvemos tus dudas por teléfono y, si encaja, vemos la demo otro día.',
   },
   {
+    v: 'propuesta',
+    eyebrow: 'Tu propuesta',
+    title: 'Te preparamos la propuesta',
+    lead: 'Con lo que has montado delante, repasamos tu local y te mandamos la propuesta por escrito, con el precio cerrado.',
+  },
+  {
+    v: 'fundador',
+    eyebrow: 'Locales fundadores',
+    title: 'Quieres ser local fundador',
+    lead: `Cuéntanos tu local. Si encaja, te explicamos las condiciones por escrito. Son ${FOUNDER_SPOTS} plazas.`,
+  },
+];
+
+const after = [
+  {
+    v: 'demo propuesta fundador',
+    title: 'Te escribimos',
+    text: `En menos de ${REPLY_HOURS} horas laborables, para buscar un hueco que te venga bien.`,
+  },
+  {
+    v: 'demo fundador',
     title: `${DEMO_MINUTES} minutos con tu caso`,
     text: 'Te enseñamos la plataforma con una carta y un flujo parecidos a los tuyos.',
   },
   {
+    v: 'propuesta',
+    title: 'Repasamos tu configuración',
+    text: 'Confirmamos contigo lo que necesitas y lo que sobra, por videollamada o por teléfono.',
+  },
+  {
+    v: 'demo propuesta fundador',
     title: 'Propuesta por escrito',
-    text: `Módulos, dispositivos y precio cerrado. Y ${TRIAL_DAYS} días de prueba si quieres seguir.`,
+    text: `Módulos, equipo y precio cerrado. Y ${TRIAL_DAYS} días de prueba sin tarjeta si quieres seguir.`,
+  },
+  {
+    v: 'llamada',
+    title: 'Te llamamos',
+    text: `En menos de ${REPLY_HOURS} horas laborables, en la franja que elijas.`,
+  },
+  {
+    v: 'llamada',
+    title: 'Resolvemos tus dudas',
+    text: 'Qué necesitas, cuánto cuesta y cómo se cambia sin cerrar el local.',
+  },
+  {
+    v: 'llamada',
+    title: 'Si encaja, el siguiente paso',
+    text: 'Una demo con pantalla o la propuesta por escrito. Tú decides.',
   },
 ];
 ---
 
 <BaseLayout
   title="Solicitar una demo de alaCarta"
-  description={`Pide una demo de alaCarta: una videollamada de ${DEMO_MINUTES} minutos con tu caso, propuesta por escrito y ${TRIAL_DAYS} días de prueba sin tarjeta.`}
+  description={`Pide una demo de alaCarta o que te llamemos: ${DEMO_MINUTES} minutos con tu caso, propuesta por escrito y ${TRIAL_DAYS} días de prueba sin tarjeta.`}
   path="/solicitar-demo"
   jsonLd={breadcrumbJsonLd(crumbs)}
   headerVariant="minimal"
 >
-  <section class="demo">
-    <div class="container demo__inner">
-      <div class="demo__copy">
-        <span class="eyebrow">Solicitar demo</span>
-        <h1>Vamos a ver tu local</h1>
-        <p class="lead">
-          Una videollamada corta, sin guion comercial: miramos cómo trabajas y te enseñamos cómo
-          quedaría con alaCarta.
-        </p>
-        <ol role="list" class="demo__steps">
-          {steps.map((s, i) => (
-            <li>
-              <span class="demo__num num">{i + 1}</span>
+  <section class="ld" data-variant="demo">
+    <script is:inline>
+      (function () {
+        const el = document.currentScript && document.currentScript.parentElement;
+        if (!el) return;
+        const q = new URLSearchParams(window.location.search);
+        const motivo = q.get('motivo');
+        const fundador = motivo === 'fundador' || /(^|_)f(_|$)/.test(q.get('config') || '');
+        function set(modo) {
+          el.setAttribute(
+            'data-variant',
+            modo === 'llamada'
+              ? 'llamada'
+              : motivo === 'propuesta'
+                ? 'propuesta'
+                : fundador
+                  ? 'fundador'
+                  : 'demo'
+          );
+        }
+        set(q.get('modo'));
+        window.addEventListener('alacarta:lead-modo', function (e) {
+          set(e.detail);
+        });
+      })();
+    </script>
+    <div class="container ld__inner">
+      <header class="ld__head">
+        {/* Un solo h1 en el HTML: las variantes son spans y el CSS deja visible la activa */}
+        {heads.map((h) => (
+          <span data-v={h.v} class="eyebrow">
+            {h.eyebrow}
+          </span>
+        ))}
+        <h1>
+          {heads.map((h) => (
+            <span data-v={h.v}>{h.title}</span>
+          ))}
+        </h1>
+        {heads.map((h) => (
+          <p data-v={h.v} class="lead">
+            {h.lead}
+          </p>
+        ))}
+      </header>
+
+      <div class="ld__form card">
+        <LeadForm
+          client:load
+          products={products}
+          families={familyOptions}
+          sectors={sectorOptions}
+        />
+      </div>
+
+      <aside class="ld__aside" aria-labelledby="ld-after-title">
+        <h2 id="ld-after-title" class="ld__aside-title">
+          Qué pasa después
+        </h2>
+        <ol role="list" class="ld__steps">
+          {after.map((s) => (
+            <li data-v={s.v}>
+              <span class="ld__dot" aria-hidden="true" />
               <div>
-                <h2>{s.title}</h2>
+                <h3>{s.title}</h3>
                 <p class="muted">{s.text}</p>
               </div>
             </li>
           ))}
         </ol>
-        <ul role="list" class="demo__facts muted">
+        <ul role="list" class="ld__facts muted">
           <li>
-            <Icon name="check" size={16} /> Sin compromiso
+            <Icon name="clock" size={16} /> Respuesta en menos de {REPLY_HOURS} h laborables
           </li>
           <li>
-            <Icon name="check" size={16} /> Sin tarjeta para la prueba
+            <Icon name="check" size={16} /> Sin compromiso ni permanencia
           </li>
           <li>
-            <Icon name="check" size={16} /> Sin permanencia
+            <Icon name="mail" size={16} />
+            <span>
+              ¿Prefieres escribir? <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+            </span>
           </li>
         </ul>
-      </div>
-      <div class="demo__form card">
-        <LeadForm client:load variant="demo" />
-      </div>
+        <a
+          href={ctaHref({ to: 'probar', origen: 'solicitar-demo' })}
+          class="card is-link ld__try"
+          data-v="demo propuesta fundador llamada"
+        >
+          <Icon name="play" size={20} />
+          <span>
+            <strong>¿Prefieres no esperar? Pruébalo ahora</strong>
+            <span class="muted">
+              Toma una comanda y mira cómo llega a cocina y a caja. Sin datos ni registro.
+            </span>
+          </span>
+          <Icon name="arrow-right" size={16} class="ld__try-arrow" />
+        </a>
+      </aside>
     </div>
   </section>
 </BaseLayout>
 
 <style>
-  .demo {
-    padding-block: clamp(2.5rem, 2rem + 3vw, 5rem) var(--section-y);
+  .ld {
+    padding-block: clamp(2rem, 1.5rem + 3vw, 4.5rem) var(--section-y);
   }
-  .demo__inner {
+  .ld__inner {
     display: grid;
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-    gap: var(--space-16);
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    grid-template-areas:
+      'head form'
+      'aside form';
+    grid-template-rows: auto 1fr;
+    gap: var(--space-10) var(--space-16);
     align-items: start;
   }
-  .demo__copy {
-    display: grid;
-    gap: var(--space-6);
-    position: sticky;
-    top: calc(var(--header-h) + var(--space-8));
-  }
-  .demo__copy h1 {
-    font-size: var(--text-4xl);
-  }
-  .demo__steps {
+  .ld__head {
+    grid-area: head;
     display: grid;
     gap: var(--space-5);
-    margin-top: var(--space-2);
+    align-content: start;
   }
-  .demo__steps li {
+  .ld__form {
+    grid-area: form;
+    padding: var(--space-8);
+  }
+  .ld__aside {
+    grid-area: aside;
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  /* Variantes: se enseña solo lo de la variante activa */
+  .ld[data-variant='demo'] [data-v]:not([data-v~='demo']),
+  .ld[data-variant='llamada'] [data-v]:not([data-v~='llamada']),
+  .ld[data-variant='propuesta'] [data-v]:not([data-v~='propuesta']),
+  .ld[data-variant='fundador'] [data-v]:not([data-v~='fundador']) {
+    display: none;
+  }
+
+  .ld__head h1 {
+    font-size: var(--text-4xl);
+  }
+  .ld__aside-title {
+    font-size: var(--text-xs);
+    font-family: var(--font-body);
+    font-weight: var(--weight-medium);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    color: var(--color-text-muted);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-border);
+  }
+  .ld__steps {
+    display: grid;
+    gap: var(--space-4);
+    counter-reset: ld;
+  }
+  /* Los pasos ocultos (display: none) no cuentan: la numeración se adapta a la variante */
+  .ld__steps li {
     display: flex;
     gap: var(--space-4);
     align-items: flex-start;
+    counter-increment: ld;
   }
-  .demo__steps h2 {
-    font-size: var(--text-base);
-    margin-bottom: 2px;
-  }
-  .demo__steps p {
-    font-size: var(--text-sm);
-  }
-  .demo__num {
+  .ld__dot {
     flex: 0 0 auto;
     width: 1.75rem;
     height: 1.75rem;
@@ -123,31 +284,64 @@ const steps = [
     font-size: var(--text-xs);
     font-weight: var(--weight-medium);
   }
-  .demo__facts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-5);
+  .ld__dot::before {
+    content: counter(ld);
+  }
+  .ld__steps h3 {
+    font-size: var(--text-base);
+    margin-bottom: 2px;
+  }
+  .ld__steps p {
     font-size: var(--text-sm);
   }
-  .demo__facts li {
-    display: inline-flex;
+  .ld__facts {
+    display: grid;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+  }
+  .ld__facts li {
+    display: flex;
     align-items: center;
     gap: var(--space-2);
   }
-  .demo__form {
-    padding: var(--space-8);
+  .ld__facts a {
+    color: var(--color-text-strong);
+    text-decoration: underline;
+  }
+  .ld__try {
+    display: flex;
+    gap: var(--space-4);
+    align-items: flex-start;
+    padding: var(--space-5);
+  }
+  .ld__try > span {
+    display: grid;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+    flex: 1 1 auto;
+  }
+  .ld__try strong {
+    font-family: var(--font-display);
+    font-size: var(--text-base);
+    color: var(--color-text-strong);
+  }
+  .ld__try :global(.ld__try-arrow) {
+    flex: 0 0 auto;
+    margin-top: 4px;
   }
   @media (max-width: 1024px) {
-    .demo__inner {
+    .ld__inner {
       grid-template-columns: 1fr;
-      gap: var(--space-10);
-    }
-    .demo__copy {
-      position: static;
+      grid-template-areas:
+        'head'
+        'form'
+        'aside';
+      grid-template-rows: auto;
+      gap: var(--space-8);
     }
   }
   @media (max-width: 640px) {
-    .demo__form {
+    .ld__form {
       padding: var(--space-5);
     }
   }

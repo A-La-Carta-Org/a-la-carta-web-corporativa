@@ -3,12 +3,27 @@
  * Hero de página. Dos variantes:
  * - `split`: texto a la izquierda y maqueta (slot) a la derecha. Para producto y sectores.
  * - `compact`: una columna, antetítulo, H1 y una línea. Para precios, recursos, contacto.
+ *
+ * Slots: el por defecto es la maqueta (solo en `split`); `after-actions` va bajo los botones
+ * (la mini-tarjeta de precio de las páginas de producto).
  */
 import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
 import Breadcrumbs from '@/components/ui/Breadcrumbs.astro';
+import StatusChip from '@/components/ui/StatusChip.astro';
+import type { SolutionStatus } from '@/data/solutions';
 
+/**
+ * Los `href` de los botones se construyen con `ctaHref()` (src/lib/cta.ts) en cada página, para
+ * que lleven su contexto (`origen`, `modulo`, `sector`).
+ */
 interface Props {
   eyebrow?: string;
+  /** Icono de línea delante del antetítulo */
+  eyebrowIcon?: IconName;
+  /** Estado del producto: el chip solo aparece si no está disponible */
+  status?: SolutionStatus;
+  statusNote?: string;
   title: string;
   text?: string;
   variant?: 'split' | 'compact' | 'center';
@@ -19,6 +34,9 @@ interface Props {
 }
 const {
   eyebrow,
+  eyebrowIcon,
+  status,
+  statusNote,
   title,
   text,
   variant = 'split',
@@ -33,7 +51,17 @@ const {
   <div class="container page-hero__inner">
     <div class="page-hero__copy">
       {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
-      {eyebrow && <span class="eyebrow">{eyebrow}</span>}
+      {(eyebrow || status) && (
+        <div class="page-hero__eyebrow">
+          {eyebrow && (
+            <span class:list={['eyebrow', { 'has-icon': eyebrowIcon }]}>
+              {eyebrowIcon && <Icon name={eyebrowIcon} size={16} />}
+              {eyebrow}
+            </span>
+          )}
+          <StatusChip status={status} note={statusNote} />
+        </div>
+      )}
       <h1>{title}</h1>
       {text && <p class="lead">{text}</p>}
       {(primary || secondary) && (
@@ -51,7 +79,11 @@ const {
           )}
         </div>
       )}
+      <slot name="after-actions" />
       {note && <p class="page-hero__note muted">{note}</p>}
+      {status && status !== 'disponible' && statusNote && (
+        <p class="page-hero__note muted">{statusNote}</p>
+      )}
     </div>
     {variant === 'split' && (
       <div class="page-hero__media">
@@ -96,6 +128,18 @@ const {
     flex-wrap: wrap;
     gap: var(--space-3);
     margin-top: var(--space-2);
+  }
+  .page-hero__eyebrow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+  }
+  .is-center .page-hero__eyebrow {
+    justify-content: center;
+  }
+  .eyebrow.has-icon::before {
+    display: none;
   }
   .page-hero__note {
     font-size: var(--text-sm);

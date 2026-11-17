@@ -1,0 +1,212 @@
+---
+/**
+ * ERP: facturas de proveedor del mes con su estado y, al lado, el almacén con lo que está bajo
+ * mínimo y su valor. Proveedores y cifras inventados como ejemplo de interfaz.
+ */
+---
+
+<div class="mk mk-erp">
+  <div class="mk-topbar">
+    <span class="mk-logo">
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+    </span>
+    <div class="mk-tabs">
+      <span class="mk-tab is-on">Compras</span>
+      <span class="mk-tab">Almacén</span>
+      <span class="mk-tab">Facturas</span>
+      <span class="mk-tab">Tesorería</span>
+      <span class="mk-tab">Contabilidad</span>
+    </div>
+    <div class="mk-right">
+      <span class="mk-pill">Noviembre</span>
+    </div>
+  </div>
+  <div class="mk-erp__body">
+    <section class="mk-erp__main">
+      <div class="mk-erp__kpis">
+        <div class="mk-panel is-soft mk-erp__kpi">
+          <span class="mk-muted">Compras del mes</span>
+          <span class="num mk-erp__big">8.420 €</span>
+        </div>
+        <div class="mk-panel is-soft mk-erp__kpi">
+          <span class="mk-muted">Pendiente de pago</span>
+          <span class="num mk-erp__big">2.135 €</span>
+        </div>
+      </div>
+      <div class="mk-erp__table">
+        <div class="mk-erp__tr is-head">
+          <span>Proveedor</span>
+          <span>Fecha</span>
+          <span class="is-r">Importe</span>
+          <span class="is-r">Estado</span>
+        </div>
+        <div class="mk-erp__tr">
+          <span class="mk-strong">
+            Pescados del Puerto<span class="sub">F-2611 · pescado y marisco</span>
+          </span>
+          <span class="num">20/11</span>
+          <span class="num is-r">1.284,60 €</span>
+          <span class="is-r">
+            <span class="mk-pill is-warn">Vence en 3 días</span>
+          </span>
+        </div>
+        <div class="mk-erp__tr">
+          <span class="mk-strong">
+            Hortalizas Vega<span class="sub">A-0981 · fruta y verdura</span>
+          </span>
+          <span class="num">19/11</span>
+          <span class="num is-r">412,30 €</span>
+          <span class="is-r">
+            <span class="mk-pill is-ok">Pagada</span>
+          </span>
+        </div>
+        <div class="mk-erp__tr">
+          <span class="mk-strong">
+            Bodegas Serra<span class="sub">2026-118 · vinos</span>
+          </span>
+          <span class="num">17/11</span>
+          <span class="num is-r">850,00 €</span>
+          <span class="is-r">
+            <span class="mk-pill">Recibida</span>
+          </span>
+        </div>
+        <div class="mk-erp__tr">
+          <span class="mk-strong">
+            Cafés Molino<span class="sub">C-332 · café y azúcar</span>
+          </span>
+          <span class="num">14/11</span>
+          <span class="num is-r">196,45 €</span>
+          <span class="is-r">
+            <span class="mk-pill is-ok">Pagada</span>
+          </span>
+        </div>
+      </div>
+    </section>
+    <aside class="mk-erp__side">
+      <div class="mk-panel mk-erp__stock">
+        <div class="mk-row">
+          <span class="grow mk-strong">Bajo mínimo</span>
+          <span class="mk-muted">Almacén central</span>
+        </div>
+        <div class="mk-row">
+          <span class="grow">
+            Arroz bomba<span class="sub">mínimo 10 kg</span>
+          </span>
+          <span class="num">4 kg</span>
+          <span class="mk-pill is-danger">Pedir</span>
+        </div>
+        <div class="mk-row">
+          <span class="grow">
+            Aceite de oliva<span class="sub">mínimo 12 l</span>
+          </span>
+          <span class="num">6 l</span>
+          <span class="mk-pill is-danger">Pedir</span>
+        </div>
+        <div class="mk-row">
+          <span class="grow">
+            Harina de trigo<span class="sub">mínimo 8 kg</span>
+          </span>
+          <span class="num">7 kg</span>
+          <span class="mk-pill is-warn">Justo</span>
+        </div>
+        <span class="mk-btn is-dark is-block">Crear pedido de compra</span>
+      </div>
+      <div class="mk-panel is-soft mk-erp__kpi">
+        <span class="mk-muted">Valor del almacén</span>
+        <span class="num mk-erp__big">12.380 €</span>
+        <span class="mk-muted">a coste medio</span>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<style>
+  .mk-erp__body {
+    display: grid;
+    grid-template-columns: 1fr 36%;
+    min-height: 290px;
+  }
+  .mk-erp__main {
+    padding: 10px 12px;
+    display: grid;
+    gap: 10px;
+    align-content: start;
+  }
+  .mk-erp__kpis {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .mk-erp__kpi {
+    padding: 9px 10px;
+    display: grid;
+    gap: 2px;
+  }
+  .mk-erp__big {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+  }
+  .mk-erp__tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 40px 72px 92px;
+    gap: 8px;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--gray-150);
+  }
+  .mk-erp__tr:last-child {
+    border-bottom: 0;
+  }
+  .mk-erp__tr.is-head {
+    padding-top: 0;
+    font-size: 9px;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .mk-erp__tr .sub {
+    display: block;
+    font-weight: 400;
+    color: var(--gray-500);
+    font-size: 9.5px;
+  }
+  .mk-erp__tr .is-r {
+    text-align: right;
+  }
+  .mk-erp__side {
+    padding: 10px;
+    border-left: 1px solid var(--gray-200);
+    background: var(--gray-50);
+    display: grid;
+    gap: 8px;
+    align-content: start;
+  }
+  .mk-erp__stock {
+    padding: 4px 10px 10px;
+  }
+  .mk-erp__stock .mk-btn {
+    margin-top: 6px;
+  }
+  @container (max-width: 560px) {
+    .mk-erp__body {
+      grid-template-columns: 1fr;
+    }
+    .mk-erp__side {
+      border-left: 0;
+      border-top: 1px solid var(--gray-200);
+    }
+    .mk-erp__side > .mk-erp__kpi {
+      display: none;
+    }
+    .mk-erp__tr {
+      grid-template-columns: minmax(0, 1fr) 72px 84px;
+    }
+    .mk-erp__tr > :nth-child(2) {
+      display: none;
+    }
+  }
+</style>

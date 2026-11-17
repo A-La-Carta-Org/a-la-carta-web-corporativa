@@ -1,40 +1,107 @@
 ---
+/**
+ * Recursos (docs/auditoria/13 §1): tres bloques. Aprende (guías, con su fecha de revisión),
+ * Herramientas (calculadora, configurador, demo, comprobador de equipo) y Ayuda (preguntas
+ * frecuentes, centro de ayuda y soporte). Al final, los enlaces de empresa.
+ */
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHero from '@/components/blocks/PageHero.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
 import CtaBand from '@/components/blocks/CtaBand.astro';
 import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
 import { getCollection } from 'astro:content';
 import { breadcrumbJsonLd } from '@/lib/seo';
+import { ctaHref } from '@/lib/cta';
+import { REPLY_HOURS, SUPPORT_EMAIL } from '@/data/site';
 
+const origen = 'recursos';
 const crumbs = [
   { name: 'Inicio', path: '/' },
   { name: 'Recursos', path: '/recursos' },
 ];
+const lastCheck = (d: { publishedAt: Date; updatedAt?: Date; reviewedAt?: Date }) =>
+  [d.publishedAt, d.updatedAt, d.reviewedAt]
+    .filter((x): x is Date => Boolean(x))
+    .reduce((a, b) => (b.getTime() > a.getTime() ? b : a));
 const guias = (await getCollection('guias', ({ data }) => !data.draft)).sort(
-  (a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime()
+  (a, b) => lastCheck(b.data).getTime() - lastCheck(a.data).getTime()
 );
-const blocks = [
+const fmt = (d: Date) =>
+  d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+
+interface Tool {
+  icon: IconName;
+  title: string;
+  text: string;
+  href: string;
+  label: string;
+}
+const tools: Tool[] = [
   {
-    href: '/recursos/preguntas-frecuentes',
+    icon: 'calculator',
+    title: 'Calculadora de comisiones',
+    text: 'Lo que te cuestan al año los agregadores y los portales de reservas, y lo que dejarías de pagar con tu canal.',
+    href: ctaHref({ to: 'calculadora', origen }),
+    label: 'Hacer la cuenta',
+  },
+  {
+    icon: 'receipt',
+    title: 'Monta tu alaCarta',
+    text: 'Elige las piezas como en una carta y mira el precio orientativo al momento, por local y mes.',
+    href: ctaHref({ to: 'precios', origen, hash: 'monta' }),
+    label: 'Montar el mío',
+  },
+  {
+    icon: 'play',
+    title: 'Demo interactiva',
+    text: 'Haz de camarero, de cocina y de caja en un servicio de ejemplo. Sin registrarte.',
+    href: ctaHref({ to: 'probar', origen }),
+    label: 'Probar ahora',
+  },
+  {
+    icon: 'tablet',
+    title: '¿Te sirve tu equipo?',
+    text: 'Cuatro preguntas para saber si puedes usar la tablet, el terminal o la impresora que ya tienes.',
+    href: '/hardware#comprobador',
+    label: 'Comprobar mi equipo',
+  },
+];
+
+const help = [
+  {
+    icon: 'help' as IconName,
     title: 'Preguntas frecuentes',
-    text: 'Lo que suelen preguntarnos sobre la plataforma, los precios y la puesta en marcha.',
+    text: 'Servicio, canales, gestión, equipamiento, precios y empresa, agrupadas y con respuesta directa.',
+    href: '/recursos/preguntas-frecuentes',
+    label: 'Ver las preguntas',
   },
   {
-    href: '/recursos/guias',
-    title: 'Guías',
-    text: 'Artículos largos y útiles: cómo elegir un TPV, VeriFactu, carta QR bien hecha.',
-  },
-  {
-    href: '/recursos/ayuda',
+    icon: 'lifebuoy' as IconName,
     title: 'Centro de ayuda',
-    text: 'Documentación de uso de cada módulo, para clientes. En construcción.',
+    text: 'La documentación de uso de cada pieza. Disponible con el lanzamiento.',
+    href: '/recursos/ayuda',
+    label: 'Qué tendrá',
   },
+  {
+    icon: 'mail' as IconName,
+    title: 'Soporte',
+    text: `Escríbenos a ${SUPPORT_EMAIL}. Respondemos en menos de ${REPLY_HOURS} horas laborables.`,
+    href: `mailto:${SUPPORT_EMAIL}`,
+    label: 'Escribir a soporte',
+  },
+];
+
+const company = [
+  { label: 'Por qué alaCarta', href: '/por-que-alacarta', icon: 'layers' as IconName },
+  { label: 'Qué hay y qué está en camino', href: '/novedades', icon: 'newspaper' as IconName },
+  { label: 'Locales fundadores', href: '/locales-fundadores', icon: 'award' as IconName },
 ];
 ---
 
 <BaseLayout
-  title="Recursos: guías, preguntas frecuentes y ayuda"
-  description="Guías prácticas para hostelería, preguntas frecuentes sobre alaCarta y el centro de ayuda de la plataforma."
+  title="Recursos para hostelería: guías y herramientas"
+  description="Guías para abrir y llevar un local, calculadora de comisiones, configurador de precio, demo interactiva y respuestas sobre alaCarta. Sin registro."
   path="/recursos"
   jsonLd={breadcrumbJsonLd(crumbs)}
 >
@@ -42,20 +109,72 @@ const blocks = [
     variant="compact"
     breadcrumbs={crumbs}
     eyebrow="Recursos"
+    eyebrowIcon="book"
     title="Para decidir con criterio"
-    text="Lo que publicamos aquí está pensado para servir aunque no contrates alaCarta: guías sin relleno, respuestas directas y documentación del producto."
+    text="Guías con su fecha de revisión, herramientas que hacen la cuenta con tus números y respuestas directas. Sirven aunque no contrates alaCarta, y ninguna te pide el correo."
   />
 
-  <section class="section is-sm">
+  <!-- Aprende -->
+  <section class="section is-sm" id="aprende">
     <div class="container">
-      <ul role="list" class="res-grid">
-        {blocks.map((b) => (
+      <div class="res-head">
+        <span class="eyebrow has-icon">
+          <Icon name="book" size={16} />
+          Aprende
+        </span>
+        <h2>Guías sin relleno</h2>
+        <p class="muted">
+          Escribimos sobre lo que sabemos. Las que dependen de una norma llevan la fecha en que
+          comprobamos su estado.
+        </p>
+      </div>
+      <ul role="list" class="guide-list">
+        {guias.map((g) => (
           <li>
-            <a href={b.href} class="card is-link res-card">
-              <h2>{b.title}</h2>
-              <p class="muted">{b.text}</p>
+            <a href={`/recursos/guias/${g.id}`} class="guide-row">
+              <span class="guide-row__title">{g.data.title}</span>
+              <span class="guide-row__desc muted">{g.data.description}</span>
+              <span class="guide-row__meta muted">
+                {g.data.reviewedAt ? (
+                  <>
+                    Revisada el{' '}
+                    <time datetime={g.data.reviewedAt.toISOString()}>{fmt(g.data.reviewedAt)}</time>
+                  </>
+                ) : (
+                  <time datetime={g.data.publishedAt.toISOString()}>{fmt(g.data.publishedAt)}</time>
+                )}{' '}
+                · {g.data.readingMinutes} min
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <a href="/recursos/guias" class="link-arrow res-more">
+        Todas las guías
+        <Icon name="arrow-right" size={14} />
+      </a>
+    </div>
+  </section>
+
+  <!-- Herramientas -->
+  <section class="section is-soft" id="herramientas">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Herramientas"
+        title="Haz la cuenta con tus números"
+        text="Funcionan en el navegador, no guardan nada y no te piden datos para usarlas."
+      />
+      <ul role="list" class="tool-grid">
+        {tools.map((t) => (
+          <li>
+            <a href={t.href} class="card is-link tool">
+              <span class="tool__icon">
+                <Icon name={t.icon} size={20} />
+              </span>
+              <h3>{t.title}</h3>
+              <p class="muted">{t.text}</p>
               <span class="link-arrow">
-                Abrir
+                {t.label}
                 <Icon name="arrow-right" size={14} />
               </span>
             </a>
@@ -65,63 +184,76 @@ const blocks = [
     </div>
   </section>
 
-  <section class="section is-soft">
+  <!-- Ayuda -->
+  <section class="section" id="ayuda">
     <div class="container">
-      <div class="res-head">
-        <h2>Últimas guías</h2>
-        <a href="/recursos/guias" class="link-arrow">
-          Todas <Icon name="arrow-right" size={14} />
-        </a>
-      </div>
-      <ul role="list" class="guide-list">
-        {guias.map((g) => (
-          <li>
-            <a href={`/recursos/guias/${g.id}`} class="guide-row">
-              <span class="guide-row__meta muted">{g.data.readingMinutes} min de lectura</span>
-              <span class="guide-row__title">{g.data.title}</span>
-              <span class="guide-row__desc muted">{g.data.description}</span>
+      <SectionHeader eyebrow="Ayuda" title="Si tienes una duda" />
+      <ul role="list" class="help-cols">
+        {help.map((h) => (
+          <li class="column help-col">
+            <Icon name={h.icon} size={20} />
+            <h3>{h.title}</h3>
+            <p class="muted">{h.text}</p>
+            <a href={h.href} class="link-arrow">
+              {h.label}
+              <Icon name="arrow-right" size={14} />
             </a>
           </li>
         ))}
       </ul>
+      <nav class="res-company" aria-label="Sobre alaCarta">
+        <h3>Sobre alaCarta</h3>
+        <ul role="list">
+          {company.map((c) => (
+            <li>
+              <a href={c.href} class="res-company__link">
+                <Icon name={c.icon} size={16} />
+                {c.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </div>
   </section>
 
-  <CtaBand />
+  <CtaBand origen="recursos-cierre" />
 </BaseLayout>
 
 <style>
-  .res-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-4);
+  section[id] {
+    scroll-margin-top: var(--header-h);
   }
-  .res-card {
-    display: grid;
-    gap: var(--space-3);
-    align-content: start;
-    height: 100%;
+  .eyebrow.has-icon::before {
+    display: none;
   }
-  .res-card h2 {
-    font-size: var(--text-xl);
-  }
-  .res-card p {
-    font-size: var(--text-sm);
+  .eyebrow.has-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
   }
   .res-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
+    display: grid;
+    gap: var(--space-3);
+    max-width: 44rem;
     margin-bottom: var(--space-8);
+  }
+  .res-head h2 {
+    font-size: var(--text-3xl);
   }
   .guide-list {
     border-top: 1px solid var(--color-border);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-12);
   }
   .guide-row {
     display: grid;
-    gap: var(--space-1);
+    gap: var(--space-2);
     padding: var(--space-6) 0;
     border-bottom: 1px solid var(--color-border);
+    height: 100%;
+    align-content: start;
   }
   .guide-row:hover {
     text-decoration: none;
@@ -141,10 +273,94 @@ const blocks = [
   }
   .guide-row__desc {
     font-size: var(--text-sm);
-    max-width: 44rem;
+  }
+  .res-more {
+    margin-top: var(--space-8);
+  }
+  .tool-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+  .tool-grid > li {
+    display: flex;
+  }
+  .tool {
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    gap: var(--space-3);
+    width: 100%;
+    background: var(--color-bg);
+  }
+  .tool h3 {
+    font-size: var(--text-lg);
+  }
+  .tool p {
+    font-size: var(--text-sm);
+  }
+  .tool__icon {
+    display: inline-flex;
+    width: 2.5rem;
+    height: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-strong);
+  }
+  .help-cols {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-8);
+  }
+  .help-col {
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+  }
+  .help-col h3 {
+    font-size: var(--text-lg);
+  }
+  .help-col p {
+    font-size: var(--text-sm);
+  }
+  .res-company {
+    margin-top: var(--space-12);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4) var(--space-8);
+  }
+  .res-company h3 {
+    font-size: var(--text-sm);
+    font-family: var(--font-body);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-muted);
+  }
+  .res-company ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-8);
+  }
+  .res-company__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--color-text-strong);
+    font-weight: var(--weight-medium);
+    font-size: var(--text-sm);
   }
   @media (max-width: 1024px) {
-    .res-grid {
+    .tool-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 720px) {
+    .guide-list,
+    .tool-grid,
+    .help-cols {
       grid-template-columns: 1fr;
     }
   }

@@ -24,7 +24,12 @@ export default defineConfig({
   integrations: [
     vue(),
     sitemap({
-      filter: (page) => !page.includes('/404') && !page.includes('/legal/'),
+      // Fuera del sitemap: errores, legales en borrador y páginas `noindex` (gracias, demo de carta)
+      filter: (page) =>
+        !page.includes('/404') &&
+        !page.includes('/legal/') &&
+        !page.includes('/gracias') &&
+        !page.includes('/demo/carta'),
       changefreq: 'weekly',
       priority: 0.7,
     }),

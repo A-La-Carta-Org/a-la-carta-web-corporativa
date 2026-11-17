@@ -1,110 +1,154 @@
-# Negocio: propuesta de valor, posicionamiento y modelo
+# Negocio: ecosistema, propuesta de valor y modelo
+
+Revisado el 17-11-2026 tras el replanteamiento como ecosistema (`docs/auditoria/01`). Las cifras
+viven en `src/data/pricing.ts` y se justifican en `docs/PRECIOS.md`.
 
 ## 1. Qué es alaCarta
 
-**alaCarta es una plataforma integral de gestión para hostelería.** Un solo sistema que reúne el
-servicio (TPV, comandero, cocina, carta QR, reservas, pedidos) y la gestión (backoffice, informes,
-clientes, inventario, facturación) para restaurantes, bares, cafeterías, pizzerías,
-hamburgueserías, cervecerías, pubs, coctelerías, negocios de take away y delivery, y grupos con
-varios locales.
+> **alaCarta es el ecosistema que hace funcionar un restaurante: lo que pasa en la sala, lo que
+> entra por el teléfono y el móvil del cliente, lo que pasa en la oficina y el equipo, y el
+> equipamiento para que todo arranque. Todo conectado, con una cuota y un solo interlocutor.**
 
-No es un catálogo de soluciones, ni una capa sobre el software de otro. Es software propio con su
-backoffice, su modelo de datos, sus clientes y su facturación.
+Tres consecuencias que guían la web:
 
-## 2. Propuesta de valor
+1. **El producto no es el TPV, es la conexión.** Cada página enseña con qué se conecta lo que vende
+   (diagrama de conexiones) y la web lo **demuestra** con demos vivas en vez de afirmarlo.
+2. **Software, equipamiento y servicio con una sola lógica**: «te lo dejamos funcionando». Todo
+   cuelga de un sistema propio; nada se vende suelto sobre la plataforma de otro.
+3. **Embudo de cuatro puertas**: probar, calcular, que te llamen y pedir demo (§7).
 
-**Principal**: *Sala, cocina, pedidos y gestión. Un solo sistema.*
+Mensaje principal: **«Todo tu restaurante, en un solo sistema.»** «Ecosistema» se usa en titulares
+de marca (home, `/soluciones`, por qué); en el resto, lenguaje de local. «Todo en uno» no se usa
+como claim (está saturado).
 
-**Secundarias** (las que se repiten por la web):
+## 2. Posicionamiento
 
-- Controla pedidos, sala, cocina y ventas en un solo sistema.
-- Una carta, un dato, un cambio: lo que cambias en el backoffice cambia en todos los canales.
-- Precio claro, sin comisiones: cuota fija por local, 0 % por reserva, pedido o pago QR.
-- Funciona con lo que tienes: tablets, móviles, equipos táctiles e impresoras estándar.
-- Hecho para muchas horas: interfaz clara, legible con prisa y con poca luz.
-- Adaptado a tu tipo de local: mismo sistema, distinta configuración.
-- Preparado para la normativa: VeriFactu, datos en la UE, exportación cuando quieras.
+| | |
+| --- | --- |
+| **Para** | propietarios y gerentes de 1 a 15 locales de hostelería |
+| **Que** | pagan 4-7 herramientas sueltas, comisiones por sus propios clientes, y no ven el negocio entero |
+| **alaCarta es** | el ecosistema de gestión para hostelería |
+| **Que** | conecta sala, cocina, canales propios, gestión y equipo en un solo sistema, con una cuota fija, sin comisiones y llave en mano |
+| **A diferencia de** | TPV con módulos de terceros (integraciones que se rompen y cada una cobra) o suites caras y opacas |
+| **Porque** | un mismo dato (carta, mesa, cliente, venta, persona) alimenta todo, y la web lo enseña funcionando |
 
-## 3. Diferenciadores frente al mercado
+El hueco de mercado (`docs/investigacion/ecosistema-y-embudo.md`): nadie en España une TPV + ERP
++ RRHH + IA telefónica + web con marca propia y **precio público**, ni enseña una demo jugable que
+conecte sala, cocina y caja.
 
-| Diferenciador                     | Por qué importa                                                                 | Evidencia en la investigación |
-| --------------------------------- | ------------------------------------------------------------------------------- | ----------------------------- |
-| Plataforma propia e integral      | El sector adopta herramientas "fragmentadas, sin integración" (Segittur, 2026)   | `investigacion/mercado-y-seo.md` |
-| Precio público, simple y completo | Solo 4 competidores españoles publican precio; todos fragmentan el coste total   | `investigacion/competidores-espana.md` |
-| 0 % de comisiones                 | Last.app cobra 4 % + 0,20 € en QR/online; TheFork cobra por comensal              | ambos informes |
-| Hardware estándar, sin permanencia | Varios actores atan a terminales propietarios y contratos de 24-36 meses          | `competidores-internacionales.md` |
-| Identidad monocroma y sobria      | Ningún competidor español es minimalista; todos usan la estética SaaS colorida    | `competidores-espana.md` |
-| Web por flujo de servicio y por sector | Nadie estructura la propuesta como "reserva → mesa → comanda → cocina → cuenta → cierre" | conclusión propia |
-| Honestidad sobre el estado        | Varias webs mezclan cifras contradictorias o módulos "próximamente" sin avisar    | ambos informes |
+## 3. Las cuatro familias
+
+| Familia | Mensaje | Productos (estado en la web) |
+| --- | --- | --- |
+| **Servicio en sala y cocina** | La comanda sale de la mesa y llega a cocina y a caja sin que nadie la copie | TPV · Comandero · Pantalla de cocina · Carta digital QR |
+| **Clientes y canales** | Tus reservas, tus pedidos, tu app y tu teléfono, con tu marca y sin pagar por cada cliente | Reservas · Pedidos online · **App propia** (en camino) · **Llamadas con IA** (en camino) · Clientes y fidelización · Web y presencia en Google |
+| **Gestión del negocio** | Ventas, compras, stock, facturas y horas de tu equipo en el mismo sitio | Backoffice e informes · **ERP** (en camino) · Equipo y RRHH |
+| **Equipamiento y servicios** | Hardware, placas QR y puesta en marcha: te lo dejamos funcionando | Hardware · Placas QR para mesas · Puesta en marcha |
+
+- «Informes» dejó de ser producto: es parte de **Backoffice e informes** (decisión del 16-11-2026).
+- El chip **«En camino»** va solo en lo que depende de terceros o de ramas sin desplegar (app
+  propia, llamadas con IA, ERP) y en las integraciones no hechas. El resto se presenta como
+  «Disponible desde el lanzamiento con los primeros locales» (`/novedades`).
+- Origen técnico (solo en documentación, nunca en la web): ERP y RRHH parten de GestiTec con marca
+  alaCarta; las llamadas con IA necesitan un proveedor de voz. Ver `docs/ROADMAP.md`.
 
 ## 4. A quién nos dirigimos
 
-**Cliente principal**: el propietario o gerente de un local independiente o de un pequeño grupo
-(1-15 locales) con servicio en mesa o mostrador, que ya tiene un TPV y está cansado de mantener
-varias herramientas, o que abre un local nuevo y quiere empezar bien.
+**Cliente principal**: propietario o gerente de un local independiente o de un grupo pequeño
+(1-15 locales) con servicio en mesa o mostrador, que mantiene varias herramientas sueltas o que
+abre un local nuevo.
 
-**Segmentos** (misma plataforma, configuración distinta): ver `src/data/sectors.ts` y las páginas
-`/sectores/*`. El primer foco comercial debe ser **restaurantes y bares** (volumen y búsquedas) y
-**grupos pequeños** (mayor valor por cuenta y menos sensibilidad al precio).
+**Sectores** (mismo sistema, configuración distinta; `src/data/sectors.ts`): restaurantes, bares,
+cafeterías, pizzerías, hamburgueserías, cervecerías, pubs y coctelerías, take away y delivery,
+grupos y cadenas. Cada sector tiene una **configuración recomendada** con precio calculado por el
+configurador. Primer foco comercial: restaurantes y bares (volumen) y grupos pequeños (valor).
 
-**No cliente por ahora**: grandes cadenas con requisitos de integración pesados, hoteles con PMS,
-franquicias con central de compras. Se atienden desde el plan Grupos a medida cuando el producto
-madure.
+**Momentos de compra** (`src/data/moments.ts`, `/momentos/*`): abrir un local, cambiar de TPV,
+dejar de pagar comisiones. Además: segundo local (→ grupos) y presión normativa (VeriFactu y
+registro de jornada, cubiertos con guías con fecha de revisión).
 
-## 5. Momentos de compra
+**No cliente por ahora**: grandes cadenas con integraciones pesadas, hoteles con PMS, franquicias
+con central de compras.
 
-1. **Apertura de un local**: necesita todo, decide rápido, valora la puesta en marcha.
-2. **Cambio de TPV**: tiene un sistema que no evoluciona o caro; busca precio claro y migración.
-3. **Segundo o tercer local**: descubre que su herramienta no es multilocal.
-4. **Presión normativa**: VeriFactu (2027/2028) obliga a revisar el software de facturación.
-5. **Canal propio**: quiere dejar de pagar comisiones por reservas y pedidos que ya eran suyos.
+## 5. Modelo comercial
 
-La web cubre 1, 2, 4 y 5 en la home, precios y guías; 3 en `/sectores/grupos-y-cadenas`.
+Precios orientativos sin IVA, por local y mes. Detalle y justificación en `docs/PRECIOS.md`.
 
-## 6. Tono de comunicación
+| Pieza | Qué es | Precio |
+| --- | --- | --- |
+| **Esencial** | TPV, carta QR, backoffice e informes | 49 € |
+| **Completo** | Esencial + comandero, cocina, reservas, pedidos online y clientes | 99 € |
+| **Total** | Completo + app propia, llamadas con IA (200 min), ERP (1 empresa) y Equipo y RRHH | 159 € (por separado saldría a 200 €) |
+| **Grupos** | Total en cada local + carta maestra, a partir de 3 locales | a medida |
+| Anual | −15 % sobre la cuota del plan | Esencial 42 €, Completo 84 €, Total 135 € |
 
-- **Concreto**: cada frase dice qué hace el producto o qué gana el local. Nada de "soluciones
-  innovadoras que revolucionan".
+**Complementos** con precio público sobre cualquier plan: app propia 19 €/local · llamadas con IA
+29 €/local con 200 minutos y 0,12 €/minuto extra · Equipo y RRHH 24 €/local hasta 20 personas y
+1 €/persona más · ERP 29 €/empresa · web y presencia en Google 24 €/mes + 390 € de alta. Los
+cuatro primeros van dentro del Total.
+
+**Módulos sueltos** sobre el Esencial (comandero, cocina, reservas, pedidos online, clientes) y
+**dispositivos adicionales** (terminal 12 €, comandero 8 €, pantalla 12 €).
+
+**Equipamiento** a presupuesto («en tu propuesta»), con kits orientativos y siempre la opción de
+usar el equipo propio. **Servicios**: puesta en marcha remota incluida; presencial desde 290 €;
+migración a medida.
+
+**0 % de comisión** por reserva, pedido o pago QR: es la bandera. Los minutos de IA son coste de uso,
+no comisión, y se dice así.
+
+**Configurador «Monta tu alaCarta»** (`/precios#monta`): el visitante marca lo que necesita como
+en una carta y el ticket le dice qué camino le sale más barato (Esencial con sueltos, Completo o
+Total), cuánto ahorra pagando el año y qué va en la propuesta. La configuración viaja al formulario.
+
+**Métricas a vigilar**: MRR por local, mezcla de planes (peso del Total), complementos por local,
+coste de adquisición por puerta del embudo, tiempo de puesta en marcha, churn, tickets de soporte.
+
+## 6. Locales fundadores
+
+Decisión del 16-11-2026 (`/locales-fundadores`): **20 plazas reales**, sin cuentas atrás ni
+contadores. Condiciones: **precio bloqueado** mientras siga la suscripción, **puesta en marcha
+presencial incluida** (sin descuento en la cuota) y **línea directa con producto**. A cambio: que lo
+usen de verdad en servicio, que cuenten qué falla y paciencia con lo que está en camino. Se busca
+variedad de sectores y locales a los que se pueda ir en persona (zona por definir). Entran con
+`motivo=fundador` por el mismo formulario.
+
+Es el sustituto honesto de la prueba social que todavía no existe: demos, transparencia de estado
+(`/novedades`), fundadores y, cuando haya datos, la cara del equipo.
+
+## 7. Embudo: cuatro puertas, un formulario
+
+| Puerta | Para quien | Dónde | Conversión |
+| --- | --- | --- | --- |
+| **Probar** | Quiere verlo funcionar sin hablar con nadie | `/demo` (simulador, cambio de canales), `/demo/carta` (QR escaneable), demos en cada producto | Siguiente paso: demo con su carta |
+| **Calcular** | Quiere saber cuánto cuesta o cuánto pierde | Configurador en `/precios#monta`, calculadora de comisiones, comprobador de equipo, placa QR | «Recibir esta propuesta» con la configuración |
+| **Te llamamos** | No quiere rellenar ni agendar | `/solicitar-demo?modo=llamada` (nombre, teléfono, franja), barra móvil | Llamada en la franja elegida |
+| **Demo** | Está decidiendo | `/solicitar-demo` en 3 pasos | Videollamada de 30 minutos y propuesta por escrito |
+
+Reglas: todo CTA lleva contexto (`origen`, `modulo`, `sector`, `config`…) y el formulario lo
+arrastra hasta el lead; `/gracias` explica qué pasa ahora y dispara el evento de conversión;
+atribución propia sin cookies. Detalle técnico en `docs/ARQUITECTURA.md`.
+
+Captación: SEO por producto, sector, momento y guía; gestorías y asesorías como prescriptores
+(`/contacto`); instaladores y distribuidores para lo presencial (más adelante); boca a boca desde
+los fundadores.
+
+## 8. Tono
+
+- **Concreto**: cada frase dice qué hace el producto o qué gana el local.
 - **En lenguaje de local**: comanda, pase, marchar, arqueo, ronda, mitades.
-- **Directo y elegante**: frases cortas, verbo claro, sin exclamaciones.
-- **Honesto**: lo que no existe se dice que está en el plan de producto. Sin testimonios ni cifras
-  inventadas. La página `/por-que-alacarta` lo declara explícitamente.
-- **Español de España**, tuteo.
-
-## 7. Modelo de negocio
-
-**Ingresos recurrentes por suscripción** (ver `PRECIOS.md` para cifras y justificación):
-
-- Cuota mensual o anual **por local**, con dos planes públicos (Esencial, Completo) y uno a medida
-  (Grupos).
-- **Módulos sueltos** sobre el plan Esencial.
-- **Dispositivos adicionales** por unidad (TPV, comandero, pantalla de cocina).
-- **Servicios**: puesta en marcha remota incluida; formación presencial y migración de datos como
-  ingresos puntuales.
-- **Sin comisiones** sobre reservas, pedidos ni pagos: es un diferenciador y renuncia deliberada.
-- Futuro: integraciones premium, API para grupos, pagos integrados con margen sobre la pasarela (si
-  se negocia), hardware certificado con margen (opcional, nunca obligatorio).
-
-**Costes principales**: desarrollo del producto, infraestructura (VPS → gestionado), soporte,
-cumplimiento (VeriFactu, RGPD), marketing de captación.
-
-**Métricas a vigilar**: MRR por local, coste de adquisición, tiempo de puesta en marcha, churn
-mensual, locales por cuenta (expansión), tickets de soporte por local.
-
-## 8. Canales de captación
-
-1. **SEO** por solución y por sector (ya estructurado en la web) y guías normativas (VeriFactu).
-2. **Demo** como conversión principal; prueba de 14 días como segundo paso.
-3. **Asesorías y gestorías** como prescriptores (acceso de solo lectura para la asesoría).
-4. **Distribuidores e instaladores locales** para la parte presencial (más adelante).
-5. Boca a boca entre hosteleros una vez haya casos reales.
+- **Directo y elegante**: frases cortas, sin exclamaciones. Español de España, tuteo.
+- **Honesto**: lo que no existe lleva «En camino» o se dice que no se hace («no calcula nóminas»,
+  «la IA no toma pedidos a domicilio»). Sin testimonios ni cifras inventadas. Nunca se nombran en
+  la web las marcas técnicas de origen.
 
 ## 9. Riesgos y mitigaciones
 
-| Riesgo                                     | Mitigación                                                              |
-| ------------------------------------------ | ----------------------------------------------------------------------- |
-| Producto aún no existe; la web promete     | Web honesta sobre el estado; demo con prototipo; prueba solo cuando haya MVP |
-| Suelo de precio percibido (34-35 €)        | Esencial a 49 € con QR, backoffice e informes incluidos; comparar coste total |
-| Competidores con mucha más velocidad       | Foco en pocos sectores y en integración real, no en número de funciones |
-| Dependencia de normativa cambiante         | Guía VeriFactu mantenida; cumplimiento en el núcleo, no como módulo     |
-| Soporte 365 que el sector espera           | Definir horario real antes de prometerlo; empezar con "24 h laborables" |
+| Riesgo | Mitigación |
+| --- | --- |
+| El producto aún no existe y la web promete un ecosistema | Estado por producto en datos, chip «En camino», `/novedades`, demos con restaurante ficticio declarado, fundadores |
+| Prometer integraciones que no están | Conexiones con estado propio en `solutions.ts` e `integrations.ts`; discontinuas en los diagramas |
+| Dependencia de terceros (voz IA, marca blanca del ERP/RRHH, hardware) | Precio y página publicados como «en camino» o «en tu propuesta»; nada con fecha inventada |
+| Suelo de precio percibido (34-35 €) | Esencial a 49 € ya útil; comparativa «por piezas» con fuentes; Total como ancla |
+| Normativa cambiante (VeriFactu, registro de jornada) | Guías con fecha de revisión; nunca «certificado» ni «cumplimiento garantizado» |
+| Soporte que el sector espera 365 días | Prometer solo «24 h laborables» hasta definir horario real |

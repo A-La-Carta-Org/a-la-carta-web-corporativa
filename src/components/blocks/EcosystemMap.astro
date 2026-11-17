@@ -1,0 +1,158 @@
+---
+/**
+ * Mapa del ecosistema (D7, docs/auditoria/10). Un núcleo («un solo sistema») y alrededor las
+ * cuatro familias con sus piezas, unidas al núcleo por radios: continuos si la pieza está
+ * disponible, discontinuos si está en camino.
+ *
+ * Aquí se calcula en build la geometría (piezas en elipse) y las conexiones de cada pieza
+ * (`connections` de `solutions.ts`, en los dos sentidos) y se pasan a la isla
+ * `EcosystemMapIsland.vue`. La isla, sin JavaScript, pinta el mapa ESTÁTICO de la fase 2 (cada
+ * pieza enlaza a su página; lista por familias en ≤ 720 px). Con JavaScript, tocar una pieza
+ * ilumina sus conexiones y abre su ficha. Sin props: las páginas no cambian.
+ */
+import EcosystemMapIsland from '@/components/islands/EcosystemMapIsland.vue';
+import { iconPaths } from '@/components/ui/icons';
+import {
+  ecosystem,
+  equipment,
+  familiesWithItems,
+  solutions,
+  statusLabels,
+  type EcosystemSlug,
+} from '@/data/solutions';
+
+const groups = familiesWithItems();
+
+/* Geometría del SVG (unidades del viewBox) */
+const W = 1200;
+const H = 700;
+const cx = W / 2;
+const cy = H / 2;
+const rx = 392;
+const ry = 238;
+const R = 26; // radio de cada pieza
+const LINE = 15; // interlineado de las etiquetas
+
+/** Parte una etiqueta en líneas de ~15 caracteres, sin cortar palabras */
+const wrap = (text: string, max = 15) => {
+  const lines: string[] = [];
+  for (const word of text.split(' ')) {
+    const last = lines[lines.length - 1];
+    if (last !== undefined && (last + ' ' + word).length <= max)
+      lines[lines.length - 1] = `${last} ${word}`;
+    else lines.push(word);
+  }
+  return lines;
+};
+const r1 = (n: number) => Math.round(n * 10) / 10;
+
+/* Conexiones en los dos sentidos: si A dice cómo se conecta con B, B también lo enseña */
+const statusOf = new Map(ecosystem.map((i) => [i.slug, i.status]));
+type Edge = { to: EcosystemSlug; text: string; pending: boolean };
+const edges = new Map<EcosystemSlug, Edge[]>();
+const addEdge = (from: EcosystemSlug, e: Edge) => {
+  const list = edges.get(from) ?? [];
+  const found = list.find((x) => x.to === e.to);
+  if (!found) list.push(e);
+  edges.set(from, list);
+};
+const sources = [...solutions, ...equipment].map((x) => ({
+  slug: x.slug as EcosystemSlug,
+  connections: x.connections ?? [],
+}));
+// Primero el texto propio de cada pieza; después, lo que dicen las demás de ella
+for (const src of sources)
+  for (const c of src.connections) {
+    const pending =
+      c.status === 'en-camino' ||
+      statusOf.get(src.slug) !== 'disponible' ||
+      statusOf.get(c.to) !== 'disponible';
+    addEdge(src.slug, { to: c.to, text: c.text, pending });
+  }
+for (const src of sources)
+  for (const c of src.connections) {
+    const pending =
+      c.status === 'en-camino' ||
+      statusOf.get(src.slug) !== 'disponible' ||
+      statusOf.get(c.to) !== 'disponible';
+    addEdge(c.to, { to: src.slug, text: c.text, pending });
+  }
+
+/*
+ * Reparto en la elipse: una ranura por pieza y una vacía entre familias, empezando arriba a la
+ * izquierda y en el sentido de las agujas del reloj.
+ */
+const total = groups.reduce((n, g) => n + g.items.length + 1, 0);
+const step = (2 * Math.PI) / total;
+const start = (-153 * Math.PI) / 180;
+
+let slot = 0;
+const families = groups.map((g) => {
+  const first = slot;
+  slot += g.items.length + 1;
+  const mid = start + (first + (g.items.length - 1) / 2) * step;
+  return {
+    id: g.id,
+    name: g.name,
+    short: g.shortName,
+    lx: r1(cx + rx * 0.64 * Math.cos(mid)),
+    ly: r1(cy + ry * 0.64 * Math.sin(mid) + 4),
+    items: g.items.map((i) => i.slug),
+  };
+});
+
+slot = 0;
+const nodes = groups.flatMap((g) => {
+  const list = g.items.map((item) => {
+    const a = start + slot * step;
+    slot++;
+    const cos = Math.cos(a);
+    const sin = Math.sin(a);
+    const x = cx + rx * cos;
+    const y = cy + ry * sin;
+    const lines = wrap(item.navLabel);
+    const pending = item.status !== 'disponible';
+    if (pending) lines.push(statusLabels[item.status].toLowerCase());
+    const d = R + 12;
+    const lx = x + cos * d;
+    const ly = y + sin * d;
+    const anchor: 'start' | 'middle' | 'end' =
+      cos > 0.35 ? 'start' : cos < -0.35 ? 'end' : 'middle';
+    const n = lines.length;
+    const firstBaseline =
+      sin < -0.35 ? ly - (n - 1) * LINE - 3 : sin > 0.35 ? ly + 11 : ly - ((n - 1) * LINE) / 2 + 4;
+    return {
+      slug: item.slug,
+      navLabel: item.navLabel,
+      name: item.name,
+      tagline: item.tagline,
+      path: item.path,
+      family: item.family,
+      status: item.status,
+      statusLabel: statusLabels[item.status],
+      statusNote: item.statusNote,
+      pending,
+      icon: iconPaths[item.icon],
+      x: r1(x),
+      y: r1(y),
+      lx: r1(lx),
+      ly: r1(firstBaseline),
+      anchor,
+      lines,
+      edges: edges.get(item.slug) ?? [],
+    };
+  });
+  slot++; // hueco entre familias
+  return list;
+});
+---
+
+<EcosystemMapIsland
+  client:visible={{ rootMargin: '200px' }}
+  nodes={nodes}
+  families={families}
+  width={W}
+  height={H}
+  radius={R}
+  lineHeight={LINE}
+/>

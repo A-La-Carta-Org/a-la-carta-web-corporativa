@@ -1,0 +1,102 @@
+---
+/**
+ * Integraciones con servicios de fuera, por grupo y con su estado (docs/auditoria/13 §6). Lee de
+ * `src/data/integrations.ts`. Sin logotipos: icono de línea del grupo y el nombre en texto.
+ * Lo que está «en camino» va con filete discontinuo y chip.
+ */
+import Icon from '@/components/ui/Icon.astro';
+import StatusChip from '@/components/ui/StatusChip.astro';
+import { getItem } from '@/data/solutions';
+import { integrationsByGroup } from '@/data/integrations';
+
+const groups = integrationsByGroup();
+---
+
+<ul role="list" class="int-groups">
+  {groups.map((g) => (
+    <li class="int-group">
+      <h3 class="int-group__title">
+        <Icon name={g.icon} size={18} />
+        {g.name}
+      </h3>
+      <ul role="list" class="int-items">
+        {g.items.map((it) => {
+          const via = getItem(it.via);
+          return (
+            <li class:list={['int-item', { 'is-pending': it.status === 'en-camino' }]}>
+              <span class="int-item__head">
+                <b>{it.name}</b>
+                <StatusChip status={it.status} />
+              </span>
+              <span class="muted">{it.text}</span>
+              <a href={via.path} class="int-item__via">
+                {via.navLabel}
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .int-groups {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-12) var(--space-10);
+  }
+  @media (max-width: 1024px) {
+    .int-groups {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 640px) {
+    .int-groups {
+      grid-template-columns: 1fr;
+    }
+  }
+  .int-group__title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-md);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--color-border-strong);
+    margin-bottom: var(--space-4);
+  }
+  .int-items {
+    display: grid;
+    gap: var(--space-5);
+  }
+  .int-item {
+    display: grid;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+    padding-left: var(--space-3);
+    border-left: 2px solid var(--color-text-strong);
+  }
+  .int-item.is-pending {
+    border-left: 2px dashed var(--color-border-strong);
+  }
+  .int-item__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .int-item__head b {
+    font-weight: var(--weight-medium);
+    color: var(--color-text-strong);
+  }
+  .int-item__via {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    justify-self: start;
+  }
+  .int-item__via:hover {
+    color: var(--color-text-strong);
+  }
+</style>

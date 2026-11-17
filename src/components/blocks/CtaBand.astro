@@ -1,20 +1,82 @@
 ---
-/** Cierre de página: una banda oscura con el titular, una línea y los dos botones. */
+/**
+ * Cierre de página (docs/auditoria/11 §7): una banda oscura con el titular y **tres salidas** en
+ * escalera de compromiso — pruébalo (sin datos), calcula o configura (precio al momento) y habla
+ * con nosotros (solicitar demo o te llamamos). Todos los enlaces salen de `ctaHref()` y llevan el
+ * `origen` de la página.
+ *
+ * Por defecto: «Pruébalo» abre la demo del producto (`modulo`) o el simulador; «Calcula» abre
+ * Monta tu alaCarta con el producto o el sector preseleccionado. Cada salida se puede cambiar o
+ * quitar (`null`) por página.
+ */
 import Icon from '@/components/ui/Icon.astro';
-import { TRIAL_DAYS } from '@/data/pricing';
+import type { IconName } from '@/components/ui/icons';
+import { DEMO_MINUTES, TRIAL_DAYS } from '@/data/site';
+import { ctaHref, demoCta, demoShortTexts } from '@/lib/cta';
+import { solutions, type EcosystemSlug } from '@/data/solutions';
+import type { SectorSlug } from '@/data/sectors';
+
+interface Exit {
+  label: string;
+  href: string;
+  /** Una línea bajo el título de la salida */
+  text?: string;
+}
 
 interface Props {
   title?: string;
   text?: string;
+  /** Desde dónde viene el visitante: obligatorio para la atribución («sol-tpv-cierre»…) */
+  origen: string;
+  /** Contexto para los enlaces por defecto */
+  modulo?: EcosystemSlug;
+  sector?: SectorSlug;
+  /** Salida «Pruébalo». `null` la quita */
+  tryLink?: Exit | null;
+  /** Salida «Calcula». `null` la quita */
+  calcLink?: Exit | null;
+  /** Botón principal de «Habla con nosotros» (por defecto, Solicitar demo) */
   primary?: { label: string; href: string };
-  secondary?: { label: string; href: string };
+  /** Texto de «Habla con nosotros» */
+  talkText?: string;
+  /** Botón «Te llamamos» (por defecto, sí) */
+  call?: boolean;
+  /** Enlace pequeño bajo los botones («Escríbenos», «Cómo funciona el programa»…) */
+  extraLink?: { label: string; href: string };
 }
+
+const { modulo, sector, origen, call = true, extraLink } = Astro.props;
+
+/* «Pruébalo» por defecto: la demo del producto si la tiene; si no, el simulador */
+const productDemo = solutions.find((s) => s.slug === modulo)?.demo;
+const productTry = demoCta(productDemo, origen, 'Probar la demo');
+const defaultTry: Exit = productTry
+  ? { ...productTry, text: demoShortTexts[productDemo!] }
+  : {
+      label: 'Abrir el simulador',
+      href: ctaHref({ to: 'probar', origen, hash: 'simulador' }),
+      text: demoShortTexts.simulador,
+    };
+const defaultCalc: Exit = {
+  label: 'Monta tu alaCarta',
+  href: ctaHref({ to: 'precios', add: modulo, sector, origen, hash: 'monta' }),
+  text: 'Elige las piezas y mira el precio orientativo al momento.',
+};
+
 const {
   title = 'Vamos a ver tu local',
   text = `En una videollamada corta repasamos tu carta, tus canales y tu equipo, y te enseñamos la plataforma con un caso como el tuyo. Después, ${TRIAL_DAYS} días de prueba sin tarjeta.`,
-  primary = { label: 'Solicitar demo', href: '/solicitar-demo' },
-  secondary = { label: 'Ver precios', href: '/precios' },
+  tryLink = defaultTry,
+  calcLink = defaultCalc,
+  primary = { label: 'Solicitar demo', href: ctaHref({ to: 'demo', modulo, sector, origen }) },
+  talkText = `Una demo de ${DEMO_MINUTES} minutos con tu caso, o te llamamos cuando te venga bien.`,
 } = Astro.props;
+const callHref = ctaHref({ to: 'llamada', modulo, sector, origen });
+
+const exits: { kicker: string; icon: IconName; exit: Exit }[] = [
+  ...(tryLink ? [{ kicker: 'Pruébalo', icon: 'play' as const, exit: tryLink }] : []),
+  ...(calcLink ? [{ kicker: 'Calcula', icon: 'calculator' as const, exit: calcLink }] : []),
+];
 ---
 
 <section class="section is-dark cta-band">
@@ -23,47 +85,152 @@ const {
       <h2>{title}</h2>
       <p class="muted">{text}</p>
     </div>
-    <div class="cta-band__actions">
-      <a href={primary.href} class="btn is-inverse is-lg">
-        {primary.label}
-        <Icon name="arrow-right" size={16} class="btn-arrow" />
-      </a>
-      {secondary && (
-        <a href={secondary.href} class="btn is-inverse-outline is-lg">
-          {secondary.label}
-        </a>
-      )}
-    </div>
+    <ul role="list" class:list={['cta-band__exits', `has-${exits.length + 1}`]}>
+      {exits.map(({ kicker, icon, exit }) => (
+        <li class="cta-band__exit">
+          <p class="cta-band__kicker">
+            <Icon name={icon} size={16} />
+            {kicker}
+          </p>
+          {exit.text && <p class="cta-band__text">{exit.text}</p>}
+          <a href={exit.href} class="cta-band__link">
+            {exit.label}
+            <Icon name="arrow-right" size={16} />
+          </a>
+        </li>
+      ))}
+      <li class="cta-band__exit is-main">
+        <p class="cta-band__kicker">
+          <Icon name="message" size={16} />
+          Habla con nosotros
+        </p>
+        <p class="cta-band__text">{talkText}</p>
+        <div class="cta-band__actions">
+          <a href={primary.href} class="btn is-inverse is-lg">
+            {primary.label}
+            <Icon name="arrow-right" size={16} class="btn-arrow" />
+          </a>
+          {call && (
+            <a href={callHref} class="btn is-inverse-outline is-lg">
+              <Icon name="ai-call" size={16} />
+              Te llamamos
+            </a>
+          )}
+        </div>
+        {extraLink && (
+          <a href={extraLink.href} class="cta-band__link is-small">
+            {extraLink.label}
+            <Icon name="arrow-right" size={16} />
+          </a>
+        )}
+      </li>
+    </ul>
   </div>
 </section>
 
 <style>
   .cta-band__inner {
     display: grid;
-    grid-template-columns: 1.4fr 1fr;
-    gap: var(--space-10);
-    align-items: center;
+    gap: var(--space-12);
   }
   .cta-band__copy {
     display: grid;
     gap: var(--space-4);
-    max-width: 36rem;
+    max-width: 44rem;
   }
   .cta-band__copy h2 {
     font-size: var(--text-4xl);
+  }
+  .cta-band__exits {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.5fr);
+    gap: var(--space-8);
+  }
+  .cta-band__exits.has-2 {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  }
+  .cta-band__exits.has-1 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cta-band__exit {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-border-inverse);
+  }
+  .cta-band__exit.is-main {
+    border-top-color: var(--white);
+  }
+  .cta-band__kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    color: var(--color-text-inverse);
+  }
+  .cta-band__text {
+    font-size: var(--text-sm);
+    color: var(--color-text-inverse-muted);
+    line-height: var(--leading-relaxed);
+    max-width: 30rem;
+  }
+  .cta-band__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: auto;
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-inverse);
+    text-decoration: underline;
+    text-decoration-color: var(--color-border-inverse);
+    text-underline-offset: 4px;
+  }
+  .cta-band__link:hover {
+    text-decoration-color: currentColor;
+  }
+  .cta-band__link.is-small {
+    font-size: var(--text-sm);
+    margin-top: 0;
+    color: var(--color-text-inverse-muted);
+  }
+  .cta-band__link.is-small:hover {
+    color: var(--color-text-inverse);
   }
   .cta-band__actions {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-3);
-    justify-content: flex-end;
+    margin-top: var(--space-1);
   }
   @media (max-width: 1024px) {
+    .cta-band__exits,
+    .cta-band__exits.has-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .cta-band__exit.is-main {
+      grid-column: 1 / -1;
+    }
+  }
+  @media (max-width: 640px) {
     .cta-band__inner {
+      gap: var(--space-8);
+    }
+    .cta-band__exits,
+    .cta-band__exits.has-2 {
       grid-template-columns: 1fr;
+      gap: var(--space-6);
     }
     .cta-band__actions {
-      justify-content: flex-start;
+      width: 100%;
+    }
+    .cta-band__actions .btn {
+      flex: 1 1 auto;
     }
   }
 </style>

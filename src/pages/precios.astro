@@ -1,36 +1,90 @@
 ---
+/**
+ * Precios (docs/auditoria/09): planes, «Monta tu alaCarta» (D5), comparativa con herramientas
+ * sueltas (rangos públicos con fuente), calculadora de comisiones reducida (D6), módulo a
+ * módulo, complementos, equipamiento y servicios, cero comisiones, locales fundadores y FAQ.
+ * Todas las cifras salen de src/data/pricing.ts; la cuenta del configurador, de src/lib/quote.ts.
+ */
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHero from '@/components/blocks/PageHero.astro';
 import SectionHeader from '@/components/ui/SectionHeader.astro';
 import FaqSection from '@/components/blocks/FaqSection.astro';
 import CtaBand from '@/components/blocks/CtaBand.astro';
 import Icon from '@/components/ui/Icon.astro';
+import StatusChip from '@/components/ui/StatusChip.astro';
 import PricingPlans from '@/components/islands/PricingPlans.vue';
+import Configurator from '@/components/islands/Configurator.vue';
+import CommissionCalculator from '@/components/islands/CommissionCalculator.vue';
 import {
   plans,
+  addons,
   addonModules,
   devices,
   services,
   fmtPrice,
+  getPlan,
+  planMonthly,
   VAT_NOTE,
   TRIAL_DAYS,
   ANNUAL_DISCOUNT,
   FROM_PRICE,
   PRICES_ARE_ESTIMATES,
+  NO_PRICE_LABEL,
+  ESTIMATE_NOTE,
+  FOUNDER_SPOTS,
+  founderPerks,
+  comparisonRows,
+  COMPARISON_CHECKED,
+  COMMISSION_RANGE,
 } from '@/data/pricing';
-import { solutions } from '@/data/solutions';
+import { hardwareKits } from '@/data/hardware';
+import { familiesWithItems, getSolution, solutions } from '@/data/solutions';
 import { pricingFaqs } from '@/data/faqs';
 import { breadcrumbJsonLd, faqJsonLd } from '@/lib/seo';
+import { ctaHref } from '@/lib/cta';
 
 const crumbs = [
   { name: 'Inicio', path: '/' },
   { name: 'Precios', path: '/precios' },
 ];
+const groups = familiesWithItems();
+const total = getPlan('total');
+const completo = getPlan('completo');
+const totalLine = `Plan ${total.name}: ${fmtPrice(total.monthly as number)}/mes por local (${fmtPrice(
+  planMonthly(total, 'anual') as number
+)} con pago anual), sin comisión por pedido, reserva ni QR.`;
+const soon = solutions.filter((s) => s.status !== 'disponible').map((s) => s.slug);
+
+/** Columna «suelto o complemento» de la tabla módulo a módulo */
+const looseCell = (
+  slug: string
+): { amount?: string; unit?: string; note?: string; text?: string } => {
+  if (slug === 'puesta-en-marcha') return { text: 'Remota incluida' };
+  if (slug === 'hardware' || slug === 'placas-qr') return { text: NO_PRICE_LABEL };
+  if (plans[0]!.modules.includes(slug as never)) return { text: 'En todos los planes' };
+  const loose = addonModules.find((a) => a.module === slug);
+  if (loose) return { amount: `+${fmtPrice(loose.monthly)}`, unit: '/mes', note: loose.note };
+  const addon = addons.find((a) => a.module === slug);
+  if (addon)
+    return {
+      amount: fmtPrice(addon.monthly),
+      unit: addon.period,
+      note: addon.setup ? `+ ${fmtPrice(addon.setup)} de alta` : addon.extra,
+    };
+  return { text: NO_PRICE_LABEL };
+};
+const included = (slug: string, isSolution: boolean, plan: (typeof plans)[number]) =>
+  slug === 'puesta-en-marcha' || (isSolution && plan.modules.includes(slug as never));
+
+const description = `Planes por local y mes, sin permanencia ni comisiones: ${plans
+  .filter((p) => p.monthly !== null)
+  .map((p) => `${p.name} ${fmtPrice(p.monthly as number)}`)
+  .join(', ')}. Monta tu alaCarta y mira tu cuenta al momento.`;
 ---
 
 <BaseLayout
-  title={`Precios: software de hostelería desde ${fmtPrice(FROM_PRICE)}/mes, sin comisiones`}
-  description={`Planes de alaCarta por local y mes, sin permanencia y sin comisiones por reserva, pedido o QR. Esencial desde ${fmtPrice(FROM_PRICE)}/mes; Completo con todos los módulos; Grupos a medida.`}
+  title={`Precios de alaCarta: desde ${fmtPrice(FROM_PRICE)}/mes, sin comisiones`}
+  description={description}
   path="/precios"
   jsonLd={[breadcrumbJsonLd(crumbs), faqJsonLd(pricingFaqs)]}
 >
@@ -38,11 +92,14 @@ const crumbs = [
     variant="center"
     eyebrow="Precios"
     title="Un precio por local. Sin comisiones, sin permanencia."
-    text={`Cuota fija al mes por cada local, con los módulos que necesites. Ni comisión por reserva, ni por pedido online, ni por pago por QR. ${TRIAL_DAYS} días de prueba sin tarjeta y un ${ANNUAL_DISCOUNT} % menos si pagas el año.`}
+    text={`Cuota fija al mes por cada local, con lo que necesites: del TPV al restaurante entero. Ni comisión por reserva, ni por pedido online, ni por pago con QR. ${TRIAL_DAYS} días de prueba sin tarjeta y un ${ANNUAL_DISCOUNT} % menos en el plan si pagas el año.`}
   />
 
-  <section class="section is-sm" id="planes">
+  <section class="section is-sm" id="planes" aria-labelledby="planes-title">
     <div class="container">
+      <h2 id="planes-title" class="sr-only">
+        Planes
+      </h2>
       <PricingPlans client:visible />
       <p class="pricing-note muted">
         Precios por local y mes, {VAT_NOTE}.{' '}
@@ -52,69 +109,216 @@ const crumbs = [
     </div>
   </section>
 
+  <section class="section has-rule" id="monta">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Monta tu alaCarta"
+        title="Pide a la carta y mira el ticket"
+        text="Marca lo que necesitas, como en una carta. El ticket se escribe solo, te dice qué plan te sale más barato y lo puedes compartir o recibir por correo."
+      />
+      <div class="monta">
+        <Configurator client:visible soon={soon} origen="configurador" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section has-rule" id="comparativa">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Herramientas sueltas o alaCarta"
+        title="Lo que cuesta montarlo por piezas"
+        text="Lo que se paga en el mercado por cada pieza contratada por separado, con precios públicos. Un mismo restaurante suele juntar cuatro o cinco de estas cuotas, más las comisiones."
+      />
+      <div class="cmp-wrap">
+        <table class="cmp">
+          <thead>
+            <tr>
+              <th scope="col">Pieza</th>
+              <th scope="col">Por separado</th>
+              <th scope="col">En alaCarta</th>
+            </tr>
+          </thead>
+          <tbody>
+            {comparisonRows.map((r) => (
+              <tr>
+                <th scope="row" data-label="Pieza">
+                  {r.piece}
+                </th>
+                <td data-label="Por separado">
+                  <span class="num cmp__market">{r.market}</span>
+                  <span class="cmp__source">Fuente: {r.source}.</span>
+                </td>
+                <td data-label="En alaCarta">{r.alacarta}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr>
+              <th scope="row" data-label="Todo junto">
+                Todo junto, conectado
+              </th>
+              <td colspan="2" data-label="En alaCarta">
+                {totalLine}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <p class="cmp-note muted">
+        Rangos orientativos, sin IVA, con los precios publicados por cada proveedor y consultados el{' '}
+        {COMPARISON_CHECKED}. Cambian a menudo y cada contrato tiene sus condiciones: compáralos con
+        tus facturas. Las recopilaciones de terceros están marcadas.
+      </p>
+    </div>
+  </section>
+
+  <section class="section has-rule" id="comisiones">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Calculadora de comisiones"
+        title="¿Cuánto se te va en comisiones?"
+        text="Con tus pedidos a domicilio de un mes, una cuenta rápida. La versión completa suma también las reservas por comensal y los pagos con QR."
+      />
+      <CommissionCalculator
+        client:visible
+        compact
+        origen="precios-calculadora"
+        range={COMMISSION_RANGE}
+      />
+    </div>
+  </section>
+
   <section class="section is-soft" id="modulos">
     <div class="container">
       <SectionHeader
         eyebrow="Qué incluye cada plan"
         title="Módulo a módulo"
-        text="El Esencial puede añadir cualquier módulo por separado. El Completo los lleva todos."
+        text={`Agrupado por familias. Lo que no va dentro de un plan se puede añadir a cualquiera. ${ESTIMATE_NOTE}`}
       />
       <div class="table-wrap">
         <table class="plan-table">
           <thead>
             <tr>
-              <th scope="col">Módulo</th>
+              <th scope="col">Producto</th>
               {plans.map((p) => (
                 <th scope="col">{p.name}</th>
               ))}
-              <th scope="col">Suelto sobre Esencial</th>
+              <th scope="col">Suelto o complemento</th>
             </tr>
           </thead>
-          <tbody>
-            {solutions.map((s) => {
-              const addon = addonModules.find((a) => a.module === s.slug);
-              return (
-                <tr>
-                  <th scope="row">
-                    <a href={`/soluciones/${s.slug}`}>{s.name}</a>
-                  </th>
-                  {plans.map((p) => (
-                    <td>
-                      {p.modules.includes(s.slug) ? (
-                        <Icon name="check" size={18} title="Incluido" />
-                      ) : (
-                        <span class="muted" aria-label="No incluido">
-                          —
+          {groups.map((f) => (
+            <tbody>
+              <tr class="plan-table__family">
+                <th scope="colgroup" colspan={plans.length + 2}>
+                  <span>
+                    <Icon name={f.icon} size={16} />
+                    {f.name}
+                  </span>
+                </th>
+              </tr>
+              {f.items.map((s) => {
+                const cell = looseCell(s.slug);
+                return (
+                  <tr>
+                    <th scope="row">
+                      <span class="plan-table__name">
+                        <a href={s.path}>{s.name}</a>
+                        <StatusChip status={s.status} note={s.statusNote} />
+                      </span>
+                    </th>
+                    {plans.map((p) => (
+                      <td data-label={p.name} class="plan-table__mark">
+                        {included(s.slug, s.isSolution, p) ? (
+                          <Icon name="check" size={18} title="Incluido" />
+                        ) : (
+                          <span class="muted plan-table__opt">opcional</span>
+                        )}
+                      </td>
+                    ))}
+                    <td class="plan-table__loose" data-label="Suelto">
+                      {cell.amount ? (
+                        <span>
+                          <span class="num">{cell.amount}</span>
+                          {cell.unit}
+                          {cell.note && <span class="muted plan-table__note"> · {cell.note}</span>}
                         </span>
+                      ) : (
+                        <span class="muted">{cell.text}</span>
                       )}
                     </td>
-                  ))}
-                  <td>
-                    {addon ? (
-                      <span>
-                        <span class="num">{fmtPrice(addon.monthly)}</span>/mes
-                        {addon.note && <span class="muted plan-table__note"> · {addon.note}</span>}
-                      </span>
-                    ) : (
-                      <span class="muted">Incluido</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
+                  </tr>
+                );
+              })}
+            </tbody>
+          ))}
         </table>
       </div>
+      <p class="pricing-note muted">
+        «Opcional»: se añade a ese plan con el precio de la última columna. Los módulos sueltos solo
+        tienen sentido sobre el {plans[0]!.name}: el {completo.name} ya los lleva.
+      </p>
     </div>
   </section>
 
-  <section class="section" id="dispositivos">
+  <section class="section" id="complementos">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Complementos"
+        title="Para cualquier plan, con su precio"
+        text={`Se suman al plan que tengas. Los cuatro primeros van dentro del plan ${total.name}.`}
+      />
+      <ul role="list" class="addon-grid">
+        {addons.map((a) => {
+          const s = getSolution(a.module);
+          return (
+            <li class="card addon">
+              <div class="addon__head">
+                <Icon name={s.icon} size={20} />
+                <StatusChip status={s.status} note={s.statusNote} />
+              </div>
+              <h3 class="addon__name">{a.name}</h3>
+              <p class="addon__price">
+                <b class="num">{fmtPrice(a.monthly)}</b>
+                <span>{a.period}</span>
+              </p>
+              <ul role="list" class="addon__facts">
+                <li>{a.includes}</li>
+                {a.extra && <li>{a.extra}</li>}
+                {a.setup && <li>{fmtPrice(a.setup)} de alta, una sola vez</li>}
+                <li>{a.inTotal ? `Incluido en el plan ${total.name}` : 'Fuera de los planes'}</li>
+              </ul>
+              <p class="muted addon__text">{a.text}</p>
+              <div class="addon__links">
+                <a href={`/soluciones/${s.slug}`} class="link-arrow">
+                  Cómo funciona
+                  <Icon name="arrow-right" size={14} />
+                </a>
+                <a
+                  href={ctaHref({
+                    to: 'precios',
+                    add: a.module,
+                    origen: 'precios-complementos',
+                    hash: 'monta',
+                  })}
+                  class="addon__add"
+                >
+                  Añadir a mi cuenta
+                </a>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section has-rule" id="equipamiento">
     <div class="container pricing-cols">
       <div>
         <SectionHeader
-          eyebrow="Dispositivos"
-          title="Añade los que necesites"
-          text="Cada plan incluye los dispositivos indicados. Los demás se suman por unidad y se pueden dar de baja por temporada."
+          eyebrow="Equipamiento"
+          title="Dispositivos, kits y placas"
+          text="Cada plan incluye los dispositivos indicados; los demás se suman por unidad y se dan de baja por temporada. El equipo se presupuesta contigo, o usas el tuyo."
         />
         <ul role="list" class="price-list">
           {devices.map((d) => (
@@ -125,13 +329,43 @@ const crumbs = [
               </span>
             </li>
           ))}
+          {hardwareKits.map((k) => (
+            <li>
+              <span>
+                {k.name}
+                <span class="muted price-list__sub">
+                  {' '}
+                  ·{' '}
+                  {k.contents
+                    .map((c, i) => (i ? c.charAt(0).toLowerCase() + c.slice(1) : c))
+                    .join(', ')}
+                </span>
+              </span>
+              <span class="muted">{NO_PRICE_LABEL}</span>
+            </li>
+          ))}
+          <li>
+            <span>
+              Placas QR para las mesas
+              <span class="muted price-list__sub"> · imprimirlas tú es gratis</span>
+            </span>
+            <span class="muted">{NO_PRICE_LABEL}</span>
+          </li>
         </ul>
+        <p class="price-list__links">
+          <a href="/hardware" class="link-arrow">
+            Hardware <Icon name="arrow-right" size={14} />
+          </a>
+          <a href="/hardware/placas-qr" class="link-arrow">
+            Placas QR <Icon name="arrow-right" size={14} />
+          </a>
+        </p>
       </div>
       <div>
         <SectionHeader
           eyebrow="Puesta en marcha"
           title="Para empezar bien"
-          text="La configuración remota está incluida en todos los planes. Lo presencial se contrata aparte."
+          text="La configuración remota está incluida en todos los planes. Lo presencial se contrata aparte; los locales fundadores lo tienen incluido."
         />
         <ul role="list" class="price-list">
           {services.map((s) => (
@@ -146,6 +380,11 @@ const crumbs = [
             </li>
           ))}
         </ul>
+        <p class="price-list__links">
+          <a href="/puesta-en-marcha" class="link-arrow">
+            Cómo es la puesta en marcha <Icon name="arrow-right" size={14} />
+          </a>
+        </p>
       </div>
     </div>
   </section>
@@ -171,6 +410,10 @@ const crumbs = [
           <p>El pago en mesa desde la carta solo paga la comisión de tu pasarela.</p>
         </li>
         <li class="column">
+          <h3>0 € por llamada atendida</h3>
+          <p>Con la IA pagas minutos de llamada, no reservas ni pedidos.</p>
+        </li>
+        <li class="column">
           <h3>0 € de alta</h3>
           <p>La puesta en marcha remota y la importación de la carta están incluidas.</p>
         </li>
@@ -178,15 +421,55 @@ const crumbs = [
     </div>
   </section>
 
-  <FaqSection items={pricingFaqs} title="Preguntas sobre precios" />
+  <section class="section" id="fundadores">
+    <div class="container founders">
+      <div class="founders__copy">
+        <SectionHeader
+          eyebrow="Locales fundadores"
+          title={`${FOUNDER_SPOTS} locales para construirlo con ellos`}
+          text="alaCarta es nuevo y no tiene clientes que enseñarte todavía. A los primeros locales que lo usen en su servicio y nos cuenten qué falla les damos condiciones de fundador. Son plazas reales, sin cuenta atrás ni fecha límite."
+        />
+        <div class="founders__actions">
+          <a
+            href={ctaHref({ to: 'demo', motivo: 'fundador', origen: 'precios-fundadores' })}
+            class="btn is-primary"
+          >
+            Quiero ser local fundador
+          </a>
+          <a href="/locales-fundadores" class="link-arrow">
+            Cómo funciona <Icon name="arrow-right" size={14} />
+          </a>
+        </div>
+      </div>
+      <ul role="list" class="founders__perks">
+        {founderPerks.map((p) => (
+          <li class="column">
+            <h3>{p.title}</h3>
+            <p>{p.text}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <FaqSection items={pricingFaqs} title="Preguntas sobre precios" soft={false} />
 
   <CtaBand
+    origen="precios-cierre"
     title="¿Qué plan te encaja?"
-    text="En la demo repasamos tu local y te decimos qué módulos necesitas de verdad. La propuesta llega por escrito, con el precio cerrado."
+    text="En la demo repasamos tu local y te decimos qué necesitas de verdad. La propuesta llega por escrito, con el precio cerrado."
+    calcLink={{
+      label: 'Monta tu alaCarta',
+      href: '#monta',
+      text: 'Está en esta misma página: elige las piezas y mira el precio al momento.',
+    }}
   />
 </BaseLayout>
 
 <style>
+  section[id] {
+    scroll-margin-top: var(--header-h);
+  }
   .pricing-note {
     margin-top: var(--space-6);
     text-align: center;
@@ -194,17 +477,83 @@ const crumbs = [
     max-width: 44rem;
     margin-inline: auto;
   }
+  .monta {
+    margin-top: var(--space-10);
+  }
+
+  /* Comparativa */
+  .cmp-wrap {
+    margin-top: var(--space-10);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+  }
+  .cmp {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+  }
+  .cmp th,
+  .cmp td {
+    padding: var(--space-4) var(--space-5);
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .cmp thead th {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    background: var(--color-bg-soft);
+  }
+  .cmp tbody th {
+    width: 26%;
+    font-weight: var(--weight-medium);
+    color: var(--color-text-strong);
+  }
+  .cmp tbody td:last-child {
+    width: 32%;
+  }
+  .cmp__market {
+    display: block;
+    font-weight: var(--weight-medium);
+    color: var(--color-text-strong);
+  }
+  .cmp__source {
+    display: block;
+    margin-top: var(--space-1);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+  .cmp tfoot th,
+  .cmp tfoot td {
+    border-bottom: 0;
+    background: var(--color-bg-soft);
+    color: var(--color-text-strong);
+  }
+  .cmp tfoot th {
+    font-weight: var(--weight-semibold);
+  }
+  .cmp-note {
+    margin-top: var(--space-4);
+    font-size: var(--text-xs);
+    max-width: 48rem;
+  }
+
+  /* Módulo a módulo */
   .table-wrap {
-    overflow-x: auto;
+    margin-top: var(--space-10);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);
     background: var(--white);
+    overflow: hidden;
   }
   .plan-table {
     width: 100%;
     border-collapse: collapse;
     font-size: var(--text-sm);
-    min-width: 40rem;
   }
   .plan-table th,
   .plan-table td {
@@ -221,9 +570,29 @@ const crumbs = [
     color: var(--color-text-muted);
     background: var(--color-bg-soft);
   }
-  .plan-table tbody tr:last-child td,
-  .plan-table tbody tr:last-child th {
+  .plan-table tbody:last-child tr:last-child td,
+  .plan-table tbody:last-child tr:last-child th {
     border-bottom: 0;
+  }
+  .plan-table__family th {
+    padding-block: var(--space-3);
+    background: var(--color-bg-soft);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+  .plan-table__family span {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .plan-table__name {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-2);
   }
   .plan-table tbody th {
     font-weight: var(--weight-medium);
@@ -232,9 +601,13 @@ const crumbs = [
   .plan-table tbody th a:hover {
     text-decoration: underline;
   }
-  .plan-table td:nth-child(n + 2):nth-child(-n + 4) {
+  .plan-table__mark,
+  .plan-table thead th:nth-child(n + 2):nth-child(-n + 5) {
     text-align: center;
-    width: 8rem;
+    width: 7rem;
+  }
+  .plan-table__opt {
+    font-size: var(--text-xs);
   }
   .plan-table__note {
     font-size: var(--text-xs);
@@ -242,6 +615,83 @@ const crumbs = [
   .num {
     font-variant-numeric: tabular-nums;
   }
+
+  /* Complementos */
+  .addon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-10);
+  }
+  .addon {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-5);
+  }
+  .addon__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+  }
+  .addon__head {
+    justify-content: space-between;
+    min-height: 1.5rem;
+  }
+  .addon__name {
+    font-size: var(--text-lg);
+    margin-top: calc(var(--space-2) * -1);
+  }
+  .addon__price {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+    padding-block: var(--space-3);
+    border-block: 1px solid var(--color-border);
+  }
+  .addon__price b {
+    font-family: var(--font-display);
+    font-size: var(--text-3xl);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-tight);
+    line-height: 1;
+    white-space: nowrap;
+    color: var(--color-text-strong);
+  }
+  .addon__price span {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .addon__facts {
+    display: grid;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+  }
+  .addon__facts li::before {
+    content: '· ';
+    color: var(--color-text-muted);
+  }
+  .addon__text {
+    font-size: var(--text-sm);
+  }
+  .addon__links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-top: auto;
+  }
+  .addon__add {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-strong);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* Equipamiento y servicios */
   .pricing-cols {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -249,6 +699,7 @@ const crumbs = [
     align-items: start;
   }
   .price-list {
+    margin-top: var(--space-8);
     border-top: 1px solid var(--color-border);
   }
   .price-list li {
@@ -258,6 +709,10 @@ const crumbs = [
     padding: var(--space-4) 0;
     border-bottom: 1px solid var(--color-border);
     font-size: var(--text-sm);
+  }
+  .price-list li > span:last-child {
+    flex: 0 0 auto;
+    text-align: right;
   }
   .price-list li.is-stack {
     flex-direction: column;
@@ -271,20 +726,157 @@ const crumbs = [
   .price-list p {
     font-size: var(--text-sm);
   }
+  .price-list__sub {
+    font-size: var(--text-xs);
+  }
+  .price-list__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-6);
+    margin-top: var(--space-5);
+  }
+
   .zero-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: var(--space-8);
+    margin-top: var(--space-10);
   }
   .zero-grid h3 {
     font-size: var(--text-xl);
   }
+
+  /* Fundadores */
+  .founders {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: var(--space-12);
+    align-items: start;
+  }
+  .founders__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4) var(--space-6);
+    margin-top: var(--space-6);
+  }
+  .founders__perks {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .founders__perks h3 {
+    font-size: var(--text-lg);
+  }
+  .founders__perks p {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+
   @media (max-width: 1024px) {
-    .pricing-cols {
+    .pricing-cols,
+    .founders {
       grid-template-columns: 1fr;
+      gap: var(--space-12);
     }
     .zero-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* Móvil: las dos tablas pasan a fichas, sin scroll lateral ni columnas cortadas */
+  @media (max-width: 720px) {
+    .cmp thead,
+    .plan-table thead {
+      display: none;
+    }
+    .cmp,
+    .cmp tbody,
+    .cmp tfoot,
+    .cmp tr,
+    .cmp th,
+    .cmp td,
+    .plan-table,
+    .plan-table tbody,
+    .plan-table tr,
+    .plan-table th,
+    .plan-table td {
+      display: block;
+      width: auto !important;
+    }
+    .cmp tr {
+      padding: var(--space-4) var(--space-4);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cmp tfoot tr {
+      background: var(--color-bg-soft);
+      border-bottom: 0;
+    }
+    .cmp th,
+    .cmp td {
+      padding: 0;
+      border: 0;
+    }
+    .cmp tbody th {
+      font-size: var(--text-md);
+      margin-bottom: var(--space-2);
+    }
+    .cmp td + td,
+    .cmp th + td {
+      margin-top: var(--space-2);
+    }
+    .cmp td::before {
+      content: attr(data-label);
+      display: block;
+      font-size: var(--text-xs);
+      font-weight: var(--weight-medium);
+      letter-spacing: var(--tracking-wide);
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+
+    .plan-table tr:not(.plan-table__family) {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--space-2) var(--space-1);
+      padding: var(--space-4);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .plan-table tbody:last-child tr:last-child {
+      border-bottom: 0;
+    }
+    .plan-table th,
+    .plan-table td {
+      padding: 0;
+      border: 0;
+    }
+    .plan-table__family th {
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .plan-table tr:not(.plan-table__family) > th {
+      grid-column: 1 / -1;
+      font-size: var(--text-md);
+    }
+    .plan-table__mark {
+      display: grid !important;
+      justify-items: center;
+      gap: 2px;
+      padding: var(--space-2) 0 !important;
+      border-radius: var(--radius-sm) !important;
+      background: var(--color-bg-soft);
+    }
+    .plan-table__mark::before {
+      content: attr(data-label);
+      font-size: 0.6875rem;
+      font-weight: var(--weight-medium);
+      color: var(--color-text-muted);
+    }
+    .plan-table__loose {
+      grid-column: 1 / -1;
+    }
+    .plan-table__loose::before {
+      content: 'Suelto o complemento: ';
+      color: var(--color-text-muted);
     }
   }
   @media (max-width: 640px) {

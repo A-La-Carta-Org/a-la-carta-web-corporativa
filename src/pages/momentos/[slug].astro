@@ -1,0 +1,634 @@
+---
+/**
+ * Página de momento (docs/auditoria/12 §4): abrir un local, cambiar de TPV, dejar las
+ * comisiones. Problema → bloque propio del momento → plan paso a paso → demo o herramienta →
+ * piezas → FAQ → cierre. Todo sale de `src/data/moments.ts`; una sola isla por página
+ * (`DemoBlock`, con `client:visible`).
+ *
+ * - Abrir: checklist de apertura con lo que resolvemos marcado y configuración tipo (quote.ts).
+ * - Cambiar de TPV: qué se trae y qué no, VeriFactu con sus fechas y comparativa en checklist.
+ * - Dejar las comisiones: la calculadora en el centro y la estrategia de canal propio.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import FeatureColumns from '@/components/blocks/FeatureColumns.astro';
+import Steps from '@/components/blocks/Steps.astro';
+import SolutionGrid from '@/components/blocks/SolutionGrid.astro';
+import FaqSection from '@/components/blocks/FaqSection.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import DemoBlock from '@/components/blocks/DemoBlock.astro';
+import RecommendedSetup from '@/components/blocks/RecommendedSetup.astro';
+import Icon from '@/components/ui/Icon.astro';
+import StatusChip from '@/components/ui/StatusChip.astro';
+import { moments, momentPath, type Moment } from '@/data/moments';
+import { migrationImports, migrationNotImported } from '@/data/onboarding';
+import { getItem } from '@/data/solutions';
+import { breadcrumbJsonLd, faqJsonLd } from '@/lib/seo';
+import { ctaHref } from '@/lib/cta';
+import { getCollection } from 'astro:content';
+
+export function getStaticPaths() {
+  return moments.map((m) => ({ params: { slug: m.slug }, props: { moment: m } }));
+}
+
+interface Props {
+  moment: Moment;
+}
+const { moment: m } = Astro.props;
+const path = momentPath(m.slug);
+const origen = `momento-${m.slug}`;
+const motivo = m.motivo;
+const crumbs = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Sectores', path: '/sectores' },
+  { name: m.name, path },
+];
+
+const secondary = {
+  'abrir-un-local': { label: 'Ver la configuración tipo', href: '#configuracion' },
+  'cambiar-de-tpv': { label: '¿Te sirve tu equipo?', href: '#pruebalo' },
+  'dejar-las-comisiones': { label: 'Calcular mis comisiones', href: '#pruebalo' },
+}[m.slug];
+
+const tryText = {
+  'abrir-un-local': 'Haz de camarero, de cocina y de caja en un servicio de ejemplo.',
+  'cambiar-de-tpv': 'Cuatro preguntas para saber si te sirve el equipo que ya tienes.',
+  'dejar-las-comisiones': 'Pon tus pedidos y tu ticket medio y mira lo que se queda el agregador.',
+}[m.slug];
+
+const setupHref = m.setup
+  ? ctaHref({ to: 'precios', origen: `${origen}-config`, hash: 'monta' })
+  : '';
+const compareRows = m.compare?.rows.map((r) => ({
+  ...r,
+  item: r.piece ? getItem(r.piece) : null,
+}));
+const channelItems = m.channels?.items.map((c) => ({ ...c, item: getItem(c.piece) }));
+/* Guías que se declaran de este momento (frontmatter `moments`) */
+const guides = await getCollection(
+  'guias',
+  ({ data }) => !data.draft && data.moments.includes(m.slug)
+);
+---
+
+<BaseLayout
+  title={m.seoTitle}
+  description={m.description}
+  path={path}
+  jsonLd={[breadcrumbJsonLd(crumbs), faqJsonLd(m.faqs)]}
+>
+  <PageHero
+    variant="compact"
+    breadcrumbs={crumbs}
+    eyebrow={m.navLabel}
+    eyebrowIcon={m.icon}
+    title={m.title}
+    text={m.intro}
+    primary={{
+      label: 'Solicitar demo',
+      href: ctaHref({ to: 'demo', origen: `${origen}-hero`, motivo }),
+    }}
+    secondary={secondary}
+  />
+
+  <!-- El problema -->
+  <section class="section has-rule">
+    <div class="container">
+      <SectionHeader eyebrow="Lo que preocupa" title="Es normal tener dudas" />
+      <FeatureColumns
+        items={m.worries}
+        columns={m.worries.length === 4 ? 4 : m.worries.length === 2 ? 2 : 3}
+      />
+    </div>
+  </section>
+
+  {/* Dejar las comisiones: la calculadora en el centro, antes del plan */}
+  {m.slug === 'dejar-las-comisiones' && (
+    <DemoBlock
+      demo={m.demo.key}
+      title={m.demo.title}
+      text={m.demo.text}
+      origen={`${origen}-demo`}
+    />
+  )}
+
+  {m.channels && channelItems && (
+    <section class="section has-rule">
+      <div class="container">
+        <SectionHeader eyebrow="Tu canal propio" title={m.channels.title} text={m.channels.text} />
+        <ul role="list" class="mo-channels">
+          {channelItems.map((c) => (
+            <li class="column mo-channel">
+              <span class="mo-channel__head">
+                <Icon name={c.item.icon} size={18} />
+                <h3>{c.title}</h3>
+                <StatusChip status={c.item.status} />
+              </span>
+              <p>{c.text}</p>
+              <a href={c.item.path} class="link-arrow">
+                {c.item.navLabel}
+                <Icon name="arrow-right" size={14} />
+              </a>
+            </li>
+          ))}
+        </ul>
+        <blockquote class="mo-quote">
+          <p>{m.channels.quote}</p>
+        </blockquote>
+      </div>
+    </section>
+  )}
+
+  {/* Abrir: checklist de apertura */}
+  {m.checklist && (
+    <section class="section has-rule" id="checklist">
+      <div class="container">
+        <SectionHeader
+          eyebrow="Checklist de apertura"
+          title={m.checklist.title}
+          text={m.checklist.text}
+        />
+        <p class="mo-legend">
+          <span class="mo-legend__item">
+            <span class="mo-mark is-on" aria-hidden="true"></span> Lo resolvemos nosotros
+          </span>
+          <span class="mo-legend__item">
+            <span class="mo-mark" aria-hidden="true"></span> Depende de ti o de tu gestoría
+          </span>
+        </p>
+        <ul role="list" class="mo-checklist">
+          {m.checklist.items.map((it) => (
+            <li class:list={['mo-check', { 'is-on': it.covered }]}>
+              <span class:list={['mo-mark', { 'is-on': it.covered }]} aria-hidden="true"></span>
+              <span class="mo-check__body">
+                <b>{it.text}</b>
+                <span class="sr-only">
+                  {it.covered ? '(lo resolvemos nosotros)' : '(depende de ti o de tu gestoría)'}
+                </span>
+                <span>{it.note}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )}
+
+  <!-- El plan, paso a paso -->
+  <section class="section is-soft">
+    <div class="container">
+      <SectionHeader eyebrow="Cómo lo hacemos" title={m.planTitle} text={m.planText} />
+      <div style={`--cols: ${m.plan.length}`}>
+        <Steps steps={m.plan} />
+      </div>
+      {m.slug === 'abrir-un-local' && (
+        <a href="/puesta-en-marcha" class="link-arrow mo-more">
+          Cómo es la puesta en marcha
+          <Icon name="arrow-right" size={14} />
+        </a>
+      )}
+    </div>
+  </section>
+
+  {/* Cambiar de TPV: qué se trae, qué no y VeriFactu */}
+  {m.slug === 'cambiar-de-tpv' && (
+    <section class="section">
+      <div class="container">
+        <SectionHeader
+          eyebrow="La migración"
+          title="Qué traemos de tu TPV y qué no"
+          text="Te lo decimos antes de empezar, con tu sistema delante. Sin sorpresas el día del cambio."
+        />
+        <div class="mo-migration">
+          <div>
+            <h3 class="mo-h">Lo que traemos</h3>
+            <ul class="check-list">
+              {migrationImports.map((t) => (
+                <li>{t}</li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h3 class="mo-h">Lo que no se traspasa</h3>
+            <ul role="list" class="mo-not">
+              {migrationNotImported.map((t) => (
+                <li>{t}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        <aside class="mo-notice" aria-labelledby="mo-verifactu">
+          <span class="mo-notice__icon" aria-hidden="true">
+            <Icon name="shield-check" size={20} />
+          </span>
+          <div class="mo-notice__body">
+            <h3 id="mo-verifactu">VeriFactu: un buen motivo para revisar, no para correr</h3>
+            <p>
+              Según la norma vigente, la obligación empieza el <b>1 de enero de 2027</b> para las
+              empresas y el <b>1 de julio de 2027</b> para autónomos y resto de obligados. En
+              octubre de 2026 Hacienda anunció su intención de aplazarla a 2028, pero a 16 de
+              noviembre de 2026 ese aplazamiento no está publicado en el BOE. Si vas a cambiar de
+              sistema, es buen momento para hacerlo con calma.
+            </p>
+            <a href="/recursos/guias/verifactu-restaurantes" class="link-arrow">
+              Leer la guía de VeriFactu
+              <Icon name="arrow-right" size={14} />
+            </a>
+          </div>
+        </aside>
+      </div>
+    </section>
+  )}
+
+  {m.compare && compareRows && (
+    <section class="section has-rule">
+      <div class="container">
+        <SectionHeader eyebrow="Comparativa" title={m.compare.title} text={m.compare.text} />
+        <div class="mo-compare" role="table" aria-label={m.compare.title}>
+          <div class="mo-compare__row is-head" role="row">
+            <span role="columnheader">Lo que necesitas</span>
+            <span role="columnheader">Lo habitual hoy</span>
+            <span role="columnheader">Con alaCarta</span>
+          </div>
+          {compareRows.map((r) => (
+            <div class="mo-compare__row" role="row">
+              <span role="rowheader" class="mo-compare__need">
+                {r.need}
+              </span>
+              <span role="cell" class="mo-compare__before">
+                <span class="mo-compare__tag">Lo habitual hoy</span>
+                {r.before}
+              </span>
+              <span role="cell" class="mo-compare__after">
+                <span class="mo-compare__tag">Con alaCarta</span>
+                <span class="mo-compare__value">
+                  <Icon name="check" size={16} />
+                  {r.item && r.item.status === 'disponible' ? (
+                    <a href={r.item.path}>{r.after}</a>
+                  ) : (
+                    <span>{r.after}</span>
+                  )}
+                  {r.item && <StatusChip status={r.item.status} />}
+                </span>
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  {/* Abrir: configuración tipo */}
+  {m.setup && (
+    <section class="section has-rule" id="configuracion">
+      <div class="container">
+        <SectionHeader eyebrow="Configuración tipo" title={m.setup.title} />
+        <RecommendedSetup
+          config={m.setup.config}
+          kits={m.setup.kits}
+          later={m.setup.later}
+          text={m.setup.text}
+          href={setupHref}
+          label={m.setup.label}
+        />
+      </div>
+    </section>
+  )}
+
+  {m.slug !== 'dejar-las-comisiones' && (
+    <DemoBlock
+      demo={m.demo.key}
+      title={m.demo.title}
+      text={m.demo.text}
+      origen={`${origen}-demo`}
+    />
+  )}
+
+  <section class="section has-rule">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Lo que más te sirve ahora"
+        title="Las piezas del sistema para este momento"
+        text="Empieza por estas. El resto se conecta cuando lo necesites."
+      />
+      <SolutionGrid only={m.links} columns={3} />
+      {guides.length > 0 && (
+        <div class="mo-reading">
+          <h3 class="mo-h">Para leer con calma</h3>
+          <ul role="list" class="mo-guides">
+            {guides.map((g) => (
+              <li>
+                <a href={`/recursos/guias/${g.id}`} class="mo-guide">
+                  <Icon name="book" size={18} />
+                  <span>
+                    <b>{g.data.title}</b>
+                    <span class="muted">{g.data.readingMinutes} min de lectura</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <FaqSection items={m.faqs} title="Preguntas frecuentes" />
+
+  <CtaBand
+    origen={origen}
+    primary={{ label: 'Solicitar demo', href: ctaHref({ to: 'demo', origen, motivo }) }}
+    tryLink={{
+      label: m.slug === 'dejar-las-comisiones' ? 'Calcular mis comisiones' : 'Probar ahora',
+      href: '#pruebalo',
+      text: tryText,
+    }}
+  />
+</BaseLayout>
+
+<style>
+  /* Guías del momento */
+  .mo-reading {
+    margin-top: var(--space-12);
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--color-border);
+  }
+  .mo-guides {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4) var(--space-8);
+    margin-top: var(--space-4);
+  }
+  .mo-guide {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-3);
+    align-items: start;
+    color: var(--color-text);
+  }
+  .mo-guide:hover {
+    text-decoration: none;
+  }
+  .mo-guide:hover b {
+    text-decoration: underline;
+  }
+  .mo-guide > span {
+    display: grid;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+  }
+  .mo-guide b {
+    font-weight: var(--weight-medium);
+    color: var(--color-text-strong);
+    font-size: var(--text-base);
+  }
+  @media (max-width: 720px) {
+    .mo-guides {
+      grid-template-columns: 1fr;
+    }
+  }
+  /* Canales propios */
+  .mo-channels {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-10) var(--space-8);
+  }
+  .mo-channel {
+    gap: var(--space-3);
+  }
+  .mo-channel__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .mo-channel__head h3 {
+    font-size: var(--text-lg);
+  }
+  .mo-channel .link-arrow {
+    margin-top: auto;
+    font-size: var(--text-sm);
+  }
+  .mo-quote {
+    margin: var(--space-16) auto 0;
+    max-width: 48rem;
+    text-align: center;
+  }
+  .mo-quote p {
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-snug);
+    line-height: 1.3;
+    color: var(--color-text-strong);
+  }
+
+  /* Checklist de apertura */
+  .mo-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin: calc(var(--space-6) * -1) 0 var(--space-8);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .mo-legend__item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-right: var(--space-4);
+  }
+  .mo-checklist {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 var(--space-12);
+  }
+  .mo-check {
+    display: flex;
+    gap: var(--space-4);
+    align-items: flex-start;
+    padding: var(--space-4) 0;
+    border-top: 1px solid var(--color-border);
+  }
+  .mo-check__body {
+    display: grid;
+    gap: 0.15rem;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .mo-check__body b {
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-strong);
+  }
+  .mo-check:not(.is-on) .mo-check__body b {
+    font-weight: var(--weight-medium);
+    color: var(--color-text);
+  }
+  .mo-mark {
+    flex: 0 0 auto;
+    display: inline-block;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.1rem;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--color-border-strong);
+    background: var(--white);
+  }
+  .mo-mark.is-on {
+    border-color: var(--color-ink);
+    background: var(--color-ink)
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 10.5l2.6 2.5L14 7.5'/%3E%3C/svg%3E")
+      center / 100% no-repeat;
+  }
+  .mo-legend .mo-mark {
+    width: 1rem;
+    height: 1rem;
+    margin-top: 0;
+  }
+  .mo-more {
+    margin-top: var(--space-10);
+  }
+
+  /* Migración */
+  .mo-migration {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-12);
+  }
+  .mo-h {
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-4);
+  }
+  .mo-not {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .mo-not li {
+    display: flex;
+    gap: var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .mo-not li::before {
+    content: '';
+    flex: 0 0 auto;
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-top: 0.1rem;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--color-border-strong);
+  }
+  .mo-notice {
+    display: flex;
+    gap: var(--space-5);
+    align-items: flex-start;
+    margin-top: var(--space-16);
+    padding: var(--space-8);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+  }
+  .mo-notice__icon {
+    flex: 0 0 auto;
+    width: 2.75rem;
+    height: 2.75rem;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-pill);
+    background: var(--color-bg-muted);
+    color: var(--color-text-strong);
+  }
+  .mo-notice__body {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: start;
+    max-width: 48rem;
+  }
+  .mo-notice__body h3 {
+    font-size: var(--text-xl);
+  }
+  .mo-notice__body p {
+    color: var(--color-text-muted);
+  }
+  .mo-notice__body b {
+    color: var(--color-text-strong);
+    font-weight: var(--weight-semibold);
+  }
+
+  /* Comparativa en checklist */
+  .mo-compare {
+    border-top: 1px solid var(--color-text-strong);
+  }
+  .mo-compare__row {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr 1.2fr;
+    gap: var(--space-6);
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--color-border);
+    align-items: baseline;
+    font-size: var(--text-sm);
+  }
+  .mo-compare__row.is-head {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    font-weight: var(--weight-medium);
+  }
+  .mo-compare__need {
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-strong);
+    font-size: var(--text-base);
+  }
+  .mo-compare__before {
+    color: var(--color-text-muted);
+  }
+  .mo-compare__value {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--color-text-strong);
+  }
+  .mo-compare__value a {
+    color: inherit;
+  }
+  .mo-compare__tag {
+    display: none;
+  }
+
+  @media (max-width: 1024px) {
+    .mo-channels {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 720px) {
+    .mo-channels,
+    .mo-checklist,
+    .mo-migration {
+      grid-template-columns: 1fr;
+    }
+    .mo-notice {
+      flex-direction: column;
+      padding: var(--space-6);
+    }
+    .mo-compare__row.is-head {
+      display: none;
+    }
+    .mo-compare__row {
+      grid-template-columns: 1fr;
+      gap: var(--space-2);
+    }
+    .mo-compare__tag {
+      display: block;
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+    }
+    .mo-compare__after .mo-compare__tag {
+      margin-bottom: 0.15rem;
+    }
+    .mo-quote p {
+      font-size: var(--text-xl);
+    }
+  }
+</style>

@@ -44,11 +44,11 @@ Significa "elige tus módulos" y funciona a 16 px. Está en `src/components/ui/L
 | `--gray-200`          | `#e3e3df` | Bordes y filetes                     |
 | `--gray-300`          | `#cfcfca` | Bordes de input                      |
 | `--gray-400`          | `#a4a49e` | Texto sutil, flechas                 |
-| `--gray-500`          | `#74746e` | Texto secundario                     |
+| `--gray-500`          | `#696963` | Texto secundario                     |
 | `--gray-900`          | `#151514` | Texto principal                      |
 | `--black`             | `#0b0b0a` | Tinta fuerte, botón primario, banda  |
 | `--color-ok`          | `#1f7a4d` | Estado correcto (solo producto/forms)|
-| `--color-warn`        | `#a6690b` | Aviso                                |
+| `--color-warn`        | `#946009` | Aviso                                |
 | `--color-danger`      | `#b42318` | Error                                |
 
 Alias semánticos (`--color-text`, `--color-border`, `--color-bg-soft`…) se usan en los componentes;
@@ -114,7 +114,9 @@ marco y tamaño**, para que la web no cambie de aspecto.
 
 ## 6. Accesibilidad
 
-- Contraste mínimo AA en todo el texto (gris 500 sobre blanco: 4,6:1).
+- Contraste mínimo AA en todo el texto: gris 500 sobre blanco 5,5:1, sobre `--gray-50` 5,2:1 y sobre
+  `--gray-100` 4,9:1; aviso sobre su fondo suave 4,7:1. `--gray-400` (2,5:1) solo para iconos,
+  flechas y separadores decorativos, nunca para texto (ajustado en la QA del 17-11-2026).
 - Foco visible de 2 px en negro con separación de 3 px.
 - Menús operables con teclado (botón con `aria-expanded`, cierre con Escape), acordeones nativos
   (`<details>`), formularios con etiquetas, errores asociados y `aria-invalid`.

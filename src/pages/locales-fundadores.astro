@@ -1,0 +1,205 @@
+---
+/**
+ * Locales fundadores (docs/auditoria/01, 09 y 13 §4), con las condiciones que decidió Jordi el
+ * 16-11-2026: precio bloqueado, puesta en marcha presencial incluida, línea directa con producto,
+ * plazas reales y sin cuentas atrás ni «quedan X». Condiciones y plazas en src/data/pricing.ts.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/blocks/PageHero.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import FeatureColumns from '@/components/blocks/FeatureColumns.astro';
+import FaqSection from '@/components/blocks/FaqSection.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import Steps from '@/components/blocks/Steps.astro';
+import Icon from '@/components/ui/Icon.astro';
+import SectorGrid from '@/components/blocks/SectorGrid.astro';
+import { FOUNDER_SPOTS, founderPerks, ONSITE_TRAINING_FROM, fmtPrice } from '@/data/pricing';
+import { breadcrumbJsonLd, faqJsonLd } from '@/lib/seo';
+import { ctaHref } from '@/lib/cta';
+
+const path = '/locales-fundadores';
+const crumbs = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Locales fundadores', path },
+];
+const conditions = founderPerks;
+const ask = [
+  {
+    title: 'Que lo uses de verdad',
+    text: 'En el servicio, con tu equipo, no solo en una prueba.',
+  },
+  {
+    title: 'Que nos cuentes qué falla',
+    text: 'Una conversación corta cada cierto tiempo, y avisarnos cuando algo no funcione como esperas.',
+  },
+  {
+    title: 'Paciencia con lo que está en camino',
+    text: 'Parte del ecosistema todavía se está construyendo. Te lo decimos siempre con claridad.',
+  },
+];
+const steps = [
+  {
+    title: 'Nos cuentas tu local',
+    text: 'Qué tipo de local es, cuántas mesas y qué usas hoy. Con eso vemos si encaja.',
+  },
+  {
+    title: 'Demo y propuesta por escrito',
+    text: 'Te enseñamos el sistema con tu carta y te mandamos el precio cerrado, el que queda bloqueado.',
+  },
+  {
+    title: 'Lo dejamos funcionando',
+    text: 'Puesta en marcha presencial: configuración, equipo y formación en tu local, sin coste.',
+  },
+  {
+    title: 'Hablamos cada cierto tiempo',
+    text: 'Una conversación corta para contarnos qué falla y qué echas en falta.',
+  },
+];
+const faqs = [
+  {
+    q: '¿Cuántas plazas hay?',
+    a: `${FOUNDER_SPOTS} locales. Es un número real: es lo que podemos acompañar bien de forma presencial. No hay cuenta atrás ni fecha límite artificial.`,
+  },
+  {
+    q: '¿Tengo que pagar algo por entrar?',
+    a: 'No. Pagas la cuota de tu plan, como cualquier cliente, con el precio bloqueado y la puesta en marcha presencial incluida.',
+  },
+  {
+    q: '¿Hay permanencia?',
+    a: 'No. Si decides irte, te vas. El precio bloqueado se mantiene mientras sigas con la suscripción.',
+  },
+  {
+    q: '¿El precio bloqueado es un descuento?',
+    a: 'No. Pagas la tarifa publicada el día que empiezas, con el plan y los complementos que elijas. Lo que ganas es que no te la subimos mientras sigas.',
+  },
+  {
+    q: '¿Venís de verdad a mi local?',
+    a: `Sí: la puesta en marcha presencial, que normalmente cuesta desde ${fmtPrice(ONSITE_TRAINING_FROM)}, está incluida. La fecha y el desplazamiento los cerramos contigo por escrito en la propuesta.`,
+  },
+  {
+    q: '¿Qué pasa si ya no quedan plazas?',
+    a: 'Lo diremos en esta página, sin contadores. Puedes empezar igual como cliente normal, con las mismas condiciones de producto.',
+  },
+  {
+    q: '¿Qué tipo de local buscáis?',
+    a: 'Locales de hostelería con ganas de probar algo nuevo y de contarnos cómo trabajan: restaurantes, bares, cafeterías, pizzerías y grupos pequeños.',
+  },
+];
+---
+
+<BaseLayout
+  title="Locales fundadores de alaCarta: precio bloqueado"
+  description={`Programa de ${FOUNDER_SPOTS} locales fundadores de alaCarta: precio bloqueado mientras sigas, puesta en marcha presencial incluida y línea directa con producto.`}
+  path={path}
+  jsonLd={[breadcrumbJsonLd(crumbs), faqJsonLd(faqs)]}
+>
+  <PageHero
+    variant="compact"
+    breadcrumbs={crumbs}
+    eyebrow="Locales fundadores"
+    eyebrowIcon="award"
+    title={`Buscamos ${FOUNDER_SPOTS} locales para construir alaCarta con ellos`}
+    text="alaCarta es nuevo y no tiene clientes que enseñarte todavía. Preferimos decírtelo y ofrecerte algo a cambio: condiciones de fundador para los primeros locales que lo usen en su servicio y nos ayuden a hacerlo mejor."
+    primary={{
+      label: 'Quiero ser local fundador',
+      href: ctaHref({ to: 'demo', motivo: 'fundador', origen: 'fundadores' }),
+    }}
+    secondary={{ label: 'Ver qué hay y qué viene', href: '/novedades' }}
+  />
+
+  <section class="section has-rule">
+    <div class="container">
+      <SectionHeader eyebrow="Lo que te damos" title="Condiciones de fundador" />
+      <FeatureColumns items={conditions} columns={3} />
+    </div>
+  </section>
+
+  <section class="section is-soft">
+    <div class="container">
+      <SectionHeader eyebrow="Lo que te pedimos" title="A cambio, poca cosa" />
+      <FeatureColumns items={ask} columns={3} />
+    </div>
+  </section>
+
+  <section class="section has-rule" id="a-quien-buscamos">
+    <div class="container">
+      <SectionHeader
+        eyebrow="A quién buscamos"
+        title="Locales que trabajan cada día y quieren contarnos cómo"
+        text={`Buscamos variedad: un poco de cada tipo de local, para que alaCarta funcione en todos. Son ${FOUNDER_SPOTS} plazas, que es lo que podemos acompañar bien en persona.`}
+      />
+      <SectorGrid />
+      <div class="founders-zone">
+        <Icon name="map-pin" size={20} />
+        <p>
+          <b>Zona.</b> Como la puesta en marcha es presencial, empezamos por los locales a los que
+          podemos ir sin complicar el desplazamiento. Dinos dónde estás en el formulario («Algo que
+          debamos saber») y te contestamos si llegamos; si no, te lo decimos claro y puedes empezar
+          igual con la puesta en marcha en remoto.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section has-rule">
+    <div class="container">
+      <SectionHeader
+        eyebrow="Cómo se entra"
+        title="Cuatro pasos, sin letra pequeña"
+        text="Sin formularios largos ni compromisos antes de verlo funcionando."
+      />
+      <Steps steps={steps} />
+      <p class="founders-price">
+        <a
+          href={ctaHref({ to: 'precios', config: 'f', origen: 'fundadores', hash: 'monta' })}
+          class="link-arrow"
+        >
+          Calcula el precio que bloquearías
+          <Icon name="arrow-right" size={14} />
+        </a>
+      </p>
+    </div>
+  </section>
+
+  <FaqSection items={faqs} title="Preguntas sobre el programa" allLink={false} />
+
+  <CtaBand
+    title="¿Quieres ser uno de los primeros?"
+    text={`Cuéntanos tu local. Si encaja, te explicamos las condiciones por escrito. Son ${FOUNDER_SPOTS} plazas.`}
+    primary={{
+      label: 'Quiero ser local fundador',
+      href: ctaHref({ to: 'demo', motivo: 'fundador', origen: 'fundadores-cierre' }),
+    }}
+    calcLink={{
+      label: 'Monta tu alaCarta como fundador',
+      href: ctaHref({ to: 'precios', config: 'f', origen: 'fundadores-cierre', hash: 'monta' }),
+      text: 'Mira el precio que dejarías bloqueado.',
+    }}
+    origen="fundadores-cierre"
+  />
+</BaseLayout>
+
+<style>
+  .founders-price {
+    margin-top: var(--space-10);
+  }
+  section[id] {
+    scroll-margin-top: var(--header-h);
+  }
+  .founders-zone {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: start;
+    margin-top: var(--space-10);
+    padding: var(--space-5) var(--space-6);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    max-width: 48rem;
+    font-size: var(--text-sm);
+  }
+  .founders-zone b {
+    color: var(--color-text-strong);
+    font-weight: var(--weight-medium);
+  }
+</style>

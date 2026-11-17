@@ -1,87 +1,271 @@
 ---
+/**
+ * Política de privacidad (borrador, docs/auditoria/13 §7). Dos partes:
+ * 1. Lo que trata la web (alaCarta como responsable): formularios de demo, llamada, propuesta y
+ *    contacto, almacenamiento de sesión, registros del servidor.
+ * 2. Lo que tratará el producto por cuenta del local (alaCarta como encargado): clientes,
+ *    reservas y pedidos, llamadas con IA (cuando esté disponible), equipo y RRHH, app propia.
+ * Los datos de la sociedad y los plazos sin decidir van como `Pending`. Revisión por asesor
+ * antes de publicar. Los campos tienen que coincidir con `LeadForm.vue` y `ContactForm.vue`.
+ */
 import LegalLayout from '@/layouts/LegalLayout.astro';
+import Pending from '@/components/ui/Pending.astro';
 import { CONTACT_EMAIL } from '@/data/site';
+
+interface Treatment {
+  id: string;
+  title: string;
+  data: string;
+  purpose: string;
+  basis: string;
+  keep: string;
+}
+const web: Treatment[] = [
+  {
+    id: 'demo',
+    title: 'Solicitud de demo o de propuesta',
+    data: 'Tipo de local, número de locales, en qué momento estás, nombre del local (opcional), productos que te interesan, qué usas hoy (opcional), si necesitas equipo, tu nombre, correo, teléfono (opcional), cómo prefieres que hablemos, franja horaria y tu mensaje (opcional).',
+    purpose:
+      'Responder a tu solicitud, preparar y hacer la demostración y, si la pides, enviarte la propuesta por escrito.',
+    basis:
+      'Aplicación de medidas precontractuales a petición tuya (art. 6.1.b RGPD) y tu consentimiento al enviar el formulario (art. 6.1.a RGPD).',
+    keep: 'Mientras dure la relación precontractual. Si no llegas a ser cliente, hasta 12 meses desde el último contacto (plazo propuesto, pendiente de revisión).',
+  },
+  {
+    id: 'llamada',
+    title: '«Te llamamos»',
+    data: 'Tu nombre, teléfono, la franja en la que prefieres que te llamemos y lo que te interesa.',
+    purpose: 'Llamarte en esa franja para atender tu consulta.',
+    basis: 'Medidas precontractuales a petición tuya y tu consentimiento (art. 6.1.a y b RGPD).',
+    keep: 'Igual que la solicitud de demo.',
+  },
+  {
+    id: 'contexto',
+    title: 'Lo que trae el formulario de la página de la que vienes',
+    data: 'La página desde la que pides la demo, el motivo (por ejemplo, local fundador o dejar las comisiones), el plan, la configuración que hayas montado en «Monta tu alaCarta», tus respuestas al comprobador de equipo y la atribución de la visita: primera página vista, web de procedencia, fecha de llegada y, si los hay, los parámetros de campaña (utm). No se guarda el nombre ni el correo en la dirección de la página.',
+    purpose:
+      'Que no tengas que repetir lo que ya nos has contado y saber qué páginas y campañas ayudan a que los locales nos encuentren.',
+    basis: 'Tu consentimiento al enviar el formulario (art. 6.1.a RGPD).',
+    keep: 'Junto con tu solicitud, con el mismo plazo.',
+  },
+  {
+    id: 'contacto',
+    title: 'Formulario de contacto',
+    data: 'Motivo (soporte, gestoría, partners, prensa…), tu nombre, correo, empresa (opcional) y tu mensaje.',
+    purpose: 'Responder a tu consulta.',
+    basis: 'Tu consentimiento (art. 6.1.a RGPD).',
+    keep: 'El tiempo necesario para responder y, después, hasta 12 meses (plazo propuesto, pendiente de revisión).',
+  },
+  {
+    id: 'correo',
+    title: 'Envío por correo',
+    data: 'Si el formulario no puede enviarse, se abre tu programa de correo con el mensaje ya redactado. Lo envías tú, desde tu cuenta, y nos llegan los datos que contenga y tu dirección de correo.',
+    purpose: 'Las mismas que el formulario que estabas rellenando.',
+    basis: 'Tu consentimiento al enviar el correo (art. 6.1.a RGPD).',
+    keep: 'Igual que el formulario correspondiente.',
+  },
+  {
+    id: 'servidor',
+    title: 'Navegación',
+    data: 'Datos técnicos de la conexión que registra el servidor: dirección IP, fecha y hora, página pedida y navegador.',
+    purpose: 'Seguridad y funcionamiento del sitio.',
+    basis: 'Interés legítimo (art. 6.1.f RGPD).',
+    keep: 'El tiempo necesario para la seguridad del servicio, como máximo <pendiente> días.',
+  },
+];
 ---
 
 <LegalLayout
   title="Política de privacidad"
-  description="Política de privacidad de alacarta.com: qué datos tratamos, para qué y cómo ejercer tus derechos."
+  description="Política de privacidad de alacarta.com: qué datos tratamos, para qué, durante cuánto tiempo y cómo ejercer tus derechos."
   path="/legal/privacidad"
 >
   <h2>1. Responsable del tratamiento</h2>
-  <p>
-    <strong>[Denominación social]</strong>, NIF <strong>[NIF]</strong>, <strong>[Dirección]</strong>
-    . Correo: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
-  </p>
+  <ul>
+    <li>
+      Responsable: <Pending what="denominación social" />
+    </li>
+    <li>
+      NIF: <Pending what="NIF" />
+    </li>
+    <li>
+      Domicilio: <Pending what="dirección completa" />
+    </li>
+    <li>
+      Correo: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+    </li>
+    <li>
+      Delegado de protección de datos:{' '}
+      <Pending what="designar si procede, o indicar que no es obligatorio" />
+    </li>
+  </ul>
 
-  <h2>2. Qué datos tratamos y con qué finalidad</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Origen</th>
-        <th>Datos</th>
-        <th>Finalidad</th>
-        <th>Base jurídica</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Formulario de demo</td>
-        <td>
-          Nombre, correo, teléfono (opcional), nombre y tipo de local, número de locales, módulos de
-          interés, mensaje
-        </td>
-        <td>
-          Atender la solicitud, preparar y realizar la demostración, enviar la propuesta comercial
-        </td>
-        <td>Consentimiento y medidas precontractuales (art. 6.1.a y b RGPD)</td>
-      </tr>
-      <tr>
-        <td>Formulario de contacto</td>
-        <td>Nombre, correo, teléfono (opcional), motivo, mensaje</td>
-        <td>Responder a la consulta</td>
-        <td>Consentimiento (art. 6.1.a RGPD)</td>
-      </tr>
-      <tr>
-        <td>Navegación</td>
-        <td>Datos técnicos de conexión (registros del servidor)</td>
-        <td>Seguridad y funcionamiento del sitio</td>
-        <td>Interés legítimo (art. 6.1.f RGPD)</td>
-      </tr>
-    </tbody>
-  </table>
+  <h2>2. Qué datos tratamos en esta web y para qué</h2>
   <p>
-    Este sitio no utiliza cookies de seguimiento ni herramientas de analítica de terceros en su
-    configuración por defecto. Si se activa alguna herramienta de analítica, se informará en la{' '}
-    <a href="/legal/cookies">política de cookies</a> y se pedirá consentimiento cuando sea exigible.
+    Solo tratamos los datos que nos das en los formularios y los técnicos de la conexión. No pedimos
+    el correo para usar las guías, la calculadora, el configurador ni las demos.
   </p>
+  {web.map((t) => (
+    <section class="legal-treatment" id={t.id}>
+      <h3>{t.title}</h3>
+      <dl>
+        <dt>Datos</dt>
+        <dd>{t.data}</dd>
+        <dt>Para qué</dt>
+        <dd>{t.purpose}</dd>
+        <dt>Base jurídica</dt>
+        <dd>{t.basis}</dd>
+        <dt>Cuánto tiempo</dt>
+        <dd>
+          {t.keep.includes('<pendiente>') ? (
+            <>
+              {t.keep.split('<pendiente>')[0]}
+              <Pending what="plazo" />
+              {t.keep.split('<pendiente>')[1]}
+            </>
+          ) : (
+            t.keep
+          )}
+        </dd>
+      </dl>
+    </section>
+  ))}
 
-  <h2>3. Conservación</h2>
+  <h2>3. Lo que se guarda en tu navegador</h2>
   <p>
-    Los datos de solicitudes se conservan mientras dure la relación precontractual o comercial y,
-    después, durante los plazos de prescripción legal. Los registros técnicos se conservan el tiempo
-    necesario para la seguridad del servicio.
+    Esta web <strong>no instala cookies</strong>. Para que el formulario recuerde de dónde vienes y
+    para que las demos no se reinicien al cambiar de página, guarda unos pocos datos en el
+    almacenamiento de sesión de tu navegador (<code>sessionStorage</code>), que se borra solo al
+    cerrar la pestaña y no se comparte con nadie. El detalle está en la{' '}
+    <a href="/legal/cookies">política de cookies</a>.
+  </p>
+  <p>
+    Las demostraciones (simulador de servicio, carta QR de ejemplo, cambio de precio en los canales,
+    llamada con IA de ejemplo, configurador y calculadora) funcionan en tu navegador con un local
+    ficticio. Lo que hagas en ellas no se envía a ningún sitio. La demo de llamada con IA es una
+    conversación escrita de ejemplo, sin audio ni número de teléfono real. Si en el futuro hay un
+    número de demostración, avisaremos antes de la llamada de que hablas con un asistente y de qué
+    se guarda, y lo añadiremos a esta política.
   </p>
 
   <h2>4. Destinatarios</h2>
   <p>
-    Los datos se alojan en proveedores de infraestructura ubicados en la Unión Europea. Pueden
-    tratarlos, como encargados del tratamiento, los proveedores de correo, alojamiento y gestión de
-    solicitudes que alaCarta contrate, con los que existen los contratos exigidos por el artículo 28
-    del RGPD. No se ceden a terceros salvo obligación legal.
+    No cedemos tus datos a terceros salvo obligación legal. Pueden tratarlos, como encargados del
+    tratamiento y con el contrato que exige el artículo 28 del RGPD, los proveedores que nos prestan
+    estos servicios:
+  </p>
+  <ul>
+    <li>
+      Alojamiento de la web: <Pending what="proveedor y país" />
+    </li>
+    <li>
+      Recepción de formularios: <Pending what="proveedor y país" />
+    </li>
+    <li>
+      Correo electrónico: <Pending what="proveedor y país" />
+    </li>
+  </ul>
+  <p>
+    Damos preferencia a proveedores con servidores en la Unión Europea. Si alguno tratara datos
+    fuera del Espacio Económico Europeo, lo indicaremos aquí junto con la garantía que lo permite.
   </p>
 
-  <h2>5. Derechos</h2>
+  <h2>5. Cuando contratas alaCarta: datos que tratamos por cuenta de tu local</h2>
+  <p>
+    Cuando un local usa alaCarta, el responsable de los datos de sus clientes y de su equipo es el
+    local. alaCarta actúa como <strong>encargado del tratamiento</strong>: los trata solo para
+    prestar el servicio, siguiendo las instrucciones del local y con un contrato de encargo que se
+    firma al contratar. Esta parte describe lo que hará cada producto; el detalle va en ese
+    contrato.
+  </p>
+  <ul>
+    <li>
+      <strong>Reservas, pedidos online, carta QR y clientes</strong>: nombre, teléfono, correo,
+      reservas, pedidos, alergias que el cliente indique y, si el local lo activa, puntos y
+      preferencias de comunicación. La plataforma registra el consentimiento de cada cliente para
+      recibir campañas y permite atender sus derechos de acceso y supresión.
+    </li>
+    <li>
+      <strong>Llamadas con IA</strong> (en camino, cuando esté disponible): el asistente se
+      presentará como asistente al empezar la llamada. Guardará los datos mínimos para la reserva o
+      el pedido (nombre, teléfono y detalles), y, si la llamada se graba o se transcribe, se avisará
+      al llamante antes. El proveedor de voz que intervenga figurará como subencargado.{' '}
+      <Pending what="proveedor de voz y plazo de conservación de grabaciones y transcripciones" />
+    </li>
+    <li>
+      <strong>Equipo y RRHH</strong>: datos de las personas del equipo (identificación, contacto,
+      contrato y puesto), fichajes, turnos, vacaciones, ausencias y documentos. La ubicación solo se
+      registra en el momento de fichar y solo si el local activa la geocerca, informando antes al
+      equipo. <strong>No se usan datos biométricos</strong> (ni huella ni reconocimiento facial).
+      Los registros de jornada se conservan cuatro años, como exige el Estatuto de los Trabajadores.
+    </li>
+    <li>
+      <strong>App propia</strong> (en camino): los datos de la cuenta del cliente del local (nombre,
+      contacto, pedidos, reservas y puntos).
+    </li>
+    <li>
+      <strong>ERP y backoffice</strong>: datos de proveedores y de clientes a los que se factura, y
+      los de los usuarios del sistema.
+    </li>
+  </ul>
+
+  <h2>6. Tus derechos</h2>
   <p>
     Puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, limitación y
-    portabilidad escribiendo a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. También
-    puedes retirar el consentimiento en cualquier momento y reclamar ante la Agencia Española de
-    Protección de Datos (aepd.es).
+    portabilidad escribiendo a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>, indicando
+    qué derecho ejerces. Puedes retirar tu consentimiento en cualquier momento, sin que afecte a lo
+    tratado antes. Si no estás de acuerdo con nuestra respuesta, puedes reclamar ante la Agencia
+    Española de Protección de Datos (aepd.es).
+  </p>
+  <p>
+    Si eres cliente de un local que usa alaCarta y quieres ejercer tus derechos sobre tus reservas,
+    pedidos o tu ficha, dirígete al local, que es el responsable. Si nos escribes a nosotros, se lo
+    trasladaremos.
   </p>
 
-  <h2>6. Seguridad</h2>
+  <h2>7. Seguridad</h2>
   <p>
-    Aplicamos medidas técnicas y organizativas adecuadas para proteger los datos: cifrado en
-    tránsito, control de accesos y copias de seguridad.
+    Aplicamos medidas técnicas y organizativas adecuadas al riesgo: cifrado en tránsito, control de
+    accesos, copias de seguridad y registro de actividad.
+  </p>
+
+  <h2>8. Menores</h2>
+  <p>
+    Esta web se dirige a profesionales de la hostelería. No tratamos a sabiendas datos de menores de
+    14 años.
   </p>
 </LegalLayout>
+
+<style>
+  .legal-treatment {
+    margin-block: var(--space-6);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-border);
+  }
+  .legal-treatment h3 {
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-3);
+  }
+  .legal-treatment dl {
+    display: grid;
+    grid-template-columns: 9rem minmax(0, 1fr);
+    gap: var(--space-2) var(--space-6);
+    font-size: var(--text-sm);
+  }
+  .legal-treatment dt {
+    color: var(--color-text-muted);
+    font-weight: var(--weight-medium);
+  }
+  .legal-treatment dd {
+    margin: 0;
+  }
+  @media (max-width: 640px) {
+    .legal-treatment dl {
+      grid-template-columns: 1fr;
+      gap: var(--space-1);
+    }
+    .legal-treatment dd {
+      margin-bottom: var(--space-2);
+    }
+  }
+</style>

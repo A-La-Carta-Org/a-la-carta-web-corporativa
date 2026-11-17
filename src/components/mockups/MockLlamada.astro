@@ -1,0 +1,158 @@
+---
+/**
+ * Llamadas con IA: la transcripción de una llamada y la reserva que deja en el libro, por
+ * confirmar. Debajo, otras llamadas del día (pedido pendiente de aceptar en el TPV, pregunta
+ * resuelta, grupo pasado al local). La IA propone, tú decides.
+ */
+---
+
+<div class="mk mk-call">
+  <div class="mk-topbar">
+    <span class="mk-logo">
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+    </span>
+    <div class="mk-tabs">
+      <span class="mk-tab">Sala</span>
+      <span class="mk-tab">Reservas</span>
+      <span class="mk-tab is-on">Llamadas</span>
+    </div>
+    <div class="mk-right">
+      <span class="mk-muted">Viernes 21 nov</span>
+    </div>
+  </div>
+  <div class="mk-call__body">
+    <section class="mk-call__talk">
+      <div class="mk-row">
+        <span class="grow mk-strong">
+          Llamada de las 20:47<span class="sub">1 min 52 s · atendida por el asistente</span>
+        </span>
+        <span class="mk-pill is-dark">Asistente</span>
+      </div>
+      <p class="mk-call__msg is-ai">
+        Hola, has llamado a La Plaza. Soy el asistente del restaurante. ¿En qué te ayudo?
+      </p>
+      <p class="mk-call__msg">Quería reservar para mañana a las nueve. Somos cuatro.</p>
+      <p class="mk-call__msg is-ai">
+        Mañana sábado a las 21:00 para cuatro tengo sitio en interior o en terraza. ¿Qué preferís?
+      </p>
+      <p class="mk-call__msg">Terraza. Uno de nosotros es celíaco.</p>
+      <p class="mk-call__msg is-ai">
+        Lo anoto. La reserva queda pendiente de confirmar y te llegará un mensaje cuando el local la
+        confirme.
+      </p>
+    </section>
+    <aside class="mk-call__side">
+      <div class="mk-panel mk-call__res">
+        <div class="mk-row">
+          <span class="grow mk-strong">Reserva creada</span>
+          <span class="mk-pill is-warn">Por confirmar</span>
+        </div>
+        <div class="mk-row">
+          <span class="grow mk-muted">Cliente</span>
+          <span>Pablo M.</span>
+        </div>
+        <div class="mk-row">
+          <span class="grow mk-muted">Cuándo</span>
+          <span class="num">Sáb 22 · 21:00</span>
+        </div>
+        <div class="mk-row">
+          <span class="grow mk-muted">Mesa</span>
+          <span>4 pax · terraza</span>
+        </div>
+        <div class="mk-row">
+          <span class="grow mk-muted">Nota</span>
+          <span>1 celíaco</span>
+        </div>
+        <div class="mk-call__btns">
+          <span class="mk-btn is-dark">Confirmar</span>
+          <span class="mk-btn is-soft">Llamar</span>
+        </div>
+      </div>
+      <div class="mk-panel is-soft mk-call__list">
+        <span class="mk-muted">Otras llamadas de hoy</span>
+        <div class="mk-row">
+          <span class="grow">
+            <span class="num">20:31</span> Pedido para recoger
+            <span class="sub">Esperando a que lo aceptes en el TPV</span>
+          </span>
+          <span class="mk-pill is-warn">Pendiente</span>
+        </div>
+        <div class="mk-row">
+          <span class="grow">
+            <span class="num">19:58</span> Pregunta por el horario
+          </span>
+          <span class="mk-pill is-ok">Resuelta</span>
+        </div>
+        <div class="mk-row">
+          <span class="grow">
+            <span class="num">19:40</span> Grupo de 14 personas
+          </span>
+          <span class="mk-pill">Pasada al local</span>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<style>
+  .mk-call__body {
+    display: grid;
+    grid-template-columns: 1fr 44%;
+    min-height: 290px;
+  }
+  .mk-call__talk {
+    padding: 6px 12px 12px;
+    display: grid;
+    gap: 6px;
+    align-content: start;
+  }
+  .mk-call__msg {
+    max-width: 88%;
+    padding: 7px 9px;
+    border-radius: 10px 10px 10px 3px;
+    background: var(--gray-100);
+    line-height: 1.4;
+  }
+  .mk-call__msg:not(.is-ai) {
+    justify-self: end;
+    border-radius: 10px 10px 3px 10px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+  }
+  .mk-call__side {
+    padding: 10px;
+    border-left: 1px solid var(--gray-200);
+    background: var(--gray-50);
+    display: grid;
+    gap: 8px;
+    align-content: start;
+  }
+  .mk-call__res {
+    padding: 4px 10px 10px;
+  }
+  .mk-call__btns {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .mk-call__list {
+    padding: 8px 10px 2px;
+    background: var(--white);
+  }
+  @container (max-width: 560px) {
+    .mk-call__body {
+      grid-template-columns: 1fr;
+    }
+    .mk-call__side {
+      border-left: 0;
+      border-top: 1px solid var(--gray-200);
+    }
+    .mk-call__list {
+      display: none;
+    }
+  }
+</style>
