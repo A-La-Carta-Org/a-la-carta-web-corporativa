@@ -20,6 +20,8 @@
 }
 .section.is-soft {
   background: var(--color-bg-soft);
+  /* gray-500 sobre gray-50 da 4,4:1 (no llega a AA); gray-600 da 7:1 */
+  --color-text-muted: var(--gray-600);
 }
 .section.is-dark {
   background: var(--color-bg-inverse);

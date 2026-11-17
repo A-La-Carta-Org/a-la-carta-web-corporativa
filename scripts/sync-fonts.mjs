@@ -9,6 +9,14 @@ const files = [
   ],
   ['@fontsource-variable/inter/files/inter-latin-wght-normal.woff2', 'inter-latin.woff2'],
   ['@fontsource-variable/inter/files/inter-latin-ext-wght-normal.woff2', 'inter-latin-ext.woff2'],
+  [
+    '@fontsource/instrument-serif/files/instrument-serif-latin-400-italic.woff2',
+    'instrument-serif-italic-latin.woff2',
+  ],
+  [
+    '@fontsource/instrument-serif/files/instrument-serif-latin-ext-400-italic.woff2',
+    'instrument-serif-italic-latin-ext.woff2',
+  ],
 ];
 for (const [from, to] of files) {
   copyFileSync(`node_modules/${from}`, `public/fonts/${to}`);

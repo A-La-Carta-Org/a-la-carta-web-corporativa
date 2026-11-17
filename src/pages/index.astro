@@ -11,6 +11,7 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import SectionHeader from '@/components/ui/SectionHeader.astro';
 import Icon from '@/components/ui/Icon.astro';
+<<<<<<< HEAD
 import StatusChip from '@/components/ui/StatusChip.astro';
 import FaqSection from '@/components/blocks/FaqSection.astro';
 import CtaBand from '@/components/blocks/CtaBand.astro';
@@ -44,6 +45,16 @@ import {
   startingPaths,
   totalAsSeparate,
 } from '@/data/pricing';
+=======
+import Steps from '@/components/blocks/Steps.astro';
+import SectorGrid from '@/components/blocks/SectorGrid.astro';
+import FaqSection from '@/components/blocks/FaqSection.astro';
+import CtaBand from '@/components/blocks/CtaBand.astro';
+import Mockup from '@/components/mockups/Mockup.astro';
+import HeroStage from '@/components/home/HeroStage.astro';
+import SolutionBento from '@/components/home/SolutionBento.astro';
+import { hero, flow, connected, why, trust } from '@/data/home';
+>>>>>>> exp/identidad-home
 import { homeFaqs } from '@/data/faqs';
 import { SITE_NAME } from '@/data/site';
 import { faqJsonLd, softwareJsonLd } from '@/lib/seo';
@@ -69,6 +80,7 @@ const jsonLd = [
   rawTitle
   description={homeSeo.description}
   path="/"
+<<<<<<< HEAD
   jsonLd={jsonLd}
 >
   <!-- 1 · Hero -->
@@ -111,10 +123,112 @@ const jsonLd = [
           {replaces.before.map((item) => (
             <li>
               <s>{item}</s>
+=======
+  jsonLd={faqJsonLd(homeFaqs)}
+  mainClass="home"
+>
+  <!-- 1 · Hero -->
+  <section class="home-hero">
+    <div class="container home-hero__copy">
+      <span class="eyebrow is-live fade-up">{hero.eyebrow}</span>
+      <h1 class="fade-up" style="--delay: 60ms">
+        {hero.titleLead} <em>{hero.titleAccent}</em>
+      </h1>
+      <p class="lead fade-up" style="--delay: 120ms">
+        {hero.text}
+      </p>
+      <div class="home-hero__actions fade-up" style="--delay: 180ms">
+        <a href={hero.primary.href} class="btn is-primary is-lg">
+          {hero.primary.label}
+          <Icon name="arrow-right" size={16} class="btn-arrow" />
+        </a>
+        <a href={hero.secondary.href} class="btn is-secondary is-lg">
+          {hero.secondary.label}
+        </a>
+      </div>
+      <p class="home-hero__note muted fade-up" style="--delay: 240ms">
+        {hero.note}
+      </p>
+    </div>
+    <div class="container is-wide home-hero__media fade-up" style="--delay: 200ms">
+      <HeroStage />
+    </div>
+  </section>
+
+  <!-- 2 · Confianza: lo que más pesa al cambiar de sistema, justo debajo del hero -->
+  <section class="section is-sm home-trust-wrap">
+    <div class="container">
+      <ul role="list" class="home-trust">
+        {trust.items.map((t) => (
+          <li>
+            <span class="home-trust__icon">
+              <Icon name={t.icon} size={20} />
+            </span>
+            <div>
+              <h3>{t.title}</h3>
+              <p class="muted">{t.text}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- 3 · El flujo del servicio -->
+  <section class="section has-rule">
+    <div class="container">
+      <SectionHeader eyebrow={flow.eyebrow} text={flow.text} class="reveal">
+        <Fragment slot="title">
+          Cada paso del servicio pasa por <em>el mismo sistema</em>
+        </Fragment>
+      </SectionHeader>
+      <div class="home-flow" style="--cols: 6">
+        <Steps steps={flow.steps} />
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · Soluciones -->
+  <section class="section is-soft">
+    <div class="container">
+      <div class="home-solutions__head reveal">
+        <SectionHeader
+          eyebrow="Soluciones"
+          text="Empieza por lo que necesitas hoy y añade el resto cuando el local lo pida. Todos comparten carta, mesas, usuarios y datos."
+        >
+          <Fragment slot="title">
+            Los módulos, <em>a la carta</em>
+          </Fragment>
+        </SectionHeader>
+        <a href="/soluciones" class="link-arrow">
+          Todas las soluciones
+          <Icon name="arrow-right" size={14} />
+        </a>
+      </div>
+      <SolutionBento />
+    </div>
+  </section>
+
+  <!-- 5 · Todo conectado -->
+  <section class="section">
+    <div class="container home-connected">
+      <div class="home-connected__copy">
+        <SectionHeader eyebrow={connected.eyebrow} text={connected.text}>
+          <Fragment slot="title">
+            Una carta, un dato, <em>un cambio</em>
+          </Fragment>
+        </SectionHeader>
+        <ul role="list" class="home-connected__points">
+          {connected.points.map((p) => (
+            <li class="column">
+              <h3>{p.title}</h3>
+              <p>{p.text}</p>
+>>>>>>> exp/identidad-home
             </li>
           ))}
         </ul>
       </div>
+<<<<<<< HEAD
       <div class="home-replaces__after">
         <p class="home-replaces__brand">
           <Icon name="arrow-right" size={16} />
@@ -122,10 +236,15 @@ const jsonLd = [
         </p>
         <h2 id="sustituye-titulo">{replaces.after}</h2>
         <p class="muted">{replaces.text}</p>
+=======
+      <div class="home-connected__media reveal">
+        <Mockup kind="backoffice" />
+>>>>>>> exp/identidad-home
       </div>
     </div>
   </section>
 
+<<<<<<< HEAD
   <!-- 3 · Simulador del servicio (D1) -->
   <section class="section has-rule home-sim" id="simulador">
     <div class="container">
@@ -133,6 +252,22 @@ const jsonLd = [
         <SectionHeader eyebrow={simulator.eyebrow} title={simulator.title} text={simulator.text} />
         <a href={ctaHref({ to: 'probar', origen: 'home-simulador' })} class="link-arrow">
           Todas las demos
+=======
+  <!-- 6 · Sectores -->
+  <section class="section has-rule">
+    <div class="container">
+      <div class="home-solutions__head reveal">
+        <SectionHeader
+          eyebrow="Sectores"
+          text="No es un programa distinto por sector: es el mismo sistema con los módulos y los flujos que cada negocio necesita."
+        >
+          <Fragment slot="title">
+            Una plataforma, configurada para <em>tu tipo de local</em>
+          </Fragment>
+        </SectionHeader>
+        <a href="/sectores" class="link-arrow">
+          Todos los sectores
+>>>>>>> exp/identidad-home
           <Icon name="arrow-right" size={14} />
         </a>
       </div>
@@ -144,6 +279,7 @@ const jsonLd = [
     </div>
   </section>
 
+<<<<<<< HEAD
   <!-- 4 · El ecosistema por familias -->
   <section class="section has-rule" id="ecosistema">
     <div class="container">
@@ -343,8 +479,16 @@ const jsonLd = [
 
   <!-- 9 · Por qué (banda oscura) -->
   <section class="section is-dark">
+=======
+  <!-- 7 · Por qué -->
+  <section class="section is-dark home-why-wrap">
+>>>>>>> exp/identidad-home
     <div class="container">
-      <SectionHeader eyebrow={why.eyebrow} title={why.title} />
+      <SectionHeader eyebrow={why.eyebrow} class="reveal">
+        <Fragment slot="title">
+          Menos piezas, <em>menos fricción</em>
+        </Fragment>
+      </SectionHeader>
       <ul role="list" class="home-why">
         {why.items.map((item) => (
           <li class="column">
@@ -357,6 +501,7 @@ const jsonLd = [
         Por qué alaCarta, con detalle
         <Icon name="arrow-right" size={14} />
       </a>
+<<<<<<< HEAD
     </div>
   </section>
 
@@ -406,6 +551,12 @@ const jsonLd = [
           </li>
         ))}
       </ul>
+=======
+      <!-- «Legible con poca luz», enseñado: la pantalla de cocina en modo noche -->
+      <div class="home-why__night reveal">
+        <Mockup kind="kds" />
+      </div>
+>>>>>>> exp/identidad-home
     </div>
   </section>
 
@@ -423,7 +574,13 @@ const jsonLd = [
 
   /* 1 · Hero */
   .home-hero {
+<<<<<<< HEAD
     padding-block: clamp(2.5rem, 1.5rem + 4vw, 5.5rem) clamp(3rem, 2rem + 3vw, 5rem);
+=======
+    padding-top: clamp(3rem, 2rem + 4vw, 6rem);
+    /* Margen inferior para que la sombra de los dispositivos no se corte */
+    padding-bottom: var(--space-12);
+>>>>>>> exp/identidad-home
     overflow: hidden;
   }
   .home-hero__inner {
@@ -442,6 +599,10 @@ const jsonLd = [
     max-width: 14ch;
     text-wrap: balance;
   }
+  .home-hero__copy h1 em {
+    display: block;
+    color: var(--accent);
+  }
   .home-hero__copy .lead {
     max-width: 34rem;
   }
@@ -457,9 +618,13 @@ const jsonLd = [
   .home-hero__media {
     min-width: 0;
   }
+<<<<<<< HEAD
 
   /* Cabecera de sección con enlace a la derecha */
   .home-head {
+=======
+  .home-solutions__head {
+>>>>>>> exp/identidad-home
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
@@ -831,6 +996,7 @@ const jsonLd = [
     color: var(--white);
   }
 
+<<<<<<< HEAD
   /* 10 · Fundadores */
   .home-founders {
     display: grid;
@@ -866,6 +1032,54 @@ const jsonLd = [
   }
 
   /* 11 · Confianza */
+=======
+  /* Sección oscura con calidez: un halo de pimentón casi imperceptible y grano */
+  .home-why-wrap {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background:
+      radial-gradient(60rem 28rem at 88% -10%, rgb(200 71 26 / 0.16), transparent 65%),
+      var(--color-bg-inverse);
+  }
+  .home-why-wrap::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.08;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* La pantalla de cocina en modo noche: se invierte la escala de grises solo aquí */
+  .home-why__night {
+    --white: #161614;
+    --gray-50: #1c1c1a;
+    --gray-100: #262624;
+    --gray-150: #2c2c29;
+    --gray-200: #353532;
+    --gray-300: #4b4b47;
+    --gray-400: #6b6b65;
+    --gray-500: #9c9c95;
+    --gray-600: #b6b6af;
+    --gray-700: #d5d5d0;
+    --gray-800: #e7e7e3;
+    --gray-900: #f1f1ef;
+    --black: #ffffff;
+    --color-ok: #72d8a6;
+    --color-ok-soft: rgb(31 122 77 / 0.3);
+    --color-warn: #f2b85c;
+    --color-warn-soft: rgb(166 105 11 / 0.32);
+    --color-danger: #ff9283;
+    --color-danger-soft: rgb(180 35 24 / 0.34);
+    max-width: 60rem;
+    margin: var(--space-16) auto calc(var(--section-y) * -1);
+    max-height: 21rem;
+    overflow: hidden;
+    mask-image: linear-gradient(to bottom, #000 55%, transparent);
+  }
+>>>>>>> exp/identidad-home
   .home-trust {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -877,6 +1091,16 @@ const jsonLd = [
     display: flex;
     gap: var(--space-4);
     align-items: flex-start;
+  }
+  .home-trust__icon {
+    flex: 0 0 auto;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-md);
+    background: var(--accent-soft);
+    color: var(--accent);
   }
   .home-trust h3 {
     font-size: var(--text-base);
@@ -918,12 +1142,16 @@ const jsonLd = [
     }
   }
   @media (max-width: 720px) {
+<<<<<<< HEAD
     .home-hero__copy h1 {
       max-width: none;
     }
     .home-points,
     .home-why,
     .home-trust {
+=======
+    .home-why {
+>>>>>>> exp/identidad-home
       grid-template-columns: 1fr;
     }
     .home-points {
@@ -954,5 +1182,71 @@ const jsonLd = [
     .home-hero__actions .btn {
       flex: 1 1 auto;
     }
+  }
+</style>
+
+<!-- Detalles de marca que tocan piezas compartidas, limitados a la home con .home -->
+<style is:global>
+  /* El punto del antetítulo, en pimentón; en el hero, además, «late» como algo en directo */
+  .home .eyebrow::before {
+    background: var(--accent);
+    opacity: 1;
+  }
+  .home .is-dark .eyebrow::before {
+    background: var(--accent-on-dark);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .home .eyebrow.is-live::before {
+      animation: live-pulse 2.4s ease-out infinite;
+    }
+  }
+  @keyframes live-pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgb(200 71 26 / 0.45);
+    }
+    70%,
+    100% {
+      box-shadow: 0 0 0 7px rgb(200 71 26 / 0);
+    }
+  }
+
+  /* Flujo del servicio: números en acento y una línea que se llena al hacer scroll */
+  .home .home-flow .steps {
+    position: relative;
+  }
+  .home .home-flow .steps__num {
+    color: var(--accent);
+  }
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) and (min-width: 1025px) {
+      .home .home-flow .steps::before {
+        content: '';
+        position: absolute;
+        inset: -0.5px 0 auto;
+        height: 2px;
+        background: var(--accent);
+        transform-origin: 0 50%;
+        animation: grow-x linear both;
+        animation-timeline: view();
+        animation-range: entry 90% cover 50%;
+      }
+    }
+  }
+  @keyframes grow-x {
+    from {
+      scale: 0 1;
+    }
+    to {
+      scale: 1 1;
+    }
+  }
+
+  /* Sectores: el acento aparece al pasar por encima */
+  .home .sector-link__name {
+    transition: color var(--dur-fast) var(--ease);
+  }
+  .home .sector-link:hover .sector-link__name,
+  .home .sector-link:hover .sector-link__arrow {
+    color: var(--accent);
   }
 </style>

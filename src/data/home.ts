@@ -17,6 +17,9 @@ export const homeSeo = {
 export const hero = {
   eyebrow: 'Ecosistema de gestión para hostelería',
   title: 'Todo tu restaurante, en un solo sistema.',
+  /** El titular partido: la segunda parte va en serif cursiva y color de acento (docs/auditoria/14) */
+  titleLead: 'Todo tu restaurante,',
+  titleAccent: 'en un solo sistema.',
   text: 'TPV, comandero, cocina, carta QR, reservas, pedidos, app propia, llamadas con IA, stock y equipo. Conectados entre sí, con tu marca y sin comisiones.',
   primary: { label: 'Solicitar demo', href: ctaHref({ to: 'demo', origen: 'home-hero' }) },
   /** Baja al simulador de la propia home (no es un paso de conversión: sin `origen`) */

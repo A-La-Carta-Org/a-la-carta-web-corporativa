@@ -343,3 +343,36 @@
   animation: fade-up var(--dur-slow) var(--ease) both;
   animation-delay: var(--delay, 0ms);
 }
+
+/* ── Palabra de acento en titulares (serif en cursiva) ────────────── */
+:is(h1, h2, h3) em {
+  font-family: var(--font-accent);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.08em;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+/* ── Aparición al hacer scroll (CSS nativo, sin JS) ───────────────── */
+/* Solo donde el navegador soporta animaciones ligadas al scroll y el usuario no pide menos
+   movimiento. En el resto, el contenido se ve tal cual desde el principio. */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    translate: 0 28px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 70%;
+    }
+  }
+}
